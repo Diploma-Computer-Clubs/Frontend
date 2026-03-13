@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Код подтверждения</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family: Arial, Helvetica, sans-serif;
+}
+
+html,body{
+height:100%;
+overflow:hidden;
+color:white;
+}
+
+body{
+display:flex;
+justify-content:center;
+align-items:center;
+background:#000;
+position:relative;
+}
+
+body::before{
+content:"";
+position:absolute;
+top:-40px;
+left:-40px;
+right:-40px;
+bottom:-40px;
+
+background:url("/img/bg.png") center/cover no-repeat;
+
+filter: blur(8px) brightness(0.2);
+z-index:-1;
+}
+
+.container{
+width:340px;
+display:flex;
+flex-direction:column;
+}
+
+.logo{
+display:flex;
+justify-content:center;
+margin-bottom:50px;
+}
+
+.logo img{
+width:170px;
+}
+
+.title{
+text-align:center;
+margin-bottom:25px;
+font-size:14px;
+color:#ddd;
+}
+
+.code-container{
+display:flex;
+justify-content:space-between;
+margin-bottom:30px;
+}
+
+.code-container input{
+width:48px;
+height:56px;
+text-align:center;
+font-size:22px;
+border-radius:8px;
+border:1px solid rgba(255,255,255,0.3);
+background:rgba(255,255,255,0.08);
+color:white;
+outline:none;
+}
+
+button{
+width:100%;
+padding:16px;
+border-radius:14px;
+border:none;
+font-size:16px;
+cursor:pointer;
+
+background:#e9e9e9;
+color:black;
+
+box-shadow:
+0 4px 8px rgba(0,0,0,0.25),
+inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.timer{
+text-align:center;
+font-size:13px;
+margin-top:15px;
+color:#ccc;
+}
+
+.error{
+color:#ff6b6b;
+text-align:center;
+margin-bottom:10px;
+font-size:14px;
+min-height:18px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+<img src="/img/Frame 6.svg">
+</div>
+
+<p class="title">
+Мы отправили код в SMS на +7 XXX XXX XX XX
+</p>
+
+<div class="error" id="errorText"></div>
+
+<div class="code-container">
+<input maxlength="1">
+<input maxlength="1">
+<input maxlength="1">
+<input maxlength="1">
+<input maxlength="1">
+<input maxlength="1">
+</div>
+
+<button id="verifyBtn">
+Подтвердить
+</button>
+
+<p class="timer">
+Отправить код ещё раз через 01:24
+</p>
+
+</div>
+
+<script>
+
+const inputs = document.querySelectorAll(".code-container input");
+const button = document.getElementById("verifyBtn");
+const errorText = document.getElementById("errorText");
+
+/* автопереход */
+
+inputs.forEach((input,index)=>{
+
+input.addEventListener("input",()=>{
+
+if(input.value && index < inputs.length-1){
+inputs[index+1].focus();
+}
+
+});
+
+input.addEventListener("keydown",(e)=>{
+
+if(e.key==="Backspace" && !input.value && index>0){
+inputs[index-1].focus();
+}
+
+});
+
+});
+
+/* сбор кода */
+
+function getCode(){
+
+let code="";
+
+inputs.forEach(input=>{
+code+=input.value;
+});
+
+return code;
+
+}
+
+/* отправка */
+
+button.addEventListener("click", async ()=>{
+
+const code = getCode();
+
+/* проверка */
+
+if(code.length !== 6){
+errorText.textContent="Введите полный код";
+return;
+}
+
+errorText.textContent="";
+
+/* API запрос */
+
+try{
+
+const response = await fetch("https://api.example.com/auth/verify-code",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+phone:"+77001234567", 
+code:code
+
+})
+
+});
+
+const data = await response.json();
+
+/* ответ сервера */
+
+if(data.success){
+
+window.location.href="forgot-3.html";
+
+}else{
+
+errorText.textContent="Неверный код";
+
+}
+
+}catch(err){
+
+/* сервер пока не подключен */
+
+console.log("API пока нет");
+
+window.location.href="forgot-3.html";
+
+}
+
+});
+
+</script>
+
+</body>
+</html>

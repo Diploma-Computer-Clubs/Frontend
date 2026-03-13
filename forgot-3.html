@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Новый пароль</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family: Arial, Helvetica, sans-serif;
+}
+
+html,body{
+height:100%;
+overflow:hidden;
+color:white;
+}
+
+body{
+display:flex;
+justify-content:center;
+align-items:center;
+background:#000;
+position:relative;
+}
+
+/* фон */
+
+body::before{
+content:"";
+position:absolute;
+
+top:-40px;
+left:-40px;
+right:-40px;
+bottom:-40px;
+
+background:url("/img/bg.png") center/cover no-repeat;
+
+filter: blur(8px) brightness(0.2);
+
+z-index:-1;
+}
+
+/* контейнер */
+
+.container{
+width:340px;
+display:flex;
+flex-direction:column;
+}
+
+/* логотип */
+
+.logo{
+display:flex;
+justify-content:center;
+margin-bottom:50px;
+}
+
+.logo img{
+width:170px;
+}
+
+/* форма */
+
+.field{
+display:flex;
+flex-direction:column;
+margin-bottom:20px;
+font-size:15px;
+}
+
+.field input{
+margin-top:8px;
+padding:14px;
+border-radius:10px;
+border:1px solid #aaa;
+background:transparent;
+color:white;
+font-size:16px;
+outline:none;
+}
+
+.field input::placeholder{
+color:#ccc;
+}
+
+/* ошибка */
+
+.error{
+color:#ff6b6b;
+font-size:14px;
+margin-bottom:15px;
+min-height:18px;
+}
+
+/* кнопка */
+
+button{
+width:100%;
+padding:16px;
+border-radius:14px;
+border:none;
+font-size:16px;
+cursor:pointer;
+background:#e9e9e9;
+color:black;
+
+box-shadow:
+0 4px 8px rgba(0,0,0,0.25),
+inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+button:active{
+transform:scale(0.97);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+<img src="/img/Frame 6.svg">
+</div>
+
+<form id="resetForm">
+
+<div class="field">
+<label>Новый пароль</label>
+<input id="password" type="password">
+</div>
+
+<div class="field">
+<label>Повторите пароль</label>
+<input id="password2" type="password">
+</div>
+
+<div class="error" id="errorText"></div>
+
+<button type="submit">
+Подтвердить
+</button>
+
+</form>
+
+</div>
+
+<script>
+
+const form = document.getElementById("resetForm");
+
+form.addEventListener("submit", async (e)=>{
+
+e.preventDefault();
+
+const password = document.getElementById("password").value;
+const password2 = document.getElementById("password2").value;
+const error = document.getElementById("errorText");
+
+/* проверки */
+
+if(password.length < 6){
+error.textContent="Пароль должен быть минимум 6 символов";
+return;
+}
+
+if(password !== password2){
+error.textContent="Пароли не совпадают";
+return;
+}
+
+error.textContent="";
+
+/* fetch запрос */
+
+try{
+
+const response = await fetch("https://api.example.com/auth/reset-password",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+phone:"+77001234567",
+code:"123456",
+newPassword:password
+
+})
+
+});
+
+const data = await response.json();
+
+if(data.success){
+
+alert("Пароль успешно изменён");
+
+window.location.href="login.html";
+
+}else{
+
+error.textContent="Ошибка смены пароля";
+
+}
+
+}catch(err){
+
+console.log("Сервер пока не подключен");
+
+/* временно считаем успешным */
+
+window.location.href="login.html";
+
+}
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Забыли пароль</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family: Arial, Helvetica, sans-serif;
+}
+
+html,body{
+height:100%;
+overflow:hidden;
+color:white;
+}
+
+body{
+display:flex;
+justify-content:center;
+align-items:center;
+background:#000;
+position:relative;
+}
+
+/* фон */
+
+body::before{
+content:"";
+position:absolute;
+
+top:-40px;
+left:-40px;
+right:-40px;
+bottom:-40px;
+
+background:url("/img/bg.png") center/cover no-repeat;
+
+filter: blur(8px) brightness(0.2);
+
+z-index:-1;
+}
+
+/* контейнер */
+
+.container{
+width:340px;
+display:flex;
+flex-direction:column;
+}
+
+/* логотип */
+
+.logo{
+display:flex;
+justify-content:center;
+margin-bottom:50px;
+}
+
+.logo img{
+width:170px;
+}
+
+/* форма */
+
+.field{
+display:flex;
+flex-direction:column;
+margin-bottom:25px;
+font-size:15px;
+}
+
+.field input{
+margin-top:8px;
+padding:14px;
+border-radius:10px;
+border:1px solid #aaa;
+background:transparent;
+color:white;
+font-size:16px;
+outline:none;
+}
+
+.field input::placeholder{
+color:#ccc;
+}
+
+/* текст */
+
+.title{
+text-align:center;
+margin-bottom:25px;
+font-size:15px;
+color:#ddd;
+}
+
+/* кнопка */
+
+button{
+width:100%;
+padding:16px;
+border-radius:14px;
+border:none;
+font-size:16px;
+cursor:pointer;
+}
+
+.login{
+background:#e9e9e9;
+color:#000;
+
+box-shadow:
+0 4px 8px rgba(0,0,0,0.25),
+inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+button:active{
+transform:scale(0.97);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+<img src="/img/Frame 6.svg" alt="logo">
+</div>
+
+<p class="title">Введите номер телефона</p>
+
+<form action="forgot-2.html">
+
+<div class="field">
+<label>Номер телефона</label>
+<input type="tel" placeholder="+7">
+</div>
+
+<button class="login" type="submit">
+Продолжить
+</button>
+
+</form>
+
+</div>
+
+</body>
+</html>
