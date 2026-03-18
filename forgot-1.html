@@ -138,12 +138,14 @@ transform:scale(0.97);
 
 <p class="title">Введите номер телефона</p>
 
-<form action="forgot-2.html">
+<form id="forgotForm">
 
 <div class="field">
 <label>Номер телефона</label>
-<input type="tel" placeholder="+7">
+<input name="phone" type="tel" placeholder="+7">
 </div>
+
+<div id="errorMessage" style="color:#ff6b6b; margin-bottom:15px; font-size:14px;"></div>
 
 <button class="login" type="submit">
 Продолжить
@@ -152,6 +154,61 @@ transform:scale(0.97);
 </form>
 
 </div>
+
+<script>
+
+const form = document.getElementById("forgotForm");
+const errorDiv = document.getElementById("errorMessage");
+
+form.addEventListener("submit", async (e) => {
+
+e.preventDefault();
+
+errorDiv.textContent = "";
+
+const phone = form.phone.value;
+
+try {
+
+const res = await fetch(`https://subopposite-nonheretical-brynn.ngrok-free.dev/users/find_user?phone_number=${encodeURIComponent(phone)}`, {
+method: "GET",
+headers: {
+"ngrok-skip-browser-warning": "69420"
+}
+});
+
+const data = await res.json();
+
+/* если ошибка */
+if (!res.ok) {
+
+const message = data.detail === "User not found"
+    ? "Пользователь не найден"
+    : data.detail || "Ошибка";
+
+console.log("❌", message);
+
+errorDiv.textContent = message;
+
+return;
+}
+
+/* если успех */
+console.log("✅ Пользователь найден:", data);
+
+/* редирект */
+window.location.href = "forgot-2.html";
+
+} catch (err) {
+
+console.log("❌ Сервер не отвечает", err);
+errorDiv.textContent = "Сервер недоступен";
+
+}
+
+});
+
+</script>
 
 </body>
 </html>

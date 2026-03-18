@@ -167,6 +167,12 @@ transform:scale(0.97);
 
 <a href="forgot-1.html" class="forgot">Забыли пароль?</a>
 
+
+
+<div id="errorMessage" style="color:#ff6b6b; margin-bottom:15px; font-size:14px;"></div>
+<!-- Tut -->
+
+
 <button class="login" type="submit">Войти</button>
 
 <button class="register" id="createAccount" type="button">
@@ -184,43 +190,59 @@ const createAccount = document.getElementById("createAccount");
 
 /* логин */
 
+const errorDiv = document.getElementById("errorMessage");
+
 form.addEventListener("submit", async (e) => {
 
 e.preventDefault();
 
+errorDiv.textContent = ""; // очистка старой ошибки
+
 const phone = form.phone.value;
 const password = form.password.value;
 
-console.log("Отправка данных:", phone, password);
+try {
 
-fetch("https://api.example.com/login", {
-
+const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/auth/login", {
 method: "POST",
-
 headers:{
-"Content-Type":"application/json"
+"Content-Type":"application/json",
+"ngrok-skip-browser-warning": "69420"
 },
-
 body: JSON.stringify({
-phone: phone,
+phone_number: phone,
 password: password
 })
-
-})
-.then(res => res.json())
-.then(data => {
-
-console.log("Ответ сервера:", data);
-
-})
-.catch(err => {
-
-console.log("Сервер пока не подключён");
-
 });
 
-});
+/* читаем ответ ВСЕГДА */
+const data = await res.json();
 
+/* если ошибка */
+if (!res.ok) {
+
+const message = data.detail || "Ошибка входа";
+console.log("❌", message);
+
+errorDiv.textContent = message;
+
+return;
+}
+
+/* если успех */
+console.log("✅ Успешный вход:", data);
+
+errorDiv.style.color = "#4cff88";
+errorDiv.textContent = "Успешный вход!";
+
+} catch (err) {
+
+console.log("❌ Сервер не отвечает", err);
+errorDiv.textContent = "Сервер недоступен";
+
+}
+
+});
 /* переход на регистрацию */
 
 createAccount.addEventListener("click", () => {
@@ -232,4 +254,9 @@ window.location.href = "register-step1.html";
 </script>
 
 </body>
-</html>
+</html> 
+
+
+
+
+
