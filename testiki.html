@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой Профиль</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #000; 
+            color: white; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0;
+            position: relative;
+        }
+        /* Твой фирменный фон */
+        body::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: url("../img/bg.png") center/cover no-repeat;
+            filter: blur(10px) brightness(0.2); z-index: -1;
+        }
+        .card { 
+            background: rgba(42, 42, 42, 0.8); 
+            padding: 2.5rem; 
+            border-radius: 24px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6); 
+            width: 100%; 
+            max-width: 380px; 
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .field { margin-bottom: 1.8rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.6rem; }
+        .label { color: #aaa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+        .value { font-size: 1.1rem; font-weight: 500; color: #00ffcc; }
+        .status { font-size: 0.7rem; text-align: center; color: #666; margin-top: 1.5rem; }
+        h2 { margin-bottom: 2rem; font-weight: 600; text-align: center; letter-spacing: 1px; }
+        .logout-btn {
+            width: 100%; padding: 12px; background: none; border: 1px solid #ff4c4c;
+            color: #ff4c4c; border-radius: 12px; cursor: pointer; margin-top: 10px; transition: 0.3s;
+        }
+        .logout-btn:hover { background: #ff4c4c; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Профиль</h2>
+    
+    <div class="field">
+        <div class="label">ФИО</div>
+        <div id="full_name" class="value">Загрузка...</div>
+    </div>
+
+    <div class="field">
+        <div class="label">Телефон</div>
+        <div id="phone_number" class="value">...</div>
+    </div>
+
+    <div class="field">
+        <div class="label">Город</div>
+        <div id="city" class="value">...</div>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Выйти</button>
+    <div id="token-status" class="status">Синхронизация...</div>
+</div>
+
+<script>
+    // Твой актуальный адрес ngrok
+    const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+
+    const api = axios.create({
+        baseURL: API_URL,
+    });
+
+    // 1. При каждом запросе крепим токен и заголовок ngrok
+    api.interceptors.request.use(config => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        // Обязательно для ngrok, чтобы не вылетала заглушка
+        config.headers["ngrok-skip-browser-warning"] = "69420";
+        return config;
+    });
+
+    // 2. Автоматический Refresh токена
+    api.interceptors.response.use(
+        response => response,
+        async error => {
+            const originalRequest = error.config;
+            
+            if (error.response && error.response.status === 401 && !originalRequest._retry) {
+                originalRequest._retry = true;
+                document.getElementById('token-status').innerText = "Обновление сессии...";
+
+                try {
+                    const refreshToken = localStorage.getItem('refresh_token');
+                    
+                    // Запрос на обновление. 
+                    // Передаем как объект, если бэк ждет JSON body
+                    const res = await axios.post(`${API_URL}/auth/refresh`, {
+                        refresh_token: refreshToken
+                    }, {
+                        headers: { "ngrok-skip-browser-warning": "69420" }
+                    });
+
+                    if (res.status === 200) {
+                        const newAccess = res.data.access_token;
+                        localStorage.setItem('access_token', newAccess);
+                        
+                        // Повторяем упавший запрос
+                        originalRequest.headers.Authorization = `Bearer ${newAccess}`;
+                        return api(originalRequest);
+                    }
+                } catch (refreshError) {
+                    console.error("Рефреш не удался");
+                    logout();
+                }
+            }
+            return Promise.reject(error);
+        }
+    );
+
+    // 3. Загрузка данных
+    async function loadProfile() {
+        try {
+            const response = await api.get('/users/me'); 
+            const user = response.data;
+
+            document.getElementById('full_name').innerText = user.full_name || "Не указано";
+            document.getElementById('phone_number').innerText = user.phone_number || "Не указано";
+            
+            // Обработка города (если это объект или просто строка)
+            const cityName = user.city && typeof user.city === 'object' ? user.city.name : user.city;
+            document.getElementById('city').innerText = cityName || "Не указано";
+            
+            document.getElementById('token-status').innerText = "Данные обновлены";
+        } catch (err) {
+            console.error(err);
+            document.getElementById('token-status').innerText = "Ошибка доступа";
+            // Если данных нет и мы не авторизованы - уходим на логин
+            if (err.response && err.response.status === 401) logout();
+        }
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "check.html";
+    }
+
+    // Погнали!
+    loadProfile();
+</script>
+
+</body>
+</html>

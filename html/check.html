@@ -186,69 +186,68 @@ transform:scale(0.97);
 <script>
 
 const form = document.getElementById("loginForm");
+const errorDiv = document.getElementById("errorMessage");
 const createAccount = document.getElementById("createAccount");
 
-/* логин */
-
-const errorDiv = document.getElementById("errorMessage");
-
 form.addEventListener("submit", async (e) => {
+    // 1. ОСТАНАВЛИВАЕМ ПЕРЕЗАГРУЗКУ (Самое важное!)
+    e.preventDefault();
 
-e.preventDefault();
+    errorDiv.textContent = ""; 
+    errorDiv.style.color = "#ff6b6b";
 
-errorDiv.textContent = ""; // очистка старой ошибки
+    const phone = form.phone.value;
+    const password = form.password.value;
 
-const phone = form.phone.value;
-const password = form.password.value;
+    try {
+        const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/auth/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "69420"
+            },
+            body: JSON.stringify({
+                phone_number: phone,
+                password: password
+            })
+        });
 
-try {
+        const data = await res.json();
 
-const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/auth/login", {
-method: "POST",
-headers:{
-"Content-Type":"application/json",
-"ngrok-skip-browser-warning": "69420"
-},
-body: JSON.stringify({
-phone_number: phone,
-password: password
-})
-});
+        if (!res.ok) {
+            // Случай ошибки (401, 404 и т.д.)
+            errorDiv.textContent = data.detail || "Ошибка входа";
+            return;
+        }
 
-/* читаем ответ ВСЕГДА */
-const data = await res.json();
+        /* --- УСПЕШНЫЙ ВХОД --- */
+console.log("✅ Ответ сервера:", data);
 
-/* если ошибка */
-if (!res.ok) {
+// 1. Сохраняем только то, что пришло (токены)
+localStorage.setItem('access_token', data.access_token);
+localStorage.setItem('refresh_token', data.refresh_token);
 
-const message = data.detail || "Ошибка входа";
-console.log("❌", message);
+// 2. Сохраняем телефон, который юзер ввел в поле (переменная phone)
+localStorage.setItem('user_phone', phone);
 
-errorDiv.textContent = message;
-
-return;
-}
-
-/* если успех */
-console.log("✅ Успешный вход:", data);
+// 3. Очищаем старое имя из памяти, чтобы оно не мешало новой загрузке
+localStorage.removeItem('user_full_name');
 
 errorDiv.style.color = "#4cff88";
-errorDiv.textContent = "Успешный вход!";
+errorDiv.textContent = "Успешно! Входим...";
 
-} catch (err) {
-
-console.log("❌ Сервер не отвечает", err);
-errorDiv.textContent = "Сервер недоступен";
-
-}
-
+// 4. Просто переходим на главную. Имя подтянется ТАМ через токен.
+setTimeout(() => {
+    window.location.href = "mainpage.html";
+}, 600);
+    } catch (err) {
+        console.error("❌ Ошибка запроса:", err);
+        errorDiv.textContent = "Сервер недоступен или ошибка сети";
+    }
 });
-/* переход на регистрацию */
 
 createAccount.addEventListener("click", () => {
-
-window.location.href = "register-step1.html";
-
+    window.location.href = "register-step1.html";
 });
 
 </script>

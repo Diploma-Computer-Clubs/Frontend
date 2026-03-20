@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Underlie - Бронирование клубов</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
         :root {
             --bg-dark: #333333;
@@ -112,6 +113,17 @@
             font-size: 0.95rem;
         }
 
+        /* Иконки в меню */
+        .drawer-link span {
+            margin-right: 15px;
+            color: #888; /* Цвет иконок как на скрине */
+            font-size: 22px;
+        }
+
+        .drawer-link:hover span {
+            color: #fff; /* Подсветка при наведении */
+        }
+
         .icon-stub {
             width: 20px;
             height: 20px;
@@ -205,18 +217,30 @@
 
     <div class="overlay" id="overlay"></div>
 
-    <nav class="side-drawer" id="sideDrawer">
-        <div class="user-block">
-            <span class="user-name">John Smith</span>
-            <span class="user-phone">+77771231212</span>
-        </div>
-        <div class="drawer-nav">
-            <a href="#" class="drawer-link"><div class="icon-stub"></div>Профиль</a>
-            <a href="#" class="drawer-link"><div class="icon-stub"></div>Карта клубов</a>
-            <a href="#" class="drawer-link"><div class="icon-stub"></div>Бронь</a>
-            <a href="#" class="drawer-link"><div class="icon-stub"></div>Настройки</a>
-        </div>
-    </nav>
+<nav class="side-drawer" id="sideDrawer">
+    <div class="user-block">
+        <span class="user-name" id="drawer_name">Загрузка...</span>
+        <span class="user-phone" id="drawer_phone">...</span>
+    </div>  
+    <div class="drawer-nav">
+        <a href="profile.html" class="drawer-link">
+            <span class="material-symbols-outlined">account_circle</span>
+            Профиль
+        </a>
+        <a href="map.html" class="drawer-link">
+            <span class="material-symbols-outlined">search</span>
+            Карта клубов
+        </a>
+        <a href="booking.html" class="drawer-link">
+            <span class="material-symbols-outlined">diamond</span>
+            Бронь
+        </a>
+        <a href="settings.html" class="drawer-link">
+            <span class="material-symbols-outlined">settings</span>
+            Настройки
+        </a>
+    </div>
+</nav>
 
     <header class="main-header">
         <button class="burger-menu" id="burger">
@@ -225,8 +249,8 @@
             <span class="burger-bar"></span>
         </button>
         <div class="header-right">
-            <div class="lang-switch"><img src="img/flag_ru.png" alt=""></div>
-            <div class="logo-box"><img src="img/Frame 6.svg" alt="UNDERLIE"></div>
+            <div class="lang-switch"><img src="../img/flag_ru.png" alt=""></div>
+            <div class="logo-box"><img src="../img/Frame 6.svg" alt="UNDERLIE"></div>
         </div>
     </header>
 
@@ -239,11 +263,11 @@
         <div class="step-content">
             <p class="step-text">Шаг 1: быстрая и простая регистрация</p>
         </div>
-        <div class="step-image"><img src="img/registerpage.png" alt="Шаг 1"></div>
+        <div class="step-image"><img src="../img/registerpage.png" alt="Шаг 1"></div>
     </section>
 
     <section class="step dark">
-        <div class="step-image"><img src="img/clubsmap.png" alt="Шаг 2"></div>
+        <div class="step-image"><img src="../img/clubsmap.png" alt="Шаг 2"></div>
         <div class="step-content">
             <p class="step-text">Шаг 2: Найди лучший клуб в своём городе на интерактивной карте.</p>
         </div>
@@ -253,11 +277,11 @@
         <div class="step-content">
             <p class="step-text">Шаг 3: Узнай характеристики ПК и актуальный прайс.</p>
         </div>
-        <div class="step-image"><img src="img/aboutclubs.png" alt="Шаг 3"></div>
+        <div class="step-image"><img src="../img/aboutclubs.png" alt="Шаг 3"></div>
     </section>
 
     <section class="step dark">
-        <div class="step-image"><img src="img/bookingseat.png" alt="Шаг 4"></div>
+        <div class="step-image"><img src="../img/bookingseat.png" alt="Шаг 4"></div>
         <div class="step-content">
             <p class="step-text">Шаг 4: Выбери конкретное место на схеме зала.</p>
         </div>
@@ -267,22 +291,92 @@
         <div class="step-content">
             <p class="step-text">Шаг 5: Отслеживай статус брони и продлевай время в один клик.</p>
         </div>
-        <div class="step-image"><img src="img/currentbooking.png" alt="Шаг 3"></div>
+        <div class="step-image"><img src="../img/currentbooking.png" alt="Шаг 3"></div>
     </section>
 
-    <script>
-        const burgerBtn = document.getElementById('burger');
-        const sideDrawer = document.getElementById('sideDrawer');
-        const overlay = document.getElementById('overlay');
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    // 1. ПЕРЕМЕННЫЕ И БУРГЕР
+    const burgerBtn = document.getElementById('burger');
+    const sideDrawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('overlay');
 
-        function toggleMenu() {
-            burgerBtn.classList.toggle('open');
-            sideDrawer.classList.toggle('open');
-            overlay.classList.toggle('active');
+    function toggleMenu() {
+        burgerBtn.classList.toggle('open');
+        sideDrawer.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+
+    burgerBtn.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+
+    // 2. НАСТРОЙКА API (AXIOS)
+    const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+
+    const api = axios.create({
+        baseURL: API_URL,
+        headers: { "ngrok-skip-browser-warning": "69420" }
+    });
+
+    // Автоматически подставляем токен в каждый запрос
+    api.interceptors.request.use(config => {
+        const token = localStorage.getItem('access_token');
+        if (token) config.headers.Authorization = `Bearer ${token}`;
+        return config;
+    });
+
+    // 3. ЛОГИКА ОТОБРАЖЕНИЯ ДАННЫХ
+    
+    // Мгновенная отрисовка из памяти (чтобы не моргало)
+    function updateBurgerFromStorage() {
+        const savedName = localStorage.getItem('user_full_name');
+        const savedPhone = localStorage.getItem('user_phone');
+
+        const nameEl = document.getElementById('drawer_name');
+        const phoneEl = document.getElementById('drawer_phone');
+
+        if (savedName && nameEl) nameEl.innerText = savedName;
+        if (savedPhone && phoneEl) phoneEl.innerText = savedPhone;
+    }
+
+    // Запрос актуальных данных с сервера по токену
+    async function syncProfile() {
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                document.getElementById('drawer_name').innerText = "Войти в аккаунт";
+                return;
+            }
+
+            const response = await api.get('/users/me');
+            const user = response.data;
+            
+            console.log("✅ Данные от сервера получены:", user);
+
+            const nameEl = document.getElementById('drawer_name');
+            const phoneEl = document.getElementById('drawer_phone');
+
+            if (user && user.full_name) {
+                // Обновляем текст в бургере
+                if (nameEl) nameEl.innerText = user.full_name;
+                if (phoneEl) phoneEl.innerText = user.phone_number || "";
+
+                // Сохраняем в память для следующего захода
+                localStorage.setItem('user_full_name', user.full_name);
+                localStorage.setItem('user_phone', user.phone_number || "");
+            }
+
+        } catch (err) {
+            console.error("❌ Ошибка синхронизации профиля:", err);
+            if (err.response?.status === 401) {
+                document.getElementById('drawer_name').innerText = "Сессия истекла";
+            }
         }
+    }
 
-        burgerBtn.addEventListener('click', toggleMenu);
-        overlay.addEventListener('click', toggleMenu);
-    </script>
+    // 4. ЗАПУСК ПРИ ЗАГРУЗКЕ
+    updateBurgerFromStorage(); // Сначала из памяти
+    syncProfile();             // Затем обновляем по токену
+</script>
 </body>
 </html>
