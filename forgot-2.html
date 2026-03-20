@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Забыли пароль</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family: Arial, Helvetica, sans-serif;
+}
+
+html,body{
+height:100%;
+overflow:hidden;
+color:white;
+}
+
+body{
+display:flex;
+justify-content:center;
+align-items:center;
+background:#000;
+position:relative;
+}
+
+/* фон */
+
+body::before{
+content:"";
+position:absolute;
+
+top:-40px;
+left:-40px;
+right:-40px;
+bottom:-40px;
+
+background:url("/img/bg.png") center/cover no-repeat;
+
+filter: blur(8px) brightness(0.2);
+
+z-index:-1;
+}
+
+/* контейнер */
+
+.container{
+width:340px;
+display:flex;
+flex-direction:column;
+}
+
+/* логотип */
+
+.logo{
+display:flex;
+justify-content:center;
+margin-bottom:50px;
+}
+
+.logo img{
+width:170px;
+}
+
+/* текст */
+
+.title{
+text-align:center;
+margin-bottom:30px;
+font-size:15px;
+color:#ddd;
+}
+
+/* кнопки */
+
+.button-outline{
+width:100%;
+padding:16px;
+border-radius:12px;
+border:1px solid #aaa;
+background:transparent;
+color:white;
+font-size:16px;
+cursor:pointer;
+margin-bottom:15px;
+}
+
+.button-outline:hover{
+background:rgba(255,255,255,0.05);
+}
+
+button:active{
+transform:scale(0.97);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+<img src="/img/Frame 6.svg" alt="logo">
+</div>
+
+<p class="title">Выберите способ получения кода</p>
+
+<button class="button-outline" onclick="location.href='forgot-code.html'">
+SMS-сообщение
+</button>
+
+<!-- <button class="button-outline">
+Telegram
+</button>
+
+<button class="button-outline">
+WhatsApp
+</button> -->
+
+</div>
+
+</body>
+</html>
