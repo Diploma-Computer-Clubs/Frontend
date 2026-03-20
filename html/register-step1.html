@@ -105,6 +105,69 @@ inset 0 1px 0 rgba(255,255,255,0.6);
 button:active{
 transform:scale(0.97);
 }
+.select-wrapper{
+position:relative;
+margin-top:8px;
+}
+
+.select-wrapper select{
+width:100%;
+padding:14px;
+padding-right:45px;
+
+border-radius:10px;
+border:1px solid #aaa;
+
+background:transparent;
+color:white;
+font-size:16px;
+outline:none;
+cursor:pointer;
+
+/* убираем дефолтный стиль */
+appearance:none;
+-webkit-appearance:none;
+-moz-appearance:none;
+
+transition:0.2s;
+}
+
+/* стрелка */
+.select-wrapper::after{
+content:"";
+position:absolute;
+right:14px;
+top:50%;
+width:10px;
+height:10px;
+border-right:2px solid #ccc;
+border-bottom:2px solid #ccc;
+transform:translateY(-60%) rotate(45deg);
+pointer-events:none;
+}
+
+/* hover */
+.select-wrapper select:hover{
+border-color:#fff;
+}
+
+/* focus */
+.select-wrapper select:focus{
+border-color:white;
+box-shadow:0 0 0 2px rgba(255,255,255,0.15);
+}
+
+/* placeholder цвет */
+.select-wrapper select:invalid{
+color:#aaa;
+}
+
+/* dropdown список */
+select option{
+background:#111;
+color:white;
+}
+
 
 </style>
 
@@ -131,8 +194,12 @@ transform:scale(0.97);
 </div>
 
 <div class="field">
-<label>Город</label>
-<input id="city" type="text" placeholder="Ваш город">
+  <label>Город</label>
+  <div class="select-wrapper">
+    <select id="city" required>
+      <option value="" disabled selected hidden>Выберите город</option>
+    </select>
+  </div>
 </div>
 
 <div class="field">
@@ -157,13 +224,46 @@ transform:scale(0.97);
 
 const form = document.getElementById("registerForm");
 
+let cities = [];
+
+async function loadCities(){
+  try{
+    const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/cities/get_all_cities", {
+      headers:{
+        "ngrok-skip-browser-warning": "69420"
+      }
+    });
+
+    const data = await res.json();
+    cities = data;
+
+    const select = document.getElementById("city");
+
+    // дефолтный option
+    select.innerHTML = `<option value="">Выберите город</option>`;
+
+    data.forEach(city => {
+      const option = document.createElement("option");
+      option.value = city.id;          // важное — id
+      option.textContent = city.city;  // название
+      select.appendChild(option);
+    });
+
+  }catch(err){
+    console.log("Ошибка загрузки городов:", err);
+  }
+}
+
+// вызываем при старте
+loadCities();
+
 form.addEventListener("submit", async function(e){
 
 e.preventDefault();
 
 const phone = document.getElementById("phone").value.trim();
 const name = document.getElementById("name").value.trim();
-const city = document.getElementById("city").value.trim();
+const city_id = document.getElementById("city").value;
 const password = document.getElementById("password").value;
 const password2 = document.getElementById("password2").value;
 
@@ -200,14 +300,12 @@ return;
 
 /* маппинг городов */
 
-const cityMap = {
-"Астана": 4,
-"Караганда": 9,
-"Киев": 1,
-"Мамба": 14
-};
 
-const city_id = cityMap[city];
+
+if(!city_id){
+  error.textContent = "Выберите город";
+  return;
+}
 
 if(!city_id){
 error.textContent = "Выберите корректный город";
