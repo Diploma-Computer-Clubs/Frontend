@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Клубы</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family: Arial, Helvetica, sans-serif;
+}
+
+html, body{
+height:100%;
+background:#000;
+color:white;
+}
+
+.top-bar{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+padding:15px;
+z-index:1000;
+background:rgba(0,0,0,0.6);
+backdrop-filter: blur(8px);
+}
+
+.select-wrapper{
+max-width:300px;
+position:relative;
+}
+
+.select-wrapper select{
+width:100%;
+padding:12px 40px 12px 14px;
+border-radius:10px;
+border:1px solid #aaa;
+background:transparent;
+color:white;
+font-size:15px;
+outline:none;
+cursor:pointer;
+appearance:none;
+}
+
+.select-wrapper::after{
+content:"";
+position:absolute;
+right:12px;
+top:50%;
+width:8px;
+height:8px;
+border-right:2px solid #ccc;
+border-bottom:2px solid #ccc;
+transform:translateY(-50%) rotate(45deg);
+pointer-events:none;
+}
+
+select option{
+background:#111;
+color:white;
+}
+
+#map{
+width:100%;
+height:100vh;
+}
+</style>
+
+<script src="https://maps.api.2gis.ru/2.0/loader.js?pkg=full"></script>
+
+</head>
+
+<body>
+
+<div class="top-bar">
+  <div class="select-wrapper">
+    <select id="citySelect" required>
+      <option value="" disabled selected hidden>Выберите город</option>
+    </select>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<script>
+
+let map;
+let markers = [];
+
+/* координаты городов (временные) */
+const cityCoords = {
+  "Astana": [51.1694, 71.4491],
+  "Karaganda": [49.8047, 73.1094],
+  "Kyiv": [50.4501, 30.5234],
+  "Mamba": [51.1694, 71.4491],
+  "Алматы": [43.238949, 76.889709]
+};
+
+/* карта */
+DG.then(function () {
+  map = DG.map('map', {
+    center: [51.1694, 71.4491],
+    zoom: 13
+  });
+});
+
+/* загрузка городов */
+async function loadCities(){
+  try{
+    const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/cities/get_all_cities", {
+      headers:{
+        "ngrok-skip-browser-warning": "69420"
+      }
+    });
+
+    const data = await res.json();
+
+    const select = document.getElementById("citySelect");
+
+    data.forEach(city => {
+      const option = document.createElement("option");
+      option.value = city.id; // 👈 используем id
+      option.textContent = city.city;
+      select.appendChild(option);
+    });
+
+  }catch(err){
+    console.log("Ошибка загрузки городов:", err);
+  }
+}
+
+/* загрузка клубов */
+async function loadClubs(cityId){
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    console.log("Нет токена для клубов");
+    return;
+  }
+
+  try{
+    const res = await fetch(`https://subopposite-nonheretical-brynn.ngrok-free.dev/clubs/get_clubs_map?city_id=${cityId}`, {
+      headers:{
+        "Authorization": `Bearer ${token}`, // 👈 ВОТ ЭТО КЛЮЧЕВОЕ
+        "ngrok-skip-browser-warning": "69420"
+      }
+    });
+
+    if(res.status === 401){
+      console.log("Токен невалидный");
+      localStorage.removeItem("access_token");
+      return;
+    }
+
+    const data = await res.json();
+
+    // очистка
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+
+    // добавление
+    data.forEach(club => {
+      const marker = DG.marker([club.latitude, club.longitude])
+        .addTo(map)
+        .bindPopup(`<b>${club.name}</b>`);
+
+      markers.push(marker);
+    });
+
+  }catch(err){
+    console.log("Ошибка загрузки клубов:", err);
+  }
+}
+
+/* пользователь */
+async function loadUserCity(){
+  const token = localStorage.getItem("access_token");
+  if (!token) return;
+
+  try{
+    const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/users/me", {
+      headers:{
+        "Authorization": `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "69420"
+      }
+    });
+
+    if(res.status === 401){
+      localStorage.removeItem("access_token");
+      return;
+    }
+
+    const data = await res.json();
+    const userCity = data.city;
+
+    const select = document.getElementById("citySelect");
+
+    for (let option of select.options) {
+      if (option.textContent === userCity) {
+
+        select.value = option.value;
+
+        const coords = cityCoords[userCity];
+        if(coords && map){
+          map.setView(coords, 13);
+        }
+
+        loadClubs(option.value); // 👈 загружаем клубы
+        break;
+      }
+    }
+
+  }catch(err){
+    console.log("Ошибка пользователя:", err);
+  }
+}
+
+/* смена города */
+document.getElementById("citySelect").addEventListener("change", function(){
+
+  const cityId = this.value;
+  const cityName = this.options[this.selectedIndex].text;
+
+  const coords = cityCoords[cityName];
+
+  if(coords && map){
+    map.setView(coords, 13);
+  }
+
+  loadClubs(cityId);
+});
+
+/* запуск */
+(async () => {
+  await loadCities();
+  await loadUserCity();
+})();
+
+</script>
+
+</body>
+</html>
