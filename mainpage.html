@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underlie - Бронирование клубов</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #333333;
+            --bg-light: #cccccc;
+            --menu-bg: #2d2d2d;
+            --text-main: #ffffff;
+            --text-dark: #000000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            overflow-x: hidden;
+        }
+
+        /* --- ХЕДЕР --- */
+        .main-header {
+            background-color: var(--bg-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+   .lang-switch img, 
+    .logo-box img {
+    height: 36px; /* Поменяй на 40px, если хочешь еще крупнее */
+    width: auto;  /* Ширина подстроится сама, чтобы не было искажений */
+    display: block;
+    object-fit: contain; /* Чтобы картинки не обрезались */
+}
+
+        /* Кнопка бургера */
+        .burger-menu {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .burger-bar {
+            width: 25px;
+            height: 2px;
+            background-color: #fff;
+            transition: 0.3s;
+        }
+
+        /* Анимация бургера */
+        .burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
+        .burger-menu.open .burger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* --- БОКОВОЕ МЕНЮ (Side Drawer) --- */
+        .side-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background-color: var(--menu-bg);
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        .side-drawer.open { transform: translateX(0); }
+
+        .user-block {
+            padding: 60px 25px 30px;
+            background-color: #262626;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .user-name { font-weight: 700; font-size: 1.1rem; color: #fff; display: block; }
+        .user-phone { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
+
+        .drawer-link {
+            display: flex;
+            align-items: center;
+            padding: 18px 25px;
+            color: #fff;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.95rem;
+        }
+
+        .icon-stub {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            border: 1px solid #666;
+            border-radius: 50%; /* Заглушка под круглые иконки на скрине */
+        }
+
+        /* --- ШАГИ (Чередование) --- */
+        .hero-section {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 10%;
+            gap: 40px;
+        }
+
+        .step-content { flex: 1; max-width: 500px; }
+        .step-image { flex: 1; display: flex; justify-content: center; }
+
+        .step-text {
+            font-size: 1.4rem;
+            font-weight: 700; /* Жирный Montserrat */
+            line-height: 1.3;
+        }
+
+        .step-image img {
+            max-width: 260px; /* Размер смартфона "на глаз" */
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .light { background-color: var(--bg-light); color: var(--text-dark); }
+        .dark { background-color: var(--bg-dark); color: var(--text-main); }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+        .overlay.active { display: block; }
+
+        /* --- АДАПТИВНОСТЬ --- */
+@media (max-width: 768px) {
+    .step {
+        /* Убираем ряд, ставим в колонку */
+        flex-direction: column !important; 
+        /* Сбрасываем гигантские отступы по бокам */
+        padding: 40px 15px !important; 
+        text-align: center;
+        gap: 20px;
+    }
+
+    .step-content {
+        width: 100%;
+        order: 1; /* Текст всегда первый */
+        margin-bottom: 10px;
+    }
+
+    .step-image {
+        width: 100%;
+        order: 2; /* Фото всегда под текстом */
+    }
+
+    .step-image img {
+        /* Ограничиваем ширину картинки, чтобы она не вылетала */
+        max-width: 250px !important; 
+        width: 100%;
+        height: auto;
+    }
+
+    .step-text {
+        font-size: 1.2rem; /* Чуть уменьшим шрифт, чтобы не дробился */
+        word-wrap: break-word; /* На всякий случай, чтобы слова не вылезали */
+    }
+}
+    </style>
+</head>
+<body>
+
+    <div class="overlay" id="overlay"></div>
+
+    <nav class="side-drawer" id="sideDrawer">
+        <div class="user-block">
+            <span class="user-name">John Smith</span>
+            <span class="user-phone">+77771231212</span>
+        </div>
+        <div class="drawer-nav">
+            <a href="#" class="drawer-link"><div class="icon-stub"></div>Профиль</a>
+            <a href="#" class="drawer-link"><div class="icon-stub"></div>Карта клубов</a>
+            <a href="#" class="drawer-link"><div class="icon-stub"></div>Бронь</a>
+            <a href="#" class="drawer-link"><div class="icon-stub"></div>Настройки</a>
+        </div>
+    </nav>
+
+    <header class="main-header">
+        <button class="burger-menu" id="burger">
+            <span class="burger-bar"></span>
+            <span class="burger-bar"></span>
+            <span class="burger-bar"></span>
+        </button>
+        <div class="header-right">
+            <div class="lang-switch"><img src="img/flag_ru.png" alt=""></div>
+            <div class="logo-box"><img src="img/Frame 6.svg" alt="UNDERLIE"></div>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <p>Underlie - Выйдите за пределы обычных походов в клуб.</p>
+        <h3>По шагам</h3>
+    </section>
+
+    <section class="step light">
+        <div class="step-content">
+            <p class="step-text">Шаг 1: быстрая и простая регистрация</p>
+        </div>
+        <div class="step-image"><img src="img/registerpage.png" alt="Шаг 1"></div>
+    </section>
+
+    <section class="step dark">
+        <div class="step-image"><img src="img/clubsmap.png" alt="Шаг 2"></div>
+        <div class="step-content">
+            <p class="step-text">Шаг 2: Найди лучший клуб в своём городе на интерактивной карте.</p>
+        </div>
+    </section>
+
+    <section class="step light">
+        <div class="step-content">
+            <p class="step-text">Шаг 3: Узнай характеристики ПК и актуальный прайс.</p>
+        </div>
+        <div class="step-image"><img src="img/aboutclubs.png" alt="Шаг 3"></div>
+    </section>
+
+    <section class="step dark">
+        <div class="step-image"><img src="img/bookingseat.png" alt="Шаг 4"></div>
+        <div class="step-content">
+            <p class="step-text">Шаг 4: Выбери конкретное место на схеме зала.</p>
+        </div>
+    </section>
+
+        <section class="step light">
+        <div class="step-content">
+            <p class="step-text">Шаг 5: Отслеживай статус брони и продлевай время в один клик.</p>
+        </div>
+        <div class="step-image"><img src="img/currentbooking.png" alt="Шаг 3"></div>
+    </section>
+
+    <script>
+        const burgerBtn = document.getElementById('burger');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const overlay = document.getElementById('overlay');
+
+        function toggleMenu() {
+            burgerBtn.classList.toggle('open');
+            sideDrawer.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        burgerBtn.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+    </script>
+</body>
+</html>
