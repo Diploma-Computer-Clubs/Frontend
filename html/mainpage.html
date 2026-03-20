@@ -45,15 +45,14 @@
             gap: 15px;
         }
 
-   .lang-switch img, 
-    .logo-box img {
-    height: 36px; /* Поменяй на 40px, если хочешь еще крупнее */
-    width: auto;  /* Ширина подстроится сама, чтобы не было искажений */
-    display: block;
-    object-fit: contain; /* Чтобы картинки не обрезались */
-}
+        .lang-switch img, 
+        .logo-box img {
+            height: 36px;
+            width: auto;
+            display: block;
+            object-fit: contain;
+        }
 
-        /* Кнопка бургера */
         .burger-menu {
             background: none;
             border: none;
@@ -71,18 +70,14 @@
             transition: 0.3s;
         }
 
-        /* Анимация бургера */
         .burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
         .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
         .burger-menu.open .burger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        /* --- БОКОВОЕ МЕНЮ (Side Drawer) --- */
+        /* --- БОКОВОЕ МЕНЮ --- */
         .side-drawer {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 280px;
-            height: 100vh;
+            top: 0; left: 0; width: 280px; height: 100vh;
             background-color: var(--menu-bg);
             z-index: 1000;
             transform: translateX(-100%);
@@ -113,26 +108,15 @@
             font-size: 0.95rem;
         }
 
-        /* Иконки в меню */
         .drawer-link span {
             margin-right: 15px;
-            color: #888; /* Цвет иконок как на скрине */
+            color: #888;
             font-size: 22px;
         }
 
-        .drawer-link:hover span {
-            color: #fff; /* Подсветка при наведении */
-        }
+        .drawer-link:hover span { color: #fff; }
 
-        .icon-stub {
-            width: 20px;
-            height: 20px;
-            margin-right: 15px;
-            border: 1px solid #666;
-            border-radius: 50%; /* Заглушка под круглые иконки на скрине */
-        }
-
-        /* --- ШАГИ (Чередование) --- */
+        /* --- ШАГИ --- */
         .hero-section {
             background-color: var(--bg-dark);
             color: var(--text-main);
@@ -153,12 +137,12 @@
 
         .step-text {
             font-size: 1.4rem;
-            font-weight: 700; /* Жирный Montserrat */
+            font-weight: 700;
             line-height: 1.3;
         }
 
         .step-image img {
-            max-width: 260px; /* Размер смартфона "на глаз" */
+            max-width: 260px;
             height: auto;
             border-radius: 20px;
             box-shadow: 0 15px 30px rgba(0,0,0,0.2);
@@ -167,7 +151,6 @@
         .light { background-color: var(--bg-light); color: var(--text-dark); }
         .dark { background-color: var(--bg-dark); color: var(--text-main); }
 
-        /* Overlay */
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -177,45 +160,23 @@
         }
         .overlay.active { display: block; }
 
-        /* --- АДАПТИВНОСТЬ --- */
-@media (max-width: 768px) {
-    .step {
-        /* Убираем ряд, ставим в колонку */
-        flex-direction: column !important; 
-        /* Сбрасываем гигантские отступы по бокам */
-        padding: 40px 15px !important; 
-        text-align: center;
-        gap: 20px;
-    }
-
-    .step-content {
-        width: 100%;
-        order: 1; /* Текст всегда первый */
-        margin-bottom: 10px;
-    }
-
-    .step-image {
-        width: 100%;
-        order: 2; /* Фото всегда под текстом */
-    }
-
-    .step-image img {
-        /* Ограничиваем ширину картинки, чтобы она не вылетала */
-        max-width: 250px !important; 
-        width: 100%;
-        height: auto;
-    }
-
-    .step-text {
-        font-size: 1.2rem; /* Чуть уменьшим шрифт, чтобы не дробился */
-        word-wrap: break-word; /* На всякий случай, чтобы слова не вылезали */
-    }
-}
+        @media (max-width: 768px) {
+            .step {
+                flex-direction: column !important; 
+                padding: 40px 15px !important; 
+                text-align: center;
+                gap: 20px;
+            }
+            .step-content { width: 100%; order: 1; margin-bottom: 10px; }
+            .step-image { width: 100%; order: 2; }
+            .step-image img { max-width: 250px !important; width: 100%; }
+            .step-text { font-size: 1.2rem; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="overlay" id="overlay"></div>
+<div class="overlay" id="overlay"></div>
 
 <nav class="side-drawer" id="sideDrawer">
     <div class="user-block">
@@ -224,79 +185,122 @@
     </div>  
     <div class="drawer-nav">
         <a href="profile.html" class="drawer-link">
-            <span class="material-symbols-outlined">account_circle</span>
-            Профиль
+            <span class="material-symbols-outlined">account_circle</span> Профиль
         </a>
         <a href="map.html" class="drawer-link">
-            <span class="material-symbols-outlined">search</span>
-            Карта клубов
+            <span class="material-symbols-outlined">search</span> Карта клубов
         </a>
         <a href="booking.html" class="drawer-link">
-            <span class="material-symbols-outlined">diamond</span>
-            Бронь
+            <span class="material-symbols-outlined">diamond</span> Бронь
         </a>
         <a href="settings.html" class="drawer-link">
-            <span class="material-symbols-outlined">settings</span>
-            Настройки
+            <span class="material-symbols-outlined">settings</span> Настройки
         </a>
     </div>
 </nav>
 
-    <header class="main-header">
-        <button class="burger-menu" id="burger">
-            <span class="burger-bar"></span>
-            <span class="burger-bar"></span>
-            <span class="burger-bar"></span>
-        </button>
-        <div class="header-right">
-            <div class="lang-switch"><img src="../img/flag_ru.png" alt=""></div>
-            <div class="logo-box"><img src="../img/Frame 6.svg" alt="UNDERLIE"></div>
-        </div>
-    </header>
+<header class="main-header">
+    <button class="burger-menu" id="burger">
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+    </button>
+    <div class="header-right">
+        <div class="lang-switch"><img src="../img/flag_ru.png" alt="RU"></div>
+        <div class="logo-box"><img src="../img/Frame 6.svg" alt="UNDERLIE"></div>
+    </div>
+</header>
 
-    <section class="hero-section">
-        <p>Underlie - Выйдите за пределы обычных походов в клуб.</p>
-        <h3>По шагам</h3>
-    </section>
+<section class="hero-section">
+    <p>Underlie - Выйдите за пределы обычных походов в клуб.</p>
+    <h3>По шагам</h3>
+</section>
 
-    <section class="step light">
-        <div class="step-content">
-            <p class="step-text">Шаг 1: быстрая и простая регистрация</p>
-        </div>
-        <div class="step-image"><img src="../img/registerpage.png" alt="Шаг 1"></div>
-    </section>
+<section class="step light">
+    <div class="step-content">
+        <p class="step-text">Шаг 1: быстрая и простая регистрация</p>
+    </div>
+    <div class="step-image"><img src="../img/registerpage.png" alt="Шаг 1"></div>
+</section>
 
-    <section class="step dark">
-        <div class="step-image"><img src="../img/clubsmap.png" alt="Шаг 2"></div>
-        <div class="step-content">
-            <p class="step-text">Шаг 2: Найди лучший клуб в своём городе на интерактивной карте.</p>
-        </div>
-    </section>
+<section class="step dark">
+    <div class="step-image"><img src="../img/clubsmap.png" alt="Шаг 2"></div>
+    <div class="step-content">
+        <p class="step-text">Шаг 2: Найди лучший клуб в своём городе на интерактивной карте.</p>
+    </div>
+</section>
 
-    <section class="step light">
-        <div class="step-content">
-            <p class="step-text">Шаг 3: Узнай характеристики ПК и актуальный прайс.</p>
-        </div>
-        <div class="step-image"><img src="../img/aboutclubs.png" alt="Шаг 3"></div>
-    </section>
+<section class="step light">
+    <div class="step-content">
+        <p class="step-text">Шаг 3: Узнай характеристики ПК и актуальный прайс.</p>
+    </div>
+    <div class="step-image"><img src="../img/aboutclubs.png" alt="Шаг 3"></div>
+</section>
 
-    <section class="step dark">
-        <div class="step-image"><img src="../img/bookingseat.png" alt="Шаг 4"></div>
-        <div class="step-content">
-            <p class="step-text">Шаг 4: Выбери конкретное место на схеме зала.</p>
-        </div>
-    </section>
+<section class="step dark">
+    <div class="step-image"><img src="../img/bookingseat.png" alt="Шаг 4"></div>
+    <div class="step-content">
+        <p class="step-text">Шаг 4: Выбери конкретное место на схеме зала.</p>
+    </div>
+</section>
 
-        <section class="step light">
-        <div class="step-content">
-            <p class="step-text">Шаг 5: Отслеживай статус брони и продлевай время в один клик.</p>
-        </div>
-        <div class="step-image"><img src="../img/currentbooking.png" alt="Шаг 3"></div>
-    </section>
+<section class="step light">
+    <div class="step-content">
+        <p class="step-text">Шаг 5: Отслеживай статус брони и продлевай время в один клик.</p>
+    </div>
+    <div class="step-image"><img src="../img/currentbooking.png" alt="Шаг 5"></div>
+</section>
 
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-    // 1. ПЕРЕМЕННЫЕ И БУРГЕР
+    const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+
+    // 1. Настройка Axios
+    const api = axios.create({
+        baseURL: API_URL,
+        headers: { "ngrok-skip-browser-warning": "69420" }
+    });
+
+    // Добавляем токен в каждый запрос
+    api.interceptors.request.use(config => {
+        const token = localStorage.getItem('access_token');
+        if (token) config.headers.Authorization = `Bearer ${token}`;
+        return config;
+    });
+
+    // Перехватчик ответов (для Refresh Token)
+    api.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+            const originalRequest = error.config;
+            if (error.response?.status === 401 && !originalRequest._retry) {
+                originalRequest._retry = true;
+                const refreshToken = localStorage.getItem('refresh_token');
+                
+                if (refreshToken) {
+                    try {
+                        const res = await axios.post(`${API_URL}/auth/refresh`, {}, {
+                            headers: { 
+                                "Authorization": `Bearer ${refreshToken}`,
+                                "ngrok-skip-browser-warning": "69420"
+                            }
+                        });
+                        const newAccessToken = res.data.access_token;
+                        localStorage.setItem('access_token', newAccessToken);
+                        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                        return api(originalRequest);
+                    } catch (refreshErr) {
+                        console.error("Refresh token expired");
+                        localStorage.clear();
+                        window.location.href = 'check.html';
+                    }
+                }
+            }
+            return Promise.reject(error);
+        }
+    );
+
+    // 2. Бургер-меню
     const burgerBtn = document.getElementById('burger');
     const sideDrawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
@@ -310,76 +314,45 @@
     burgerBtn.addEventListener('click', toggleMenu);
     overlay.addEventListener('click', toggleMenu);
 
-    // 2. НАСТРОЙКА API (AXIOS)
-    const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
-
-    const api = axios.create({
-        baseURL: API_URL,
-        headers: { "ngrok-skip-browser-warning": "69420" }
-    });
-
-    // Автоматически подставляем токен в каждый запрос
-    api.interceptors.request.use(config => {
-        const token = localStorage.getItem('access_token');
-        if (token) config.headers.Authorization = `Bearer ${token}`;
-        return config;
-    });
-
-    // 3. ЛОГИКА ОТОБРАЖЕНИЯ ДАННЫХ
-    
-    // Мгновенная отрисовка из памяти (чтобы не моргало)
-    function updateBurgerFromStorage() {
-        const savedName = localStorage.getItem('user_full_name');
-        const savedPhone = localStorage.getItem('user_phone');
-
+    // 3. Синхронизация данных пользователя
+    function updateBurgerUI(user) {
         const nameEl = document.getElementById('drawer_name');
         const phoneEl = document.getElementById('drawer_phone');
-
-        if (savedName && nameEl) nameEl.innerText = savedName;
-        if (savedPhone && phoneEl) phoneEl.innerText = savedPhone;
-    }
-
-    // Запрос актуальных данных с сервера по токену
-    async function syncProfile() {
-        try {
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-                document.getElementById('drawer_name').innerText = "Войти в аккаунт";
-                return;
-            }
-
-            const response = await api.get('/users/me');
-            const user = response.data;
-            
-            console.log("✅ Данные от сервера получены:", user);
-
-            const nameEl = document.getElementById('drawer_name');
-            const phoneEl = document.getElementById('drawer_phone');
-
-            if (user && user.full_name) {
-                // Обновляем текст в бургере
-                if (nameEl) nameEl.innerText = user.full_name;
-                if (phoneEl) phoneEl.innerText = user.phone_number || "";
-
-                // Сохраняем в память для следующего захода
-                localStorage.setItem('user_full_name', user.full_name);
-                localStorage.setItem('user_phone', user.phone_number || "");
-            }
-
-        } catch (err) {
-            console.error("❌ Ошибка синхронизации профиля:", err);
-            if (err.response?.status === 401) {
-                document.getElementById('drawer_name').innerText = "Сессия истекла";
-            }
+        
+        if (user) {
+            nameEl.innerText = user.full_name || "Пользователь";
+            phoneEl.innerText = user.phone_number || "";
+            // Кэшируем данные
+            localStorage.setItem('user_full_name', user.full_name);
+            localStorage.setItem('user_phone', user.phone_number);
+        } else {
+            nameEl.innerText = "Войти в аккаунт";
+            phoneEl.innerText = "";
         }
     }
 
-        
-    // 4. ЗАПУСК ПРИ ЗАГРУЗКЕ
-    updateBurgerFromStorage(); // Сначала из памяти
-    syncProfile();             // Затем обновляем по токену
+    async function syncProfile() {
+        // Сначала показываем то, что сохранено (мгновенно)
+        const savedName = localStorage.getItem('user_full_name');
+        const savedPhone = localStorage.getItem('user_phone');
+        if (savedName) {
+            document.getElementById('drawer_name').innerText = savedName;
+            document.getElementById('drawer_phone').innerText = savedPhone || "";
+        }
 
-    
+        // Пытаемся получить свежак с сервера
+        try {
+            const response = await api.get('/users/me');
+            updateBurgerUI(response.data);
+        } catch (err) {
+            if (!localStorage.getItem('access_token')) {
+                document.getElementById('drawer_name').innerText = "Войти в аккаунт";
+            }
+            console.log("Profile sync skipped or user not logged in");
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', syncProfile);
 </script>
 </body>
 </html>

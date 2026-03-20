@@ -51,6 +51,7 @@
         .user-block { padding: 60px 25px 30px; background-color: #262626; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .user-name { font-weight: 700; color: #fff; display: block; }
         .user-phone { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
+        .drawer-nav { display: flex; flex-direction: column; }
         .drawer-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .drawer-link span { margin-right: 15px; color: #888; }
 
@@ -182,34 +183,73 @@
 
 <script>
     const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+    
     const api = axios.create({
         baseURL: API_URL,
         headers: { "ngrok-skip-browser-warning": "69420" }
     });
 
+    // 1. Интерцептор запроса
     api.interceptors.request.use(config => {
         const token = localStorage.getItem('access_token');
         if (token) config.headers.Authorization = `Bearer ${token}`;
         return config;
     });
 
+    // 2. Интерцептор ответа для автоматического Refresh Token
+    api.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+            const originalRequest = error.config;
+            if (error.response?.status === 401 && !originalRequest._retry) {
+                originalRequest._retry = true;
+                const refreshToken = localStorage.getItem('refresh_token');
+                if (refreshToken) {
+                    try {
+                        const res = await axios.post(`${API_URL}/auth/refresh`, {}, {
+                            headers: { 
+                                "Authorization": `Bearer ${refreshToken}`,
+                                "ngrok-skip-browser-warning": "69420"
+                            }
+                        });
+                        const newAccessToken = res.data.access_token;
+                        localStorage.setItem('access_token', newAccessToken);
+                        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                        return api(originalRequest);
+                    } catch (refreshError) {
+                        localStorage.clear();
+                        window.location.href = 'check.html';
+                    }
+                } else {
+                    window.location.href = 'check.html';
+                }
+            }
+            return Promise.reject(error);
+        }
+    );
+
     async function getProfile() {
         try {
             const response = await api.get('/users/me');
             const user = response.data;
+            
+            // Основные поля
             document.getElementById('full_name').value = user.full_name || "Не указано";
             document.getElementById('phone_number').value = user.phone_number || "Не указан";
             document.getElementById('city').value = user.city || "Не указан";
             
+            // Поля в боковом меню (Drawer)
             const drawerName = document.getElementById('drawer_name');
             const drawerPhone = document.getElementById('drawer_phone');
             if (drawerName) drawerName.innerText = user.full_name || "Пользователь";
             if (drawerPhone) drawerPhone.innerText = user.phone_number || "";
 
+            // Обновляем локальное хранилище для кэша
             if(user.full_name) localStorage.setItem('user_full_name', user.full_name);
             if(user.phone_number) localStorage.setItem('user_phone', user.phone_number);
+            
         } catch (error) {
-            if (error.response?.status === 401) window.location.href = 'check.html';
+            console.error("Ошибка при получении профиля:", error);
         }
     }
 

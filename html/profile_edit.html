@@ -142,18 +142,61 @@
 
 <script>
     const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+    
     const api = axios.create({
         baseURL: API_URL,
         headers: { "ngrok-skip-browser-warning": "69420" }
     });
 
+    // 1. Интерцептор запроса: добавляем Access Token
     api.interceptors.request.use(config => {
         const token = localStorage.getItem('access_token');
         if (token) config.headers.Authorization = `Bearer ${token}`;
         return config;
     });
 
-    // Загрузка городов (как в регистрации)
+    // 2. Интерцептор ответа: автоматический Refresh Token
+    api.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+            const originalRequest = error.config;
+
+            // Если ошибка 401 и это не повторный запрос
+            if (error.response?.status === 401 && !originalRequest._retry) {
+                originalRequest._retry = true;
+                const refreshToken = localStorage.getItem('refresh_token');
+
+                if (refreshToken) {
+                    try {
+                        console.log("Access токен истек. Пытаюсь обновить через Refresh...");
+                        
+                        // Используем axios напрямую, чтобы не зациклиться
+                        const res = await axios.post(`${API_URL}/auth/refresh`, {}, {
+                            headers: { 
+                                "Authorization": `Bearer ${refreshToken}`,
+                                "ngrok-skip-browser-warning": "69420"
+                            }
+                        });
+
+                        const newAccessToken = res.data.access_token;
+                        localStorage.setItem('access_token', newAccessToken);
+                        
+                        // Повторяем упавший запрос с новым токеном
+                        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                        return api(originalRequest);
+                    } catch (refreshError) {
+                        console.error("Refresh токен невалиден или истек");
+                        localStorage.clear();
+                        window.location.href = 'check.html';
+                    }
+                } else {
+                    window.location.href = 'check.html';
+                }
+            }
+            return Promise.reject(error);
+        }
+    );
+
     async function loadCities(currentCityName) {
         try {
             const res = await fetch(`${API_URL}/cities/get_all_cities`, {
@@ -161,7 +204,7 @@
             });
             const data = await res.json();
             const select = document.getElementById("city_id");
-            select.innerHTML = ""; // Очистка
+            select.innerHTML = "";
 
             data.forEach(city => {
                 const option = document.createElement("option");
@@ -175,7 +218,6 @@
         }
     }
 
-    // Загрузка данных профиля
     async function initPage() {
         try {
             const response = await api.get('/users/me');
@@ -187,11 +229,10 @@
             
             await loadCities(user.city);
         } catch (error) {
-            if (error.response?.status === 401) window.location.href = 'check.html';
+            console.error("Ошибка инициализации:", error);
         }
     }
 
-    // Сохранение изменений
     async function updateProfile() {
         const name = document.getElementById('full_name').value.trim();
         const cityId = document.getElementById('city_id').value;
@@ -215,7 +256,6 @@
         }
     }
 
-    // Бургер
     const burgerBtn = document.getElementById('burger');
     const sideDrawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
