@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Клуб</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Montserrat',sans-serif; }
+html,body { height:100%; background:#111; color:#fff; overflow-y:auto; }
+
+:root { --accent:#8b1a1a; }
+
+/* ── ШАПКА ── */
+.slide-header { position:sticky; top:0; z-index:10; background:rgba(17,17,17,0.95); backdrop-filter:blur(10px); display:flex; align-items:center; gap:14px; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.07); }
+.back-btn { background:rgba(255,255,255,0.08); border:none; border-radius:10px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; transition:background 0.2s; flex-shrink:0; text-decoration:none; }
+.back-btn:active { background:rgba(255,255,255,0.18); }
+.back-btn .material-symbols-outlined { font-size:20px; }
+.slide-title { font-size:17px; font-weight:700; color:#fff; }
+
+/* ── ГЕРОЙ ── */
+.detail-hero { position:relative; width:100%; height:260px; overflow:hidden; background:#1a1a2a; flex-shrink:0; }
+.detail-hero-img { width:100%; height:100%; object-fit:cover; display:block; }
+.detail-hero-gradient { position:absolute; bottom:0; left:0; right:0; height:120px; background:linear-gradient(transparent,#111); }
+.detail-hero-logo { position:absolute; bottom:16px; left:16px; width:56px; height:56px; border-radius:12px; object-fit:cover; border:2px solid rgba(255,255,255,0.2); background:#222; }
+
+/* ── ТЕЛО ── */
+.detail-body { padding:20px 16px 120px; }
+.detail-name { font-size:22px; font-weight:700; color:#fff; margin-bottom:6px; }
+.detail-stars { color:#f5c542; font-size:15px; letter-spacing:2px; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.detail-stars span { color:#fff; font-size:14px; }
+.detail-address { font-size:13px; color:rgba(255,255,255,0.5); display:flex; align-items:center; gap:5px; margin-bottom:16px; }
+.detail-address .material-symbols-outlined { font-size:16px; }
+
+/* ── ОПИСАНИЕ ── */
+.detail-description { font-size:13px; color:rgba(255,255,255,0.65); line-height:1.6; margin-bottom:20px; padding:14px 16px; background:rgba(255,255,255,0.04); border-radius:12px; }
+
+/* ── АКЦИИ ── */
+.promos-section { margin-bottom:20px; }
+.promos-title { font-size:15px; font-weight:700; color:#fff; margin-bottom:10px; }
+.promo-chip { display:inline-flex; align-items:center; gap:8px; background:rgba(139,26,26,0.25); border:1px solid rgba(139,26,26,0.5); border-radius:20px; padding:6px 14px; font-size:12px; margin:0 6px 8px 0; }
+.promo-chip-title { color:rgba(255,255,255,0.7); }
+.promo-chip-value { color:#fff; font-weight:700; }
+
+/* ── ЦЕНА ── */
+.detail-price-row { display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); border-radius:12px; padding:12px 16px; margin-bottom:24px; }
+.detail-price-from { font-size:13px; color:rgba(255,255,255,0.5); }
+.detail-price-from b { color:#fff; font-size:15px; }
+.btn-price { background:transparent; border:1px solid rgba(255,255,255,0.3); color:#fff; border-radius:20px; padding:8px 16px; font-size:13px; font-weight:500; cursor:pointer; font-family:'Montserrat',sans-serif; transition:background 0.2s; }
+.btn-price:hover { background:rgba(255,255,255,0.1); }
+
+/* ── ЗОНЫ ── */
+.detail-zones-title { font-size:16px; font-weight:700; color:#fff; text-align:center; margin-bottom:16px; letter-spacing:0.5px; }
+.zone-card { background:#1c1c1c; border-radius:14px; padding:18px; margin-bottom:12px; }
+.zone-card-name { font-size:18px; font-weight:700; color:#fff; margin-bottom:10px; }
+.zone-spec { font-size:13px; color:rgba(255,255,255,0.55); padding:3px 0; display:flex; gap:6px; }
+.zone-spec::before { content:'•'; color:rgba(255,255,255,0.25); flex-shrink:0; }
+.zones-loading { color:rgba(255,255,255,0.3); text-align:center; padding:30px 0; font-size:13px; }
+
+/* ── КНОПКА ЗАБРОНИРОВАТЬ ── */
+.book-bar { position:fixed; bottom:0; left:0; right:0; padding:20px 16px 28px; display:flex; justify-content:center; background:linear-gradient(transparent,rgba(17,17,17,0.98) 45%); z-index:50; }
+.btn-book { padding:16px 48px; background:var(--accent); color:#fff; border:none; border-radius:14px; font-size:16px; font-weight:700; cursor:pointer; font-family:'Montserrat',sans-serif; letter-spacing:0.5px; transition:background 0.2s,transform 0.1s; min-width:220px; }
+.btn-book:active { transform:scale(0.98); background:#6b1010; }
+
+/* ── ПОПАП ЦЕНЫ ── */
+.price-popup-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; }
+.price-popup-overlay.open { display:flex; }
+.price-popup { background:#1a1a1a; border-radius:20px; overflow:hidden; max-width:500px; width:100%; position:relative; }
+.price-popup-close { position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.5); border:none; border-radius:50%; width:32px; height:32px; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:1; }
+.price-popup-close .material-symbols-outlined { font-size:18px; }
+.price-popup-img { width:100%; max-height:70vh; object-fit:contain; display:block; background:#111; }
+.price-popup-empty { padding:40px; text-align:center; color:rgba(255,255,255,0.4); font-size:14px; }
+
+/* ── СКЕЛЕТОН / ЗАГРУЗКА ── */
+.page-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; height:60vh; gap:12px; color:rgba(255,255,255,0.3); font-size:14px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+<!-- Попап цены -->
+<div class="price-popup-overlay" id="pricePopup">
+    <div class="price-popup">
+        <button class="price-popup-close" onclick="closePricePopup()"><span class="material-symbols-outlined">close</span></button>
+        <div id="pricePopupContent"></div>
+    </div>
+</div>
+
+<!-- Кнопка забронировать -->
+<div class="book-bar">
+    <button class="btn-book" id="btnBook">Забронировать</button>
+</div>
+
+<!-- Шапка -->
+<div class="slide-header">
+    <a href="map.html" class="back-btn"><span class="material-symbols-outlined">arrow_back</span></a>
+    <span class="slide-title" id="pageTitle">Клуб</span>
+</div>
+
+<!-- Контент -->
+<div id="pageContent">
+    <div class="page-loading">
+        <span class="material-symbols-outlined" style="font-size:36px;opacity:0.3">sports_esports</span>
+        Загрузка...
+    </div>
+</div>
+
+<script>
+const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+
+const api = axios.create({ baseURL: API_URL, headers: { "ngrok-skip-browser-warning": "69420" } });
+api.interceptors.request.use(cfg => {
+    const t = localStorage.getItem('access_token');
+    if (t) cfg.headers.Authorization = `Bearer ${t}`;
+    return cfg;
+});
+api.interceptors.response.use(r => r, async err => {
+    const orig = err.config;
+    if (err.response?.status === 401 && !orig._retry) {
+        orig._retry = true;
+        const rt = localStorage.getItem('refresh_token');
+        if (rt) {
+            try {
+                const r = await axios.post(`${API_URL}/auth/refresh`, {}, { headers: { "Authorization": `Bearer ${rt}`, "ngrok-skip-browser-warning": "69420" } });
+                localStorage.setItem('access_token', r.data.access_token);
+                orig.headers.Authorization = `Bearer ${r.data.access_token}`;
+                return api(orig);
+            } catch { localStorage.clear(); window.location.href = 'check.html'; }
+        }
+    }
+    return Promise.reject(err);
+});
+
+/* ── Читаем club_id из URL ── */
+const params = new URLSearchParams(window.location.search);
+const clubId = parseInt(params.get('club_id'));
+
+if (!clubId) {
+    window.location.href = 'map.html';
+}
+
+/* ── Кнопка забронировать ── */
+/* ── Кнопка забронировать ── */
+document.getElementById('btnBook').addEventListener('click', () => {
+    // Теперь переходим на страницу выбора времени
+    window.location.href = `select_time.html?club_id=${clubId}`;
+});
+
+/* ── Попап цены ── */
+function openPricePopup(imgUrl) {
+    const content = document.getElementById('pricePopupContent');
+    content.innerHTML = imgUrl
+        ? `<img class="price-popup-img" src="${imgUrl}" alt="Цены">`
+        : `<div class="price-popup-empty">Прайс-лист не добавлен</div>`;
+    document.getElementById('pricePopup').classList.add('open');
+}
+function closePricePopup() { document.getElementById('pricePopup').classList.remove('open'); }
+document.getElementById('pricePopup').addEventListener('click', e => {
+    if (e.target === document.getElementById('pricePopup')) closePricePopup();
+});
+
+/* ── Рендер страницы клуба ── */
+function renderClub(club, minPrice) {
+    document.getElementById('pageTitle').textContent = club.name;
+
+    const hasBg   = club.img_background && club.img_background !== 'string';
+    const hasLogo = club.image_url && club.image_url !== 'string';
+    const stars   = '★'.repeat(Math.round(club.rating || 0)) + '☆'.repeat(5 - Math.round(club.rating || 0));
+
+    const heroBg = hasBg
+        ? `<img class="detail-hero-img" src="${API_URL}${club.img_background}" alt="${club.name}" onerror="this.style.display='none'">`
+        : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#1e1e2e,#2a2a3a)"></div>`;
+    const logoHtml = hasLogo
+        ? `<img class="detail-hero-logo" src="${API_URL}${club.image_url}" alt="">`
+        : '';
+
+    const hasPriceImg = club.image_price_url && club.image_price_url !== 'string' && club.image_price_url !== null;
+    const priceImgUrl = hasPriceImg ? API_URL + club.image_price_url : '';
+
+    // описание
+    const hasDesc = club.description && club.description !== 'string';
+    const descHtml = hasDesc
+        ? `<div class="detail-description">${club.description}</div>`
+        : '';
+
+    // акции
+    const hasPromos = club.promos && club.promos.length > 0;
+    const promosHtml = hasPromos ? `
+        <div class="promos-section">
+            <div class="promos-title">Акции</div>
+            ${club.promos.map(p => `
+                <span class="promo-chip">
+                    <span class="promo-chip-title">${p.title}</span>
+                    <span class="promo-chip-value">${p.value}</span>
+                </span>`).join('')}
+        </div>` : '';
+
+    document.getElementById('pageContent').innerHTML = `
+        <div class="detail-hero">
+            ${heroBg}
+            <div class="detail-hero-gradient"></div>
+            ${logoHtml}
+        </div>
+        <div class="detail-body">
+            <div class="detail-name">${club.name}</div>
+            <div class="detail-stars">${stars}<span>${club.rating ?? '—'}</span></div>
+            <div class="detail-address"><span class="material-symbols-outlined">location_on</span>${club.address || '—'}</div>
+            ${descHtml}
+            ${promosHtml}
+            <div class="detail-price-row">
+                <div class="detail-price-from">от <b id="detailMinPrice">${minPrice != null ? minPrice + ' ₸ / ч' : '...'}</b></div>
+                <button class="btn-price" onclick="openPricePopup('${priceImgUrl}')">Посмотреть цены</button>
+            </div>
+            <div class="detail-zones-title">Зоны</div>
+            <div id="zonesContent"><div class="zones-loading">Загрузка зон...</div></div>
+        </div>`;
+
+    loadZones(clubId);
+
+    // если цена ещё не известна — грузим
+    if (minPrice == null) {
+        api.get(`/clubs/get_min_price?club_id=${clubId}`)
+           .then(p => {
+               const el = document.getElementById('detailMinPrice');
+               if (el) el.textContent = p.data.min_price + ' ₸ / ч';
+           }).catch(() => {});
+    }
+}
+
+async function loadZones(id) {
+    const el = document.getElementById('zonesContent');
+    if (!el) return;
+    try {
+        const r = await api.get(`/zones/get_zones?club_id=${id}`);
+        if (!r.data || !r.data.length) { el.innerHTML = '<div class="zones-loading">Зон нет</div>'; return; }
+        const skip = new Set(['id', 'club_id', 'name', 'title', 'created_at', 'updated_at']);
+        el.innerHTML = r.data.map(zone => {
+            const specs = Object.entries(zone)
+                .filter(([k, v]) => !skip.has(k) && v && v !== 'string')
+                .map(([k, v]) => `${k}: ${v}`);
+            return `<div class="zone-card">
+                <div class="zone-card-name">${zone.name || zone.title || 'Зона'}</div>
+                ${specs.map(s => `<div class="zone-spec">${s}</div>`).join('')}
+            </div>`;
+        }).join('');
+    } catch(e) { el.innerHTML = '<div class="zones-loading">Ошибка загрузки зон</div>'; console.log('Zones:', e); }
+}
+
+/* ── Инициализация ── */
+async function init() {
+    // 1. Пробуем взять из кэша (localStorage), чтобы страница открылась мгновенно
+    let club = null;
+    let minPrice = null;
+
+    const cached = localStorage.getItem('club_cache_' + clubId);
+    if (cached) {
+        try {
+            club = JSON.parse(cached);
+            minPrice = club._minPrice ?? null;
+            renderClub(club, minPrice);
+        } catch {}
+    }
+
+    // 2. Всё равно делаем свежий запрос для актуальности данных
+    try {
+        const r = await api.get(`/clubs/get_clubs_in_city?city_id=0`); // fallback
+        // Если кэш уже есть — просто обновим мин. цену
+    } catch {}
+
+    // Если кэша не было — грузим через get_clubs_in_city не зная city_id.
+    // Поэтому делаем прямой запрос к клубу если такой эндпоинт есть,
+    // иначе показываем то что есть в кэше.
+    if (!club) {
+        // Попробуем получить клуб напрямую
+        try {
+            const r = await api.get(`/clubs/get_club?club_id=${clubId}`);
+            club = r.data;
+        } catch {
+            // Нет прямого эндпоинта — покажем ошибку
+            document.getElementById('pageContent').innerHTML =
+                `<div class="page-loading">
+                    <span class="material-symbols-outlined" style="font-size:36px;opacity:0.3">error</span>
+                    Не удалось загрузить клуб.<br>
+                    <a href="map.html" style="color:#fff;margin-top:10px;display:block">← Вернуться</a>
+                </div>`;
+            return;
+        }
+        // Грузим мин. цену
+        try {
+            const p = await api.get(`/clubs/get_min_price?club_id=${clubId}`);
+            minPrice = p.data.min_price;
+        } catch {}
+        renderClub(club, minPrice);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

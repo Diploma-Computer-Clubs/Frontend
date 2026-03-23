@@ -4,245 +4,345 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Клубы</title>
-
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family: Arial, Helvetica, sans-serif;
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Montserrat',sans-serif; }
+html,body { height:100%; background:#000; color:#fff; overflow:hidden; }
+
+:root { --menu-bg:#2d2d2d; --accent:#8b1a1a; }
+
+.burger-menu { background:none; border:none; display:flex; flex-direction:column; gap:5px; cursor:pointer; z-index:1001; padding:4px; }
+.burger-bar  { width:25px; height:2px; background:#fff; transition:0.3s; }
+.burger-menu.open .burger-bar:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+.burger-menu.open .burger-bar:nth-child(2) { opacity:0; }
+.burger-menu.open .burger-bar:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+.side-drawer { position:fixed; top:0; left:0; width:280px; height:100vh; background:var(--menu-bg); z-index:2000; transform:translateX(-100%); transition:transform 0.4s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; box-shadow:10px 0 30px rgba(0,0,0,0.5); }
+.side-drawer.open { transform:translateX(0); }
+.user-block { padding:60px 25px 30px; background:#262626; border-bottom:1px solid rgba(255,255,255,0.1); }
+.user-name  { font-weight:700; font-size:1.1rem; color:#fff; display:block; }
+.user-phone { font-size:0.8rem; color:#888; margin-top:5px; display:block; }
+.drawer-link { display:flex; align-items:center; padding:18px 25px; color:#fff; text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.95rem; }
+.drawer-link span { margin-right:15px; color:#888; font-size:22px; }
+.drawer-link:hover span, .drawer-link.active span { color:#fff; }
+.drawer-link.active { background:rgba(255,255,255,0.05); }
+
+.overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; z-index:1999; }
+.overlay.active { display:block; }
+
+.top-bar { position:absolute; top:0; left:0; width:100%; padding:12px 15px; z-index:900; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); display:flex; align-items:center; gap:14px; }
+.select-wrapper { flex:1; max-width:300px; position:relative; }
+.select-wrapper select { width:100%; padding:12px 40px 12px 14px; border-radius:10px; border:1px solid #aaa; background:transparent; color:#fff; font-size:15px; outline:none; cursor:pointer; appearance:none; }
+.select-wrapper::after { content:""; position:absolute; right:12px; top:50%; width:8px; height:8px; border-right:2px solid #ccc; border-bottom:2px solid #ccc; transform:translateY(-50%) rotate(45deg); pointer-events:none; }
+select option { background:#111; color:#fff; }
+
+#map { width:100%; height:100%; }
+
+.club-marker-wrap { position:relative; display:inline-block; padding-bottom:10px; }
+.club-marker-wrap::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); border-left:9px solid transparent; border-right:9px solid transparent; border-top:10px solid #1e1e1e; }
+.club-marker { display:flex; align-items:center; gap:8px; background:#1e1e1e; border:2px solid rgba(255,255,255,0.18); border-radius:12px; padding:6px 12px 6px 6px; box-shadow:0 4px 18px rgba(0,0,0,0.6); cursor:pointer; white-space:nowrap; transition:transform 0.15s; }
+.club-marker:hover { transform:scale(1.05); }
+.club-marker-img { width:44px; height:44px; border-radius:8px; object-fit:cover; flex-shrink:0; background:#333; display:block; }
+.club-marker-img-fallback { width:44px; height:44px; border-radius:8px; background:#2a2a2a; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; }
+.club-marker-name { font-size:12px; font-weight:700; color:#fff; max-width:120px; overflow:hidden; text-overflow:ellipsis; }
+
+.bottom-panel { position:absolute; bottom:0; left:0; width:100%; display:flex; flex-direction:column; align-items:center; pointer-events:none; z-index:810; }
+.slide-handle { pointer-events:all; cursor:pointer; padding:10px 20px 0; display:flex; flex-direction:column; align-items:center; }
+.slide-handle-bar { width:40px; height:4px; background:rgba(255,255,255,0.35); border-radius:2px; transition:background 0.2s; }
+.slide-handle:hover .slide-handle-bar { background:rgba(255,255,255,0.7); }
+.clubs-count-label { pointer-events:all; cursor:pointer; padding:10px 0 20px; font-size:14px; font-weight:700; color:#fff; text-align:center; width:100%; animation:wobble 2.6s ease-in-out infinite; text-shadow:0 0 20px rgba(255,255,255,0.2); }
+.clubs-count-label span { font-weight:400; opacity:0.7; }
+@keyframes wobble {
+    0%,100% { transform:rotate(0deg) scale(1); }
+    15%      { transform:rotate(-2deg) scale(1.05); }
+    30%      { transform:rotate(2deg) scale(1.05); }
+    45%      { transform:rotate(-1.5deg) scale(1.02); }
+    60%      { transform:rotate(1.5deg) scale(1.02); }
+    75%      { transform:rotate(-0.8deg) scale(1.01); }
 }
 
-html, body{
-height:100%;
-background:#000;
-color:white;
-}
+.slider-container { height:100vh; width:100%; position:relative; overflow:hidden; }
+.slide-page { height:100vh; width:100%; position:absolute; top:0; left:0; transition:transform 0.5s cubic-bezier(0.4,0,0.2,1); will-change:transform; }
+#slide-clubs { background:#111; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 
-.top-bar{
-position:absolute;
-top:0;
-left:0;
-width:100%;
-padding:15px;
-z-index:1000;
-background:rgba(0,0,0,0.6);
-backdrop-filter: blur(8px);
-}
+.slide-header { position:sticky; top:0; z-index:10; background:rgba(17,17,17,0.95); backdrop-filter:blur(10px); display:flex; align-items:center; gap:14px; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.07); }
+.back-btn { background:rgba(255,255,255,0.08); border:none; border-radius:10px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; transition:background 0.2s; flex-shrink:0; }
+.back-btn:active { background:rgba(255,255,255,0.18); }
+.back-btn .material-symbols-outlined { font-size:20px; }
+.slide-title { font-size:17px; font-weight:700; color:#fff; }
 
-.select-wrapper{
-max-width:300px;
-position:relative;
-}
+.clubs-list { padding:16px; display:grid; grid-template-columns:1fr; gap:14px; padding-bottom:40px; }
+@media(min-width:700px) { .clubs-list { grid-template-columns:1fr 1fr; } }
+.clubs-loading { color:rgba(255,255,255,0.3); text-align:center; padding:40px 0; font-size:14px; grid-column:1/-1; }
 
-.select-wrapper select{
-width:100%;
-padding:12px 40px 12px 14px;
-border-radius:10px;
-border:1px solid #aaa;
-background:transparent;
-color:white;
-font-size:15px;
-outline:none;
-cursor:pointer;
-appearance:none;
-}
-
-.select-wrapper::after{
-content:"";
-position:absolute;
-right:12px;
-top:50%;
-width:8px;
-height:8px;
-border-right:2px solid #ccc;
-border-bottom:2px solid #ccc;
-transform:translateY(-50%) rotate(45deg);
-pointer-events:none;
-}
-
-select option{
-background:#111;
-color:white;
-}
-
-#map{
-width:100%;
-height:100vh;
-}
+.club-card { border-radius:16px; overflow:hidden; background:#1c1c1c; box-shadow:0 4px 20px rgba(0,0,0,0.4); cursor:pointer; transition:transform 0.15s; }
+.club-card:active { transform:scale(0.98); }
+.club-card-bg { width:100%; height:160px; object-fit:cover; display:block; background:#2a2a2a; }
+.club-card-bg-placeholder { width:100%; height:160px; background:linear-gradient(135deg,#1e1e2e,#2a2a3a); display:flex; align-items:center; justify-content:center; font-size:40px; }
+.club-card-body { padding:14px 16px 16px; }
+.club-card-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:5px; }
+.club-card-address { font-size:12px; color:rgba(255,255,255,0.45); display:flex; align-items:center; gap:4px; margin-bottom:14px; }
+.club-card-address .material-symbols-outlined { font-size:14px; }
+.club-card-footer { display:flex; align-items:center; justify-content:space-between; }
+.club-card-rating { display:flex; align-items:center; gap:5px; }
+.club-card-stars { color:#f5c542; font-size:13px; letter-spacing:1px; }
+.club-card-rating-num { font-size:13px; font-weight:700; color:#fff; }
+.btn-details { background:#fff; color:#111; border:none; border-radius:10px; padding:9px 18px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Montserrat',sans-serif; transition:background 0.15s,transform 0.1s; }
+.btn-details:active { transform:scale(0.96); background:#e5e5e5; }
+.club-card-price { font-size:12px; color:rgba(255,255,255,0.45); margin-bottom:10px; display:flex; align-items:center; gap:4px; }
+.club-card-price b { color:#fff; font-size:13px; }
 </style>
 
 <script src="https://maps.api.2gis.ru/2.0/loader.js?pkg=full"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
-
 <body>
 
-<div class="top-bar">
-  <div class="select-wrapper">
-    <select id="citySelect" required>
-      <option value="" disabled selected hidden>Выберите город</option>
-    </select>
-  </div>
+<div class="overlay" id="overlay"></div>
+
+<nav class="side-drawer" id="sideDrawer">
+    <div class="user-block">
+        <span class="user-name"  id="drawer_name">Загрузка...</span>
+        <span class="user-phone" id="drawer_phone">...</span>
+    </div>
+    <div class="drawer-nav">
+        <a href="profile.html"  class="drawer-link"><span class="material-symbols-outlined">account_circle</span> Профиль</a>
+        <a href="map.html"      class="drawer-link active"><span class="material-symbols-outlined">search</span> Карта клубов</a>
+        <a href="booking.html"  class="drawer-link"><span class="material-symbols-outlined">diamond</span> Бронь</a>
+        <a href="settings.html" class="drawer-link"><span class="material-symbols-outlined">settings</span> Настройки</a>
+    </div>
+</nav>
+
+<div class="slider-container">
+
+    <!-- СЛАЙД 0 — КАРТА -->
+    <div class="slide-page" id="slide-map">
+        <div class="top-bar">
+            <button class="burger-menu" id="burger">
+                <span class="burger-bar"></span><span class="burger-bar"></span><span class="burger-bar"></span>
+            </button>
+            <div class="select-wrapper">
+                <select id="citySelect">
+                    <option value="" disabled selected hidden>Выберите город</option>
+                </select>
+            </div>
+        </div>
+        <div id="map"></div>
+        <div class="bottom-panel">
+            <div class="slide-handle" id="slideHandle"><div class="slide-handle-bar"></div></div>
+            <div class="clubs-count-label" onclick="goToSlide(1)">
+                Доступно компов: <span id="clubsCountNum">—</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- СЛАЙД 1 — СПИСОК КЛУБОВ -->
+    <div class="slide-page" id="slide-clubs">
+        <div class="slide-header">
+            <button class="back-btn" onclick="goToSlide(0)"><span class="material-symbols-outlined">arrow_back</span></button>
+            <span class="slide-title">Клубы</span>
+        </div>
+        <div class="clubs-list" id="clubsList">
+            <div class="clubs-loading">Загрузка...</div>
+        </div>
+    </div>
+
 </div>
 
-<div id="map"></div>
-
 <script>
+const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
 
-let map;
-let markers = [];
-
-/* координаты городов (временные) */
-const cityCoords = {
-  "Astana": [51.1694, 71.4491],
-  "Karaganda": [49.8047, 73.1094],
-  "Kyiv": [50.4501, 30.5234],
-  "Mamba": [51.1694, 71.4491],
-  "Алматы": [43.238949, 76.889709]
-};
-
-/* карта */
-DG.then(function () {
-  map = DG.map('map', {
-    center: [51.1694, 71.4491],
-    zoom: 13
-  });
+const api = axios.create({ baseURL: API_URL, headers: { "ngrok-skip-browser-warning": "69420" } });
+api.interceptors.request.use(cfg => {
+    const t = localStorage.getItem('access_token');
+    if (t) cfg.headers.Authorization = `Bearer ${t}`;
+    return cfg;
 });
-
-/* загрузка городов */
-async function loadCities(){
-  try{
-    const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/cities/get_all_cities", {
-      headers:{
-        "ngrok-skip-browser-warning": "69420"
-      }
-    });
-
-    const data = await res.json();
-
-    const select = document.getElementById("citySelect");
-
-    data.forEach(city => {
-      const option = document.createElement("option");
-      option.value = city.id; // 👈 используем id
-      option.textContent = city.city;
-      select.appendChild(option);
-    });
-
-  }catch(err){
-    console.log("Ошибка загрузки городов:", err);
-  }
-}
-
-/* загрузка клубов */
-async function loadClubs(cityId){
-  const token = localStorage.getItem("access_token");
-
-  if (!token) {
-    console.log("Нет токена для клубов");
-    return;
-  }
-
-  try{
-    const res = await fetch(`https://subopposite-nonheretical-brynn.ngrok-free.dev/clubs/get_clubs_map?city_id=${cityId}`, {
-      headers:{
-        "Authorization": `Bearer ${token}`, // 👈 ВОТ ЭТО КЛЮЧЕВОЕ
-        "ngrok-skip-browser-warning": "69420"
-      }
-    });
-
-    if(res.status === 401){
-      console.log("Токен невалидный");
-      localStorage.removeItem("access_token");
-      return;
-    }
-
-    const data = await res.json();
-
-    // очистка
-    markers.forEach(marker => map.removeLayer(marker));
-    markers = [];
-
-    // добавление
-    data.forEach(club => {
-      const marker = DG.marker([club.latitude, club.longitude])
-        .addTo(map)
-        .bindPopup(`<b>${club.name}</b>`);
-
-      markers.push(marker);
-    });
-
-  }catch(err){
-    console.log("Ошибка загрузки клубов:", err);
-  }
-}
-
-/* пользователь */
-async function loadUserCity(){
-  const token = localStorage.getItem("access_token");
-  if (!token) return;
-
-  try{
-    const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/users/me", {
-      headers:{
-        "Authorization": `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "69420"
-      }
-    });
-
-    if(res.status === 401){
-      localStorage.removeItem("access_token");
-      return;
-    }
-
-    const data = await res.json();
-    const userCity = data.city;
-
-    const select = document.getElementById("citySelect");
-
-    for (let option of select.options) {
-      if (option.textContent === userCity) {
-
-        select.value = option.value;
-
-        const coords = cityCoords[userCity];
-        if(coords && map){
-          map.setView(coords, 13);
+api.interceptors.response.use(r => r, async err => {
+    const orig = err.config;
+    if (err.response?.status === 401 && !orig._retry) {
+        orig._retry = true;
+        const rt = localStorage.getItem('refresh_token');
+        if (rt) {
+            try {
+                const r = await axios.post(`${API_URL}/auth/refresh`, {}, { headers: { "Authorization": `Bearer ${rt}`, "ngrok-skip-browser-warning": "69420" } });
+                localStorage.setItem('access_token', r.data.access_token);
+                orig.headers.Authorization = `Bearer ${r.data.access_token}`;
+                return api(orig);
+            } catch { localStorage.clear(); window.location.href = 'check.html'; }
         }
-
-        loadClubs(option.value); // 👈 загружаем клубы
-        break;
-      }
     }
-
-  }catch(err){
-    console.log("Ошибка пользователя:", err);
-  }
-}
-
-/* смена города */
-document.getElementById("citySelect").addEventListener("change", function(){
-
-  const cityId = this.value;
-  const cityName = this.options[this.selectedIndex].text;
-
-  const coords = cityCoords[cityName];
-
-  if(coords && map){
-    map.setView(coords, 13);
-  }
-
-  loadClubs(cityId);
+    return Promise.reject(err);
 });
 
-/* запуск */
-(async () => {
-  await loadCities();
-  await loadUserCity();
-})();
+const burgerBtn  = document.getElementById('burger');
+const sideDrawer = document.getElementById('sideDrawer');
+const overlay    = document.getElementById('overlay');
+function toggleMenu() { burgerBtn.classList.toggle('open'); sideDrawer.classList.toggle('open'); overlay.classList.toggle('active'); }
+burgerBtn.addEventListener('click', toggleMenu);
+overlay.addEventListener('click', toggleMenu);
 
+async function syncProfile() {
+    const n = localStorage.getItem('user_full_name');
+    if (n) { document.getElementById('drawer_name').innerText = n; document.getElementById('drawer_phone').innerText = localStorage.getItem('user_phone') || ''; }
+    try {
+        const r = await api.get('/users/me');
+        document.getElementById('drawer_name').innerText  = r.data.full_name    || 'Пользователь';
+        document.getElementById('drawer_phone').innerText = r.data.phone_number || '';
+        localStorage.setItem('user_full_name', r.data.full_name);
+        localStorage.setItem('user_phone',     r.data.phone_number);
+    } catch { if (!localStorage.getItem('access_token')) document.getElementById('drawer_name').innerText = 'Войти в аккаунт'; }
+}
+
+let map, markers = [];
+const clubsCache = {};
+const cityCoords = { "Астана": [51.1694, 71.4491], "Karaganda": [49.8047, 73.1094], "Kyiv": [50.4501, 30.5234], "Алматы": [43.238949, 76.889709] };
+
+DG.then(() => { map = DG.map('map', { center: [51.1694, 71.4491], zoom: 13 }); });
+
+async function loadCities() {
+    try {
+        const r = await api.get('/cities/get_all_cities');
+        const sel = document.getElementById('citySelect');
+        r.data.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.city; sel.appendChild(o); });
+    } catch(e) { console.log('Города:', e); }
+}
+
+function buildClubIcon(club) {
+    const valid = club.image_url && club.image_url !== 'string';
+    const img = valid ? `<img class="club-marker-img" src="${API_URL}${club.image_url}" alt="${club.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+    const fb  = valid ? 'none' : 'flex';
+    return DG.divIcon({ html: `<div class="club-marker-wrap"><div class="club-marker">${img}<div class="club-marker-img-fallback" style="display:${fb}">🎮</div><span class="club-marker-name">${club.name}</span></div></div>`, className: '', iconAnchor: [0, 66], popupAnchor: [70, -66] });
+}
+
+/* Переход на страницу клуба — сохраняем данные в localStorage как кэш */
+function goToClub(clubId) {
+    const club = clubsCache[clubId];
+    if (club) {
+        localStorage.setItem('club_cache_' + clubId, JSON.stringify(club));
+    }
+    window.location.href = `club.html?club_id=${clubId}`;
+}
+
+async function loadClubsByCity(cityId) {
+    try {
+        // Два запроса параллельно: список для карточек + маркеры с координатами
+        const [listRes, mapRes] = await Promise.all([
+            api.get(`/clubs/get_clubs_in_city?city_id=${cityId}`),
+            api.get(`/clubs/get_clubs_map?city_id=${cityId}`).catch(() => ({ data: [] }))
+        ]);
+        const clubs    = listRes.data;
+        const mapClubs = mapRes.data;
+
+        document.getElementById('clubsCountNum').textContent = clubs.length || '—';
+        clubs.forEach(club => { clubsCache[club.id] = club; });
+
+        // Маркеры — из get_clubs_map (там есть координаты)
+        // Мерджим имя/картинку из кэша если бэк вернул только координаты
+        markers.forEach(m => map.removeLayer(m)); markers = [];
+        mapClubs.forEach(mc => {
+            const lat = mc.latitude  ?? mc.lat;
+            const lng = mc.longitude ?? mc.lng ?? mc.lon;
+            if (!lat || !lng) return;
+            // берём полные данные из кэша, иначе используем то что пришло
+            const club = clubsCache[mc.id] || mc;
+            markers.push(
+                DG.marker([lat, lng], { icon: buildClubIcon(club) })
+                  .addTo(map)
+                  .bindPopup(`<b>${club.name}</b>`)
+                  .on('click', () => goToClub(club.id))
+            );
+        });
+
+        const prices = await Promise.all(
+            clubs.map(club =>
+                api.get(`/clubs/get_min_price?club_id=${club.id}`)
+                   .then(p => ({ id: club.id, price: p.data.min_price }))
+                   .catch(() => ({ id: club.id, price: null }))
+            )
+        );
+        prices.forEach(p => { if (clubsCache[p.id]) clubsCache[p.id]._minPrice = p.price; });
+
+        renderClubsList(clubs);
+
+    } catch(e) {
+        console.log('Клубы:', e);
+        document.getElementById('clubsCountNum').textContent = '—';
+        document.getElementById('clubsList').innerHTML = '<div class="clubs-loading">Ошибка загрузки</div>';
+    }
+}
+
+function renderClubsList(clubs) {
+    const list = document.getElementById('clubsList');
+    if (!clubs.length) { list.innerHTML = '<div class="clubs-loading">Клубов нет</div>'; return; }
+
+    list.innerHTML = clubs.map(club => {
+        const hasBg   = club.img_background && club.img_background !== 'string';
+        const hasLogo = club.image_url && club.image_url !== 'string';
+        const bgHtml  = hasBg
+            ? `<img class="club-card-bg" src="${API_URL}${club.img_background}" alt="${club.name}" onerror="this.style.display='none'">`
+            : `<div class="club-card-bg-placeholder">${hasLogo ? `<img src="${API_URL}${club.image_url}" style="width:64px;height:64px;border-radius:12px;object-fit:cover">` : '🎮'}</div>`;
+        const stars    = '★'.repeat(Math.round(club.rating || 0)) + '☆'.repeat(5 - Math.round(club.rating || 0));
+        const minPrice = clubsCache[club.id]?._minPrice;
+        const priceHtml = minPrice != null
+            ? `<div class="club-card-price"><span class="material-symbols-outlined" style="font-size:14px">payments</span>от <b>${minPrice} ₸</b> / ч</div>`
+            : '';
+        return `<div class="club-card" onclick="goToClub(${club.id})">
+            ${bgHtml}
+            <div class="club-card-body">
+                <div class="club-card-name">${club.name}</div>
+                <div class="club-card-address"><span class="material-symbols-outlined">location_on</span>${club.address || '—'}</div>
+                ${priceHtml}
+                <div class="club-card-footer">
+                    <div class="club-card-rating"><span class="club-card-stars">${stars}</span><span class="club-card-rating-num">${club.rating ?? '—'}</span></div>
+                    <button class="btn-details" onclick="event.stopPropagation();goToClub(${club.id})">Подробнее</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+let current = 0;
+const slideEls = [document.getElementById('slide-map'), document.getElementById('slide-clubs')];
+
+function goToSlide(i) {
+    current = Math.max(0, Math.min(i, slideEls.length - 1));
+    slideEls.forEach((s, idx) => { s.style.transform = idx === current ? 'translateY(0)' : 'translateY(100%)'; });
+    if (current === 0 && map) setTimeout(() => map.invalidateSize(), 520);
+    if (current === 1) document.getElementById('slide-clubs').scrollTop = 0;
+}
+goToSlide(0);
+
+document.getElementById('slideHandle').addEventListener('click', () => goToSlide(1));
+
+async function loadUserCity() {
+    try {
+        const r = await api.get('/users/me');
+        const sel = document.getElementById('citySelect');
+        for (const opt of sel.options) {
+            if (opt.textContent === r.data.city) {
+                sel.value = opt.value;
+                const c = cityCoords[r.data.city];
+                if (c && map) map.setView(c, 13);
+                loadClubsByCity(opt.value);
+                break;
+            }
+        }
+    } catch(e) { console.log('Город юзера:', e); }
+}
+
+document.getElementById('citySelect').addEventListener('change', function() {
+    const c = cityCoords[this.options[this.selectedIndex].text];
+    if (c && map) map.setView(c, 13);
+    loadClubsByCity(this.value);
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    syncProfile();
+    await loadCities();
+    await loadUserCity();
+});
 </script>
-
 </body>
 </html>
