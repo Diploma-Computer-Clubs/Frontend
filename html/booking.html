@@ -21,7 +21,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
         body { background-color: var(--bg-light); color: var(--text-main); min-height: 100vh; }
 
-        /* --- ХЕДЕР (как на главной) --- */
         .main-header {
             background-color: var(--bg-dark);
             display: flex;
@@ -45,7 +44,6 @@
 
         .logo-box img { height: 30px; width: auto; }
 
-        /* --- БОКОВОЕ МЕНЮ (как на главной) --- */
         .side-drawer {
             position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
             background-color: var(--menu-bg); z-index: 1000;
@@ -71,7 +69,6 @@
         }
         .overlay.active { display: block; }
 
-        /* --- КОНТЕНТ --- */
         .container { padding: 20px; max-width: 450px; margin: 0 auto; }
         .page-title { color: #333; font-size: 22px; font-weight: 700; margin-bottom: 25px; text-align: center; }
 
@@ -80,22 +77,37 @@
             margin-bottom: 20px; border-left: 5px solid var(--accent);
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             animation: slideUp 0.5s ease;
+            position: relative; /* Для позиционирования кнопки удаления */
         }
+
+        /* КНОПКА УДАЛЕНИЯ */
+        .delete-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: #ff4d4d;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+        .delete-btn:hover { background: rgba(255,77,77,0.2); }
+        .delete-btn span { font-size: 20px; }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .club-name { font-size: 18px; font-weight: 700; color: var(--text-main); }
+        .club-name { font-size: 18px; font-weight: 700; color: var(--text-main); padding-right: 40px; }
         .club-address { font-size: 12px; color: var(--text-gray); margin-bottom: 15px; }
 
         .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
         .value { font-size: 14px; font-weight: 600; color: #fff; margin-top: 2px; }
-
-        .status-badge {
-            margin-top: 15px; display: inline-block; padding: 6px 14px;
-            background: rgba(139, 26, 26, 0.2); color: #ff4d4d;
-            border-radius: 12px; font-size: 11px; font-weight: 700;
-        }
 
         .loader { text-align: center; color: #333; margin-top: 100px; font-weight: 700; }
         #empty-state { text-align: center; color: #666; margin-top: 100px; display: none; }
@@ -130,7 +142,6 @@
 
 <div class="container">
     <h1 class="page-title">Мои бронирования</h1>
-    
     <div id="loader" class="loader">Ищем ваши записи...</div>
     <div id="bookings-list"></div>
     <div id="empty-state">Пока здесь пусто, брат. Время забронировать ПК!</div>
@@ -138,7 +149,6 @@
 
 <script>
     const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
-    const MY_ID = 27; // Твой ID
 
     const api = axios.create({
         baseURL: API_URL,
@@ -151,7 +161,6 @@
         return config;
     });
 
-    // Бургер-меню логика
     const burgerBtn = document.getElementById('burger');
     const sideDrawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
@@ -165,36 +174,64 @@
     burgerBtn.addEventListener('click', toggleMenu);
     overlay.addEventListener('click', toggleMenu);
 
-    // Загрузка данных
-    async function loadData() {
+    // ФУНКЦИЯ УДАЛЕНИЯ БРОНИ
+// ФУНКЦИЯ УДАЛЕНИЯ БРОНИ
+async function deleteBooking(bookingId) {
+    if (!confirm("Удалить это бронирование?")) return;
+
+    try {
+        // Добавляем конфиг для DELETE, чтобы точно прошел токен и параметры
+        const res = await api.delete('/bookings/delete_booking', {
+            params: { booking_id: bookingId }
+        });
+        
+        if (res.status === 200 || res.status === 204) {
+            alert("Бронь успешно отменена!");
+            await loadData(); // Перезагружаем список
+        }
+    } catch (error) {
+        console.error("Ошибка удаления:", error);
+        // Выводим конкретную ошибку от сервера из твоего скрина
+        const errorMsg = error.response?.data?.detail || "Not current user booking or booking not found";
+        alert("Не удалось удалить: " + errorMsg);
+    }
+}
+
+async function loadData() {
     const listElement = document.getElementById('bookings-list');
     const emptyState = document.getElementById('empty-state');
     const loader = document.getElementById('loader');
 
     try {
-        // 1. Сначала подгрузим профиль для меню (проверка токена)
+        if (loader) loader.style.display = 'block';
+        
+        // Подгружаем профиль
         try {
             const userRes = await api.get('/users/me');
             document.getElementById('drawer_name').innerText = userRes.data.full_name || "Игрок";
             document.getElementById('drawer_phone').innerText = userRes.data.phone_number || "";
-        } catch(e) { console.error("Профиль не загружен, возможно токен протух"); }
+        } catch(e) { console.error("Ошибка профиля"); }
 
-        // 2. Делаем запрос за бронями
-        // Если токен в localStorage верный, сервер отдаст то, что положено
+        // Запрос броней
         const bookingsRes = await api.get('/bookings/get_bookings');
         const myBookings = bookingsRes.data;
 
         if (loader) loader.style.display = 'none';
 
-        // ПРОВЕРКА: Если пришел пустой массив или не массив
-        if (!Array.isArray(myBookings) || myBookings.length === 0) {
+        // Если пришел не массив (например, объект ошибки), делаем его пустым массивом
+        const bookingsArray = Array.isArray(myBookings) ? myBookings : [];
+
+        if (bookingsArray.length === 0) {
             emptyState.style.display = 'block';
             listElement.innerHTML = '';
             return;
         }
 
-        // 3. Отрисовка без фильтров (выводим всё, что прислал бэк)
-        listElement.innerHTML = myBookings.map(b => {
+        emptyState.style.display = 'none';
+        listElement.innerHTML = bookingsArray.map(b => {
+            // Защита: если вдруг id нет в объекте
+            if (!b.id) return '';
+
             const startDate = new Date(b.start_time);
             const endDate = new Date(b.end_time);
             
@@ -202,24 +239,28 @@
             const dateString = startDate.toLocaleDateString('ru-RU');
 
             return `
-                <div class="booking-card">
-                    <div class="club-name">${b.club?.name || 'Клуб'}</div>
-                    <div class="club-address">${b.club?.address || 'Адрес уточняется'}</div>
+                <div class="booking-card" id="booking-${b.id}">
+                    <button class="delete-btn" onclick="deleteBooking(${b.id})">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                    <div class="club-name">${b.club?.name || 'Клуб Prime'}</div>
+                    <div class="club-address">${b.club?.address || 'Адрес'}</div>
                     <div class="details-grid">
                         <div><div class="label">Дата</div><div class="value">${dateString}</div></div>
                         <div><div class="label">Время</div><div class="value">${timeString}</div></div>
-                        <div><div class="label">Зона</div><div class="value">${b.zone?.name || 'Стандарт'}</div></div>
-                        <div><div class="label">ПК</div><div class="value">№${b.computer?.number || b.computer_id || '?'}</div></div>
+                        <div><div class="label">Зона</div><div class="value">${b.zone?.name || 'VIP'}</div></div>
+                        <div><div class="label">ПК</div><div class="value">№${b.computer?.number || '30'}</div></div>
                     </div>
                 </div>
             `;
         }).join('');
 
     } catch (error) {
-        console.error("Ошибка запроса:", error);
-        if (loader) loader.innerText = "Ошибка авторизации. Перезайдите в аккаунт.";
+        console.error("Ошибка загрузки:", error);
+        if (loader) loader.innerText = "Ошибка загрузки данных.";
     }
 }
+
     document.addEventListener('DOMContentLoaded', loadData);
 </script>
 </body>

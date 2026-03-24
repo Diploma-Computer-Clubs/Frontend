@@ -1,188 +1,240 @@
-    <!DOCTYPE html>
-    <html lang="ru">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Выбор места — Бронирование</title>
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
-            body { background: #000; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-            .header { padding: 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.8); }
-            .back-btn { background: #222; border: none; color: #fff; padding: 10px; border-radius: 10px; cursor: pointer; }
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор места — Бронирование</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: #000; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Шапка */
+        .header { padding: 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.8); z-index: 10; }
+        .back-btn { background: #222; border: none; color: #fff; padding: 10px; border-radius: 10px; cursor: pointer; text-decoration: none; display: flex; align-items: center; }
+
+        /* Карта */
+        .map-container { 
+            flex: 1; 
+            position: relative; 
+            width: 100%; 
+            max-width: 400px; 
+            margin: 0 auto; 
+            background: url('img/club-layout.png') no-repeat center; 
+            background-size: contain; 
+        }
+
+        .pc { 
+            position: absolute; 
+            width: 35px; 
+            height: 35px; 
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid #fff; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 12px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.3s; 
+        }
+        .pc.selected { background: #8b1a1a; border-color: #ff4d4d; box-shadow: 0 0 15px #8b1a1a; }
+        
+        /* Координаты (твои старые) */
+        #pc-1 { top: 150px; left: 60px; }
+        #pc-2 { top: 150px; left: 110px; }
+        #pc-30 { top: 320px; left: 200px; border-color: gold; color: gold; }
+
+        /* Футер и Календарь */
+        .footer { background: #1c1c1c; padding: 20px; border-top-left-radius: 30px; border-top-right-radius: 30px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
+        
+        .date-selector {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 15px;
+            scrollbar-width: none;
+        }
+        .date-selector::-webkit-scrollbar { display: none; }
+
+        .date-item {
+            flex: 0 0 55px;
+            height: 65px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: 0.2s;
+        }
+        .date-item.active { background: #8b1a1a; border-color: #ff4d4d; }
+        .date-item .day-name { font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+        .date-item .day-number { font-size: 16px; font-weight: 700; }
+        .date-item.active .day-name { color: #fff; }
+
+        .info-text { margin-bottom: 15px; font-size: 13px; color: #aaa; line-height: 1.4; }
+        .info-text b { color: #fff; }
+
+        .btn-confirm { 
+            width: 100%; 
+            padding: 16px; 
+            background: #8b1a1a; 
+            color: #fff; 
+            border: none; 
+            border-radius: 15px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+        }
+        .btn-confirm:disabled { background: #444; color: #888; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="javascript:history.back()" class="back-btn">←</a>
+        <h3>Выбор места</h3>
+    </div>
+
+    <div class="map-container" id="clubMap">
+        <div class="pc" id="pc-1" data-id="5" data-zone="7">1</div>
+        <div class="pc" id="pc-2" data-id="6" data-zone="7">2</div>
+        <div class="pc" id="pc-30" data-id="4" data-zone="9">30</div>
+    </div>
+
+    <div class="footer">
+        <div class="date-selector" id="dateList"></div>
+
+        <div class="info-text">
+            Время: <b id="timeLabel">--:--</b><br>
+            Место: <b id="seatLabel">не выбрано</b>
+        </div>
+        <button class="btn-confirm" id="confirmBtn" onclick="handleBooking()">Подтвердить бронирование</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+        let selectedPC = null;
+        let selectedDateStr = "";
+
+        // 1. Инициализация календаря (на 7 дней вперед)
+        function initCalendar() {
+            const dateList = document.getElementById('dateList');
+            const daysShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
             
-            .map-container { 
-                flex: 1; 
-                position: relative; 
-                width: 100%; 
-                max-width: 400px; 
-                margin: 0 auto; 
-                background: url('img/club-layout.png') no-repeat center; 
-                background-size: contain; 
-                border: 1px solid #333; 
+            for (let i = 0; i < 7; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() + i);
+                
+                const dayName = daysShort[d.getDay()];
+                const dayNum = d.getDate();
+                // Формат YYYY-MM-DD для API
+                const fullDate = d.toISOString().split('T')[0];
+
+                const item = document.createElement('div');
+                item.className = `date-item ${i === 0 ? 'active' : ''}`;
+                if (i === 0) selectedDateStr = fullDate;
+
+                item.innerHTML = `
+                    <div class="day-name">${dayName}</div>
+                    <div class="day-number">${dayNum}</div>
+                `;
+
+                item.onclick = () => {
+                    document.querySelectorAll('.date-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                    selectedDateStr = fullDate;
+                    console.log("Выбрана дата:", selectedDateStr);
+                };
+                dateList.appendChild(item);
             }
+        }
 
-            .pc { 
-                position: absolute; 
-                width: 35px; 
-                height: 35px; 
-                background: rgba(255, 255, 255, 0.1); 
-                border: 1px solid #fff; 
-                border-radius: 8px; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center; 
-                font-size: 12px; 
-                font-weight: bold; 
-                cursor: pointer; 
-                transition: 0.3s; 
-            }
+        // 2. Загрузка данных из памяти
+        const startTime = localStorage.getItem('booking_start_time');
+        const endTime = localStorage.getItem('booking_end_time');
+        const clubId = localStorage.getItem('selected_club_id') || 27;
 
-            .pc.selected { background: #8b1a1a; border-color: #ff4d4d; box-shadow: 0 0 15px #8b1a1a; }
-            
-            /* Координаты на карте */
-            #pc-1 { top: 150px; left: 60px; }
-            #pc-2 { top: 150px; left: 110px; }
-            #pc-30 { top: 320px; left: 200px; border-color: gold; color: gold; }
+        if (startTime && endTime) {
+            document.getElementById('timeLabel').innerText = `${startTime} - ${endTime}`;
+        }
 
-            .footer { background: #1c1c1c; padding: 25px; border-top-left-radius: 30px; border-top-right-radius: 30px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
-            .info-text { margin-bottom: 15px; font-size: 14px; color: #aaa; line-height: 1.6; }
-            .info-text b { color: #fff; }
+        // 3. Логика выбора ПК
+        document.querySelectorAll('.pc').forEach(el => {
+            el.addEventListener('click', function() {
+                document.querySelectorAll('.pc').forEach(p => p.classList.remove('selected'));
+                this.classList.add('selected');
 
-            .btn-confirm { 
-                width: 100%; 
-                padding: 16px; 
-                background: #8b1a1a; 
-                color: #fff; 
-                border: none; 
-                border-radius: 15px; 
-                font-size: 16px; 
-                font-weight: 700; 
-                cursor: pointer; 
-                transition: 0.2s; 
-            }
-            .btn-confirm:active { transform: scale(0.97); }
-        </style>
-    </head>
-    <body>
-
-        <div class="header">
-            <button class="back-btn" onclick="history.back()">←</button>
-            <h3>Выбор места</h3>
-        </div>
-
-        <div class="map-container" id="clubMap">
-            <div class="pc" id="pc-1" data-id="5" data-zone="7">1</div>
-            <div class="pc" id="pc-2" data-id="6" data-zone="7">2</div>
-            <div class="pc" id="pc-30" data-id="4" data-zone="9">30</div>
-        </div>
-
-        <div class="footer">
-            <div class="info-text">
-                Клуб: <b>ID 27</b><br>
-                Время: <b id="timeLabel">--:--</b><br>
-                Место: <b id="seatLabel">не выбрано</b>
-            </div>
-            <button class="btn-confirm" onclick="handleBooking()">Подтвердить бронирование</button>
-        </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-        <script>
-            const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
-let selectedPC = null;
-
-// 1. Подтягиваем данные из localStorage
-const startTime = localStorage.getItem('booking_start_time');
-const endTime = localStorage.getItem('booking_end_time');
-const clubId = localStorage.getItem('selected_club_id');
-
-// Отображаем время на странице
-if (startTime && endTime) {
-    document.getElementById('timeLabel').innerText = `${startTime} - ${endTime}`;
-}
-
-// 2. Выбор компа на карте
-document.querySelectorAll('.pc').forEach(el => {
-    el.addEventListener('click', function() {
-        document.querySelectorAll('.pc').forEach(p => p.classList.remove('selected'));
-        this.classList.add('selected');
-
-        selectedPC = {
-            dbId: this.dataset.id,
-            zoneId: this.dataset.zone,
-            number: this.innerText
-        };
-        document.getElementById('seatLabel').innerText = `Компьютер №${selectedPC.number}`;
-    });
-});
-
-// 3. Отправка брони
-// Функция для декодирования JWT (чтобы вытащить sub/user_id)
-function getUserIdFromToken(token) {
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const payload = JSON.parse(window.atob(base64));
-        // Обычно ID лежит в 'sub', но проверь консоль, если не сработает
-        return payload.sub || payload.user_id; 
-    } catch (e) {
-        return null;
-    }
-}
-
-async function handleBooking() {
-    if (!selectedPC) {
-        alert("Выбери место на карте!");
-        return;
-    }
-
-    const token = localStorage.getItem('access_token');
-    const userId = getUserIdFromToken(token);
-
-    if (!userId) {
-        alert("Ошибка авторизации. Перезайди в аккаунт.");
-        return;
-    }
-
-    const clubId = localStorage.getItem('selected_club_id');
-    const startTime = localStorage.getItem('booking_start_time');
-    const endTime = localStorage.getItem('booking_end_time');
-
-    // Формируем дату YYYY-MM-DD
-    const dateStr = new Date().toISOString().split('T')[0];
-
-    // Формируем объект СТРОГО как в твоем Swagger (массив объектов)
-    const bookingData = [{
-        "start_time": `${dateStr}T${startTime}:00`, // Убираем .000Z если бэк не на UTC
-        "end_time": `${dateStr}T${endTime}:00`,
-        "total_price": 0,
-        "user_id": Number(userId),
-        "computer_id": Number(selectedPC.dbId),
-        "zone_id": Number(selectedPC.zoneId),
-        "club_id": Number(clubId)
-    }];
-
-    console.log("Улетает на сервер:", bookingData);
-
-    try {
-        const response = await axios.post(`${API_URL}/bookings/create_booking`, bookingData, {
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'ngrok-skip-browser-warning': '69420',
-                'Content-Type': 'application/json'
-            }
+                selectedPC = {
+                    dbId: this.dataset.id,
+                    zoneId: this.dataset.zone,
+                    number: this.innerText
+                };
+                document.getElementById('seatLabel').innerText = `Компьютер №${selectedPC.number}`;
+            });
         });
 
-        if (response.status === 200 || response.status === 201) {
-            alert("Бронь прошла!");
-            window.location.href = 'booking.html';
+        // 4. Получение User ID из токена
+        function getUserIdFromToken(token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.sub || payload.user_id; 
+            } catch (e) { return null; }
         }
-    } catch (error) {
-        console.error("Ошибка 422 детали:", error.response?.data);
-        // Если опять 422, выведет в чем именно косяк (время или ID)
-        alert("Ошибка: " + JSON.stringify(error.response?.data?.detail));
-    }
-}
-        </script>
-    </body>
-    </html>
+
+        // 5. ОТПРАВКА БРОНИ
+        async function handleBooking() {
+            if (!selectedPC) return alert("Выбери компьютер на карте!");
+            
+            const token = localStorage.getItem('access_token');
+            const userId = getUserIdFromToken(token);
+
+            if (!userId) return alert("Нужно залогиниться!");
+
+            // Собираем данные в массив, как хочет Swagger
+            const bookingData = [{
+                "start_time": `${selectedDateStr}T${startTime}:00`,
+                "end_time": `${selectedDateStr}T${endTime}:00`,
+                "total_price": 0,
+                "user_id": Number(userId),
+                "computer_id": Number(selectedPC.dbId),
+                "zone_id": Number(selectedPC.zoneId),
+                "club_id": Number(clubId)
+            }];
+
+            const btn = document.getElementById('confirmBtn');
+            btn.disabled = true;
+            btn.innerText = "Отправка...";
+
+            try {
+                const response = await axios.post(`${API_URL}/bookings/create_booking`, bookingData, {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'ngrok-skip-browser-warning': '69420',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 200 || response.status === 201) {
+                    alert("Бронь успешно создана!");
+                    window.location.href = 'booking.html'; // переход на список броней
+                }
+            } catch (error) {
+                console.error("Ошибка:", error.response?.data);
+                alert("Ошибка: " + JSON.stringify(error.response?.data?.detail || "Сервер отклонил запрос"));
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Подтвердить бронирование";
+            }
+        }
+
+        // Запуск календаря при старте
+        document.addEventListener('DOMContentLoaded', initCalendar);
+    </script>
+</body>
+</html>
