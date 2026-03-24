@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Забыли пароль</title>
+<title>Код подтверждения</title>
 
 <style>
 
@@ -29,33 +29,23 @@ background:#000;
 position:relative;
 }
 
-/* фон */
-
 body::before{
 content:"";
 position:absolute;
-
 top:-40px;
 left:-40px;
 right:-40px;
 bottom:-40px;
-
 background:url("/frontend/Frontend/img/bg.png") center/cover no-repeat;
-
 filter: blur(8px) brightness(0.2);
-
 z-index:-1;
 }
-
-/* контейнер */
 
 .container{
 width:340px;
 display:flex;
 flex-direction:column;
 }
-
-/* логотип */
 
 .logo{
 display:flex;
@@ -67,35 +57,69 @@ margin-bottom:50px;
 width:170px;
 }
 
-/* текст */
-
 .title{
 text-align:center;
-margin-bottom:30px;
-font-size:15px;
+margin-bottom:25px;
+font-size:14px;
 color:#ddd;
 }
 
-/* кнопки */
+.code-container{
+display:flex;
+justify-content:space-between;
+margin-bottom:30px;
+}
 
-.button-outline{
+.code-container input{
+width:48px;
+height:56px;
+text-align:center;
+font-size:22px;
+border-radius:8px;
+border:1px solid rgba(255,255,255,0.3);
+background:rgba(255,255,255,0.08);
+color:white;
+outline:none;
+}
+
+button{
 width:100%;
 padding:16px;
-border-radius:12px;
-border:1px solid #aaa;
-background:transparent;
-color:white;
+border-radius:14px;
+border:none;
 font-size:16px;
 cursor:pointer;
-margin-bottom:15px;
+background:#e9e9e9;
+color:black;
+box-shadow:
+0 4px 8px rgba(0,0,0,0.25),
+inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
-.button-outline:hover{
-background:rgba(255,255,255,0.05);
+button:disabled{
+opacity:0.6;
+cursor:not-allowed;
 }
 
-button:active{
-transform:scale(0.97);
+.timer{
+text-align:center;
+font-size:13px;
+margin-top:15px;
+color:#ccc;
+}
+
+.timer span{
+cursor:pointer;
+text-decoration:underline;
+color:white;
+}
+
+.error{
+color:#ff6b6b;
+text-align:center;
+margin-bottom:10px;
+font-size:14px;
+min-height:18px;
 }
 
 </style>
@@ -106,25 +130,194 @@ transform:scale(0.97);
 
 <div class="container">
 
-<div class="logo">
-<img src="/frontend/Frontend/img/Frame 6.svg" alt="logo">
+  <div class="logo">
+    <img src="/frontend/Frontend/img/Frame 6.svg">
+  </div>
+
+  <p class="title" id="titleText">
+    Мы отправили код в SMS
+  </p>
+
+  <div class="error" id="errorText"></div>
+
+  <div class="code-container">
+    <input maxlength="1" inputmode="numeric">
+    <input maxlength="1" inputmode="numeric">
+    <input maxlength="1" inputmode="numeric">
+    <input maxlength="1" inputmode="numeric">
+    <input maxlength="1" inputmode="numeric">
+    <input maxlength="1" inputmode="numeric">
+  </div>
+
+  <button id="verifyBtn">Подтвердить</button>
+
+  <p class="timer" id="timerText">Отправить код ещё раз через <b id="timerCount">01:30</b></p>
+
 </div>
 
-<p class="title">Выберите способ получения кода</p>
+<script>
 
-<button class="button-outline" onclick="location.href='forgot-code.html'">
-SMS-сообщение
-</button>
+const inputs = document.querySelectorAll(".code-container input");
+const verifyBtn = document.getElementById("verifyBtn");
+const errorText = document.getElementById("errorText");
+const timerText = document.getElementById("timerText");
+const timerCount = document.getElementById("timerCount");
 
-<!-- <button class="button-outline">
-Telegram
-</button>
+/* Берём телефон из sessionStorage */
+const phone = sessionStorage.getItem("resetPhone") || "";
 
-<button class="button-outline">
-WhatsApp
-</button> -->
+/* Показываем телефон в заголовке */
+if (phone) {
+  document.getElementById("titleText").textContent =
+    `Мы отправили код в SMS на ${phone}`;
+}
 
-</div>
+/* Таймер */
+let seconds = 90;
+
+function updateTimer() {
+  const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const s = String(seconds % 60).padStart(2, "0");
+  timerCount.textContent = `${m}:${s}`;
+}
+
+const timerInterval = setInterval(() => {
+  seconds--;
+  if (seconds <= 0) {
+    clearInterval(timerInterval);
+    timerText.innerHTML = '<span id="resendBtn">Отправить код ещё раз</span>';
+    document.getElementById("resendBtn").addEventListener("click", resendSMS);
+  } else {
+    updateTimer();
+  }
+}, 1000);
+
+async function resendSMS() {
+  timerText.textContent = "Отправка...";
+  try {
+    const res = await fetch(
+      "https://subopposite-nonheretical-brynn.ngrok-free.dev/users/send-sms",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "69420"
+        },
+        body: JSON.stringify({ phone_number: phone })
+      }
+    );
+    if (res.ok) {
+      seconds = 90;
+      updateTimer();
+      /* перезапускаем таймер */
+      const newInterval = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+          clearInterval(newInterval);
+          timerText.innerHTML = '<span id="resendBtn">Отправить код ещё раз</span>';
+          document.getElementById("resendBtn").addEventListener("click", resendSMS);
+        } else {
+          timerText.innerHTML = `Отправить код ещё раз через <b>${
+            String(Math.floor(seconds / 60)).padStart(2, "0")}:${
+            String(seconds % 60).padStart(2, "0")}</b>`;
+        }
+      }, 1000);
+    } else {
+      timerText.textContent = "Ошибка. Попробуйте позже.";
+    }
+  } catch {
+    timerText.textContent = "Сервер недоступен";
+  }
+}
+
+/* Автопереход между полями */
+inputs.forEach((input, index) => {
+
+  input.addEventListener("input", () => {
+    /* Разрешаем только цифры */
+    input.value = input.value.replace(/\D/g, "");
+    if (input.value && index < inputs.length - 1) {
+      inputs[index + 1].focus();
+    }
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Backspace" && !input.value && index > 0) {
+      inputs[index - 1].focus();
+    }
+  });
+
+});
+
+/* Сборка кода */
+function getCode() {
+  return Array.from(inputs).map(i => i.value).join("");
+}
+
+/* Верификация */
+verifyBtn.addEventListener("click", async () => {
+
+  const code = getCode();
+
+  if (code.length !== 6) {
+    errorText.textContent = "Введите полный код";
+    return;
+  }
+
+  if (!phone) {
+    errorText.textContent = "Номер телефона не найден. Начните сначала.";
+    return;
+  }
+
+  errorText.textContent = "";
+  verifyBtn.disabled = true;
+  verifyBtn.textContent = "Проверка...";
+
+  try {
+
+    const res = await fetch(
+      "https://subopposite-nonheretical-brynn.ngrok-free.dev/users/verify",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "69420"
+        },
+        body: JSON.stringify({
+          phone_number: phone,
+          code: code
+        })
+      }
+    );
+
+    if (res.ok) {
+
+      /* Сохраняем код для страницы сброса пароля */
+      sessionStorage.setItem("resetCode", code);
+      window.location.href = "forgot-3.html";
+
+    } else {
+
+      const data = await res.json().catch(() => ({}));
+      errorText.textContent = data.detail || "Неверный код";
+
+    }
+
+  } catch (err) {
+
+    console.error(err);
+    errorText.textContent = "Сервер недоступен";
+
+  } finally {
+
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = "Подтвердить";
+
+  }
+
+});
+
+</script>
 
 </body>
 </html>

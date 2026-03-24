@@ -29,33 +29,23 @@ background:#000;
 position:relative;
 }
 
-/* фон */
-
 body::before{
 content:"";
 position:absolute;
-
 top:-40px;
 left:-40px;
 right:-40px;
 bottom:-40px;
-
 background:url("/frontend/Frontend/img/bg.png") center/cover no-repeat;
-
 filter: blur(8px) brightness(0.2);
-
 z-index:-1;
 }
-
-/* контейнер */
 
 .container{
 width:340px;
 display:flex;
 flex-direction:column;
 }
-
-/* логотип */
 
 .logo{
 display:flex;
@@ -66,8 +56,6 @@ margin-bottom:50px;
 .logo img{
 width:170px;
 }
-
-/* форма */
 
 .field{
 display:flex;
@@ -91,16 +79,12 @@ outline:none;
 color:#ccc;
 }
 
-/* текст */
-
 .title{
 text-align:center;
 margin-bottom:25px;
 font-size:15px;
 color:#ddd;
 }
-
-/* кнопка */
 
 button{
 width:100%;
@@ -114,7 +98,6 @@ cursor:pointer;
 .login{
 background:#e9e9e9;
 color:#000;
-
 box-shadow:
 0 4px 8px rgba(0,0,0,0.25),
 inset 0 1px 0 rgba(255,255,255,0.6);
@@ -122,6 +105,18 @@ inset 0 1px 0 rgba(255,255,255,0.6);
 
 button:active{
 transform:scale(0.97);
+}
+
+button:disabled{
+opacity:0.6;
+cursor:not-allowed;
+}
+
+#errorMessage{
+color:#ff6b6b;
+margin-bottom:15px;
+font-size:14px;
+min-height:18px;
 }
 
 </style>
@@ -132,26 +127,26 @@ transform:scale(0.97);
 
 <div class="container">
 
-<div class="logo">
-<img src="/frontend/Frontend/img/Frame 6.svg" alt="logo">
-</div>
+  <div class="logo">
+    <img src="/frontend/Frontend/img/Frame 6.svg" alt="logo">
+  </div>
 
-<p class="title">Введите номер телефона</p>
+  <p class="title">Введите номер телефона</p>
 
-<form id="forgotForm">
+  <form id="forgotForm">
 
-<div class="field">
-<label>Номер телефона</label>
-<input name="phone" type="tel" placeholder="+7">
-</div>
+    <div class="field">
+      <label>Номер телефона</label>
+      <input name="phone" type="tel" placeholder="+7" autocomplete="tel">
+    </div>
 
-<div id="errorMessage" style="color:#ff6b6b; margin-bottom:15px; font-size:14px;"></div>
+    <div id="errorMessage"></div>
 
-<button class="login" type="submit">
-Продолжить
-</button>
+    <button class="login" type="submit" id="submitBtn">
+      Продолжить
+    </button>
 
-</form>
+  </form>
 
 </div>
 
@@ -159,52 +154,81 @@ transform:scale(0.97);
 
 const form = document.getElementById("forgotForm");
 const errorDiv = document.getElementById("errorMessage");
+const submitBtn = document.getElementById("submitBtn");
 
 form.addEventListener("submit", async (e) => {
 
-e.preventDefault();
+  e.preventDefault();
 
-errorDiv.textContent = "";
+  errorDiv.textContent = "";
 
-const phone = form.phone.value;
+  const phone = form.phone.value.trim();
 
-try {
+  if (!phone) {
+    errorDiv.textContent = "Введите номер телефона";
+    return;
+  }
 
-const res = await fetch(`https://subopposite-nonheretical-brynn.ngrok-free.dev/users/find_user?phone_number=${encodeURIComponent(phone)}`, {
-method: "GET",
-headers: {
-"ngrok-skip-browser-warning": "69420"
-}
-});
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Загрузка...";
 
-const data = await res.json();
+  try {
 
-/* если ошибка */
-if (!res.ok) {
+    /* Шаг 1: проверяем существование пользователя */
+    const findRes = await fetch(
+      `https://subopposite-nonheretical-brynn.ngrok-free.dev/users/find_user?phone_number=${encodeURIComponent(phone)}`,
+      {
+        method: "GET",
+        headers: { "ngrok-skip-browser-warning": "69420" }
+      }
+    );
 
-const message = data.detail === "User not found"
-    ? "Пользователь не найден"
-    : data.detail || "Ошибка";
+    const findData = await findRes.json();
 
-console.log("❌", message);
+    if (!findRes.ok) {
+      const message = findData.detail === "User not found"
+        ? "Пользователь не найден"
+        : findData.detail || "Ошибка";
+      errorDiv.textContent = message;
+      return;
+    }
 
-errorDiv.textContent = message;
+    /* Шаг 2: отправляем SMS */
+    const smsRes = await fetch(
+      "https://subopposite-nonheretical-brynn.ngrok-free.dev/users/send-sms",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "69420"
+        },
+        body: JSON.stringify({ phone_number: phone })
+      }
+    );
 
-return;
-}
+    if (!smsRes.ok) {
+      const smsData = await smsRes.json().catch(() => ({}));
+      errorDiv.textContent = smsData.detail || "Ошибка отправки SMS";
+      return;
+    }
 
-/* если успех */
-console.log("✅ Пользователь найден:", data);
+    /* Сохраняем номер для следующих страниц */
+    sessionStorage.setItem("resetPhone", phone);
 
-/* редирект */
-window.location.href = "forgot-2.html";
+    /* Редирект на ввод кода */
+    window.location.href = "forgot-code.html";
 
-} catch (err) {
+  } catch (err) {
 
-console.log("❌ Сервер не отвечает", err);
-errorDiv.textContent = "Сервер недоступен";
+    console.error(err);
+    errorDiv.textContent = "Сервер недоступен";
 
-}
+  } finally {
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Продолжить";
+
+  }
 
 });
 
