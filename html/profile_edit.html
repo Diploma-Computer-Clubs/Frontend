@@ -14,6 +14,7 @@
             --field-bg: #2d2d2d;
             --text-main: #ffffff;
             --accent-green: #00ff00;
+            --error-red: #ff4d4d;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
@@ -23,6 +24,31 @@
             color: var(--text-main);
             display: flex; justify-content: center;
             min-height: 100vh; overflow-x: hidden;
+        }
+
+        /* --- TOAST NOTIFICATIONS --- */
+        #toast-container {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .toast {
+            background: #262626; color: #fff; padding: 14px 20px; border-radius: 12px;
+            display: flex; align-items: center; gap: 12px; min-width: 250px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            border-left: 4px solid var(--accent-green);
+            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .toast.error { border-left-color: var(--error-red); }
+        .toast span.icon { font-size: 20px; }
+        .toast.error span.icon { color: var(--error-red); }
+        .toast.success span.icon { color: var(--accent-green); }
+
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { transform: translateX(120%); opacity: 0; }
         }
 
         /* --- БУРГЕР И МЕНЮ --- */
@@ -95,6 +121,7 @@
 </head>
 <body>
 
+<div id="toast-container"></div>
 <div class="overlay" id="overlay"></div>
 
 <nav class="side-drawer" id="sideDrawer">
@@ -143,49 +170,58 @@
 <script>
     const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
     
+    // Функция уведомления
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const icon = type === 'success' ? 'check_circle' : 'error';
+        
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <span class="material-symbols-outlined icon">${icon}</span>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.4s forwards';
+            setTimeout(() => toast.remove(), 400);
+        }, 3000);
+    }
+
     const api = axios.create({
         baseURL: API_URL,
         headers: { "ngrok-skip-browser-warning": "69420" }
     });
 
-    // 1. Интерцептор запроса: добавляем Access Token
     api.interceptors.request.use(config => {
         const token = localStorage.getItem('access_token');
         if (token) config.headers.Authorization = `Bearer ${token}`;
         return config;
     });
 
-    // 2. Интерцептор ответа: автоматический Refresh Token
     api.interceptors.response.use(
         (response) => response,
         async (error) => {
             const originalRequest = error.config;
-
-            // Если ошибка 401 и это не повторный запрос
             if (error.response?.status === 401 && !originalRequest._retry) {
                 originalRequest._retry = true;
                 const refreshToken = localStorage.getItem('refresh_token');
 
                 if (refreshToken) {
                     try {
-                        console.log("Access токен истек. Пытаюсь обновить через Refresh...");
-                        
-                        // Используем axios напрямую, чтобы не зациклиться
                         const res = await axios.post(`${API_URL}/auth/refresh`, {}, {
                             headers: { 
                                 "Authorization": `Bearer ${refreshToken}`,
                                 "ngrok-skip-browser-warning": "69420"
                             }
                         });
-
                         const newAccessToken = res.data.access_token;
                         localStorage.setItem('access_token', newAccessToken);
-                        
-                        // Повторяем упавший запрос с новым токеном
                         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                         return api(originalRequest);
                     } catch (refreshError) {
-                        console.error("Refresh токен невалиден или истек");
                         localStorage.clear();
                         window.location.href = 'check.html';
                     }
@@ -214,7 +250,7 @@
                 select.appendChild(option);
             });
         } catch (err) {
-            console.error("Ошибка городов:", err);
+            showToast("Не удалось загрузить города", "error");
         }
     }
 
@@ -237,7 +273,7 @@
         const name = document.getElementById('full_name').value.trim();
         const cityId = document.getElementById('city_id').value;
 
-        if (!name) return alert("Введите имя");
+        if (!name) return showToast("Введите имя", "error");
 
         const payload = {
             full_name: name,
@@ -247,12 +283,14 @@
         try {
             const res = await api.patch('/users/change_user', payload);
             if (res.status === 200 || res.status === 204) {
-                alert("Данные обновлены!");
-                window.location.href = 'profile.html';
+                showToast("Данные успешно обновлены!");
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 1500);
             }
         } catch (error) {
             const msg = error.response?.data?.detail || "Ошибка сохранения";
-            alert(msg);
+            showToast(msg, "error");
         }
     }
 

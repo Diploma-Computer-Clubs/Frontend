@@ -16,11 +16,13 @@
             --text-main: #ffffff;
             --accent: #8b1a1a;
             --text-gray: #888888;
+            --success: #00ff88;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
-        body { background-color: var(--bg-light); color: var(--text-main); min-height: 100vh; }
+        body { background-color: var(--bg-light); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
 
+        /* --- ХЕДЕР (Копия с главной) --- */
         .main-header {
             background-color: var(--bg-dark);
             display: flex;
@@ -32,18 +34,19 @@
             z-index: 100;
         }
 
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .logo-box img { height: 36px; width: auto; display: block; object-fit: contain; }
+
         .burger-menu {
             background: none; border: none; display: flex;
             flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001;
         }
-
         .burger-bar { width: 25px; height: 2px; background-color: #fff; transition: 0.3s; }
         .burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
         .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
         .burger-menu.open .burger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        .logo-box img { height: 30px; width: auto; }
-
+        /* --- БОКОВОЕ МЕНЮ (Копия с главной) --- */
         .side-drawer {
             position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
             background-color: var(--menu-bg); z-index: 1000;
@@ -52,16 +55,20 @@
         }
         .side-drawer.open { transform: translateX(0); }
 
-        .user-block { padding: 60px 25px 30px; background-color: #262626; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .user-name { font-weight: 700; color: #fff; display: block; }
+        .user-block {
+            padding: 60px 25px 30px;
+            background-color: #262626;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .user-name { font-weight: 700; font-size: 1.1rem; color: #fff; display: block; }
         .user-phone { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
 
         .drawer-link {
             display: flex; align-items: center; padding: 18px 25px;
-            color: #fff; text-decoration: none; font-size: 0.95rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.95rem;
         }
-        .drawer-link span { margin-right: 15px; color: #888; }
+        .drawer-link span { margin-right: 15px; color: #888; font-size: 22px; }
 
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -69,6 +76,7 @@
         }
         .overlay.active { display: block; }
 
+        /* --- КОНТЕНТ БРОНИРОВАНИЙ --- */
         .container { padding: 20px; max-width: 450px; margin: 0 auto; }
         .page-title { color: #333; font-size: 22px; font-weight: 700; margin-bottom: 25px; text-align: center; }
 
@@ -76,38 +84,27 @@
             background: var(--card-bg); border-radius: 20px; padding: 20px;
             margin-bottom: 20px; border-left: 5px solid var(--accent);
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            animation: slideUp 0.5s ease;
-            position: relative; /* Для позиционирования кнопки удаления */
+            position: relative; animation: slideUp 0.5s ease;
         }
-
-        /* КНОПКА УДАЛЕНИЯ */
-        .delete-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255,255,255,0.05);
-            border: none;
-            color: #ff4d4d;
-            cursor: pointer;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.3s;
-        }
-        .delete-btn:hover { background: rgba(255,77,77,0.2); }
-        .delete-btn span { font-size: 20px; }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .club-name { font-size: 18px; font-weight: 700; color: var(--text-main); padding-right: 40px; }
+        .delete-btn {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(255,255,255,0.05); border: none;
+            color: #ff4d4d; cursor: pointer; width: 36px; height: 36px;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+
+        .club-name { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
         .club-address { font-size: 12px; color: var(--text-gray); margin-bottom: 15px; }
 
         .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
         .value { font-size: 14px; font-weight: 600; color: #fff; margin-top: 2px; }
+        .pc-badge { color: var(--accent); font-weight: 700; }
+        .total-price { grid-column: span 2; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); color: var(--success); font-weight: 700; }
 
         .loader { text-align: center; color: #333; margin-top: 100px; font-weight: 700; }
         #empty-state { text-align: center; color: #666; margin-top: 100px; display: none; }
@@ -117,151 +114,203 @@
 
 <div class="overlay" id="overlay"></div>
 
-<header class="main-header">
-    <button class="burger-menu" id="burger">
-        <span class="burger-bar"></span>
-        <span class="burger-bar"></span>
-        <span class="burger-bar"></span>
-    </button>
-    <div class="logo-box"><img src="../img/Frame 6.svg" alt="UNDERLIE"></div>
-    <div style="width: 25px;"></div>
-</header>
-
 <nav class="side-drawer" id="sideDrawer">
     <div class="user-block">
         <span class="user-name" id="drawer_name">Загрузка...</span>
         <span class="user-phone" id="drawer_phone">...</span>
     </div>  
     <div class="drawer-nav">
-        <a href="mainpage.html" class="drawer-link"><span class="material-symbols-outlined">home</span> Главная</a>
-        <a href="map.html" class="drawer-link"><span class="material-symbols-outlined">search</span> Карта клубов</a>
-        <a href="profile.html" class="drawer-link"><span class="material-symbols-outlined">person</span> Профиль</a>
-        <a href="settings.html" class="drawer-link"><span class="material-symbols-outlined">settings</span> Настройки</a>
+        <a href="mainpage.html" class="drawer-link">
+            <span class="material-symbols-outlined">home</span> Главная
+        </a>
+        <a href="profile.html" class="drawer-link">
+            <span class="material-symbols-outlined">account_circle</span> Профиль
+        </a>
+        <a href="map.html" class="drawer-link">
+            <span class="material-symbols-outlined">search</span> Карта клубов
+        </a>
+        <a href="settings.html" class="drawer-link">
+            <span class="material-symbols-outlined">settings</span> Настройки
+        </a>
     </div>
 </nav>
 
+<header class="main-header">
+    <button class="burger-menu" id="burger">
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+    </button>
+    <div class="header-right">
+        <div class="logo-box"><img src="../img/Frame 6.svg" alt="UNDERLIE"></div>
+    </div>
+</header>
+
 <div class="container">
     <h1 class="page-title">Мои бронирования</h1>
-    <div id="loader" class="loader">Ищем ваши записи...</div>
+    <div id="loader" class="loader">Синхронизация...</div>
     <div id="bookings-list"></div>
-    <div id="empty-state">Пока здесь пусто, брат. Время забронировать ПК!</div>
+    <div id="empty-state">У вас пока нет активных бронирований.</div>
 </div>
 
 <script>
     const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
 
-    const api = axios.create({
-        baseURL: API_URL,
-        headers: { "ngrok-skip-browser-warning": "69420" }
-    });
+const api = axios.create({
+    baseURL: API_URL,
+    headers: { "ngrok-skip-browser-warning": "69420" }
+});
 
-    api.interceptors.request.use(config => {
-        const token = localStorage.getItem('access_token');
-        if (token) config.headers.Authorization = `Bearer ${token}`;
-        return config;
-    });
+api.interceptors.request.use(config => {
+    const token = localStorage.getItem('access_token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
 
-    const burgerBtn = document.getElementById('burger');
-    const sideDrawer = document.getElementById('sideDrawer');
-    const overlay = document.getElementById('overlay');
+// --- МЕНЮ И ПРОФИЛЬ (БЕЗ ИЗМЕНЕНИЙ) ---
+const burgerBtn = document.getElementById('burger');
+const sideDrawer = document.getElementById('sideDrawer');
+const overlay = document.getElementById('overlay');
 
-    function toggleMenu() {
-        burgerBtn.classList.toggle('open');
-        sideDrawer.classList.toggle('open');
-        overlay.classList.toggle('active');
+function toggleMenu() {
+    burgerBtn.classList.toggle('open');
+    sideDrawer.classList.toggle('open');
+    overlay.classList.toggle('active');
+}
+burgerBtn.addEventListener('click', toggleMenu);
+overlay.addEventListener('click', toggleMenu);
+
+async function syncProfile() {
+    const savedName = localStorage.getItem('user_full_name');
+    const savedPhone = localStorage.getItem('user_phone');
+    if (savedName) {
+        document.getElementById('drawer_name').innerText = savedName;
+        document.getElementById('drawer_phone').innerText = savedPhone || "";
     }
-
-    burgerBtn.addEventListener('click', toggleMenu);
-    overlay.addEventListener('click', toggleMenu);
-
-    // ФУНКЦИЯ УДАЛЕНИЯ БРОНИ
-// ФУНКЦИЯ УДАЛЕНИЯ БРОНИ
-async function deleteBooking(bookingId) {
-    if (!confirm("Удалить это бронирование?")) return;
-
     try {
-        // Добавляем конфиг для DELETE, чтобы точно прошел токен и параметры
-        const res = await api.delete('/bookings/delete_booking', {
-            params: { booking_id: bookingId }
-        });
-        
-        if (res.status === 200 || res.status === 204) {
-            alert("Бронь успешно отменена!");
-            await loadData(); // Перезагружаем список
-        }
-    } catch (error) {
-        console.error("Ошибка удаления:", error);
-        // Выводим конкретную ошибку от сервера из твоего скрина
-        const errorMsg = error.response?.data?.detail || "Not current user booking or booking not found";
-        alert("Не удалось удалить: " + errorMsg);
-    }
+        const response = await api.get('/users/me');
+        const user = response.data;
+        document.getElementById('drawer_name').innerText = user.full_name || "Пользователь";
+        document.getElementById('drawer_phone').innerText = user.phone_number || "";
+        localStorage.setItem('user_full_name', user.full_name);
+        localStorage.setItem('user_phone', user.phone_number);
+    } catch (err) { console.log("Profile sync skipped"); }
 }
 
-async function loadData() {
+// --- ЛОГИКА ЗАГРУЗКИ ---
+async function loadBookings() {
     const listElement = document.getElementById('bookings-list');
     const emptyState = document.getElementById('empty-state');
     const loader = document.getElementById('loader');
 
     try {
-        if (loader) loader.style.display = 'block';
-        
-        // Подгружаем профиль
-        try {
-            const userRes = await api.get('/users/me');
-            document.getElementById('drawer_name').innerText = userRes.data.full_name || "Игрок";
-            document.getElementById('drawer_phone').innerText = userRes.data.phone_number || "";
-        } catch(e) { console.error("Ошибка профиля"); }
+        const res = await api.get('/bookings/get_bookings');
+        const bookings = Array.isArray(res.data) ? res.data : [];
+        loader.style.display = 'none';
 
-        // Запрос броней
-        const bookingsRes = await api.get('/bookings/get_bookings');
-        const myBookings = bookingsRes.data;
-
-        if (loader) loader.style.display = 'none';
-
-        // Если пришел не массив (например, объект ошибки), делаем его пустым массивом
-        const bookingsArray = Array.isArray(myBookings) ? myBookings : [];
-
-        if (bookingsArray.length === 0) {
+        if (bookings.length === 0) {
             emptyState.style.display = 'block';
             listElement.innerHTML = '';
             return;
         }
 
+        const groups = {};
+        bookings.forEach(b => {
+            const key = `${b.club?.id}-${b.start_time}-${b.end_time}`;
+            if (!groups[key]) {
+                groups[key] = {
+                    club: b.club?.name || "Prime",
+                    address: b.club?.address || "",
+                    zone: b.zone?.name || "Стандарт",
+                    start: new Date(b.start_time),
+                    end: new Date(b.end_time),
+                    pcs: [b.computer?.number],
+                    ids: [b.id],
+                    total: b.total_price || 0
+                };
+            } else {
+                groups[key].pcs.push(b.computer?.number);
+                groups[key].ids.push(b.id);
+                groups[key].total += (b.total_price || 0);
+            }
+        });
+
         emptyState.style.display = 'none';
-        listElement.innerHTML = bookingsArray.map(b => {
-            // Защита: если вдруг id нет в объекте
-            if (!b.id) return '';
-
-            const startDate = new Date(b.start_time);
-            const endDate = new Date(b.end_time);
+        listElement.innerHTML = Object.values(groups).map(g => {
+            const dateStr = g.start.toLocaleDateString('ru-RU');
+            const timeStr = `${g.start.getHours().toString().padStart(2,'0')}:${g.start.getMinutes().toString().padStart(2,'0')} - ${g.end.getHours().toString().padStart(2,'0')}:${g.end.getMinutes().toString().padStart(2,'0')}`;
+            const idsStr = JSON.stringify(g.ids);
             
-            const timeString = `${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')} - ${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
-            const dateString = startDate.toLocaleDateString('ru-RU');
-
             return `
-                <div class="booking-card" id="booking-${b.id}">
-                    <button class="delete-btn" onclick="deleteBooking(${b.id})">
+                <div class="booking-card" id="card-${g.ids[0]}">
+                    <button class="delete-btn" onclick='confirmDelete(this, ${idsStr})'>
                         <span class="material-symbols-outlined">delete</span>
                     </button>
-                    <div class="club-name">${b.club?.name || 'Клуб Prime'}</div>
-                    <div class="club-address">${b.club?.address || 'Адрес'}</div>
+                    <div class="club-name">${g.club}</div>
+                    <div class="club-address">${g.address}</div>
                     <div class="details-grid">
-                        <div><div class="label">Дата</div><div class="value">${dateString}</div></div>
-                        <div><div class="label">Время</div><div class="value">${timeString}</div></div>
-                        <div><div class="label">Зона</div><div class="value">${b.zone?.name || 'VIP'}</div></div>
-                        <div><div class="label">ПК</div><div class="value">№${b.computer?.number || '30'}</div></div>
+                        <div><div class="label">Дата</div><div class="value">${dateStr}</div></div>
+                        <div><div class="label">Время</div><div class="value">${timeStr}</div></div>
+                        <div><div class="label">Зона</div><div class="value">${g.zone}</div></div>
+                        <div><div class="label">Места</div><div class="value pc-badge">№${g.pcs.sort((a,b)=>a-b).join(', ')}</div></div>
                     </div>
                 </div>
             `;
         }).join('');
-
-    } catch (error) {
-        console.error("Ошибка загрузки:", error);
-        if (loader) loader.innerText = "Ошибка загрузки данных.";
+    } catch (e) {
+        loader.innerText = "Ошибка загрузки.";
     }
 }
 
-    document.addEventListener('DOMContentLoaded', loadData);
+// --- НОВАЯ ЛОГИКА УДАЛЕНИЯ БЕЗ CONFIRM ---
+async function confirmDelete(btn, ids) {
+    // Если кнопка уже в режиме подтверждения
+    if (btn.classList.contains('confirm-mode')) {
+        btn.innerHTML = `<span class="material-symbols-outlined" style="animation: spin 1s infinite linear">sync</span>`;
+        btn.disabled = true;
+
+        try {
+            // Удаляем все записи в группе
+            await Promise.all(ids.map(id => api.delete('/bookings/delete_booking', { params: { booking_id: id } })));
+            
+            // Автоматически обновляем список БЕЗ перезагрузки всей страницы
+            await loadBookings();
+        } catch (e) {
+            alert("Ошибка удаления");
+            btn.classList.remove('confirm-mode');
+            btn.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
+            btn.disabled = false;
+        }
+    } else {
+        // Первый клик: меняем вид кнопки
+        btn.classList.add('confirm-mode');
+        btn.innerHTML = `<span style="font-size: 10px; font-weight: bold;">УДАЛИТЬ?</span>`;
+        btn.style.width = "80px";
+        btn.style.background = "#ff4d4d";
+        btn.style.color = "#fff";
+
+        // Если юзер не нажал второй раз за 3 секунды — возвращаем как было
+        setTimeout(() => {
+            if (btn && btn.classList.contains('confirm-mode')) {
+                btn.classList.remove('confirm-mode');
+                btn.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
+                btn.style.width = "36px";
+                btn.style.background = "rgba(255,255,255,0.05)";
+                btn.style.color = "#ff4d4d";
+            }
+        }, 3000);
+    }
+}
+
+// Добавь этот стиль в блок <style> для спиннера
+/*
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+*/
+
+document.addEventListener('DOMContentLoaded', () => {
+    syncProfile();
+    loadBookings();
+});
 </script>
 </body>
 </html>

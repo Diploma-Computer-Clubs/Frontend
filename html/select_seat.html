@@ -5,236 +5,172 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Выбор места — Бронирование</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
         body { background: #000; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* Шапка */
         .header { padding: 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.8); z-index: 10; }
-        .back-btn { background: #222; border: none; color: #fff; padding: 10px; border-radius: 10px; cursor: pointer; text-decoration: none; display: flex; align-items: center; }
-
-        /* Карта */
-        .map-container { 
-            flex: 1; 
-            position: relative; 
-            width: 100%; 
-            max-width: 400px; 
-            margin: 0 auto; 
-            background: url('img/club-layout.png') no-repeat center; 
-            background-size: contain; 
-        }
-
-        .pc { 
-            position: absolute; 
-            width: 35px; 
-            height: 35px; 
-            background: rgba(255, 255, 255, 0.1); 
-            border: 1px solid #fff; 
-            border-radius: 8px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 12px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: 0.3s; 
-        }
+        .back-btn { background: #222; border: none; color: #fff; padding: 10px; border-radius: 10px; cursor: pointer; text-decoration: none; }
+        
+        .map-container { flex: 1; position: relative; width: 100%; max-width: 500px; margin: 0 auto; background: url('img/club-layout.png') no-repeat center; background-size: contain; }
+        .pc { position: absolute; width: 35px; height: 35px; background: rgba(255, 255, 255, 0.1); border: 1px solid #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .pc.selected { background: #8b1a1a; border-color: #ff4d4d; box-shadow: 0 0 15px #8b1a1a; }
+        .pc.vip { border-color: gold; color: gold; }
+        .pc.vip.selected { background: gold; color: #000; box-shadow: 0 0 15px gold; }
         
-        /* Координаты (твои старые) */
-        #pc-1 { top: 150px; left: 60px; }
-        #pc-2 { top: 150px; left: 110px; }
-        #pc-30 { top: 320px; left: 200px; border-color: gold; color: gold; }
-
-        /* Футер и Календарь */
-        .footer { background: #1c1c1c; padding: 20px; border-top-left-radius: 30px; border-top-right-radius: 30px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
-        
-        .date-selector {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 15px;
-            scrollbar-width: none;
-        }
-        .date-selector::-webkit-scrollbar { display: none; }
-
-        .date-item {
-            flex: 0 0 55px;
-            height: 65px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: 1px solid transparent;
-            transition: 0.2s;
-        }
+        .footer { background: #1c1c1c; padding: 20px; border-top-left-radius: 30px; border-top-right-radius: 30px; }
+        .date-selector { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; scrollbar-width: none; }
+        .date-item { flex: 0 0 55px; height: 65px; background: rgba(255,255,255,0.05); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
         .date-item.active { background: #8b1a1a; border-color: #ff4d4d; }
-        .date-item .day-name { font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
-        .date-item .day-number { font-size: 16px; font-weight: 700; }
-        .date-item.active .day-name { color: #fff; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 13px; }
+        .price-tag { color: #00ff88; font-size: 18px; font-weight: bold; }
+        .btn-confirm { width: 100%; padding: 16px; background: #8b1a1a; color: #fff; border: none; border-radius: 15px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-confirm:disabled { background: #444; opacity: 0.6; }
 
-        .info-text { margin-bottom: 15px; font-size: 13px; color: #aaa; line-height: 1.4; }
-        .info-text b { color: #fff; }
-
-        .btn-confirm { 
-            width: 100%; 
-            padding: 16px; 
-            background: #8b1a1a; 
-            color: #fff; 
-            border: none; 
-            border-radius: 15px; 
-            font-size: 16px; 
-            font-weight: 700; 
-            cursor: pointer; 
-        }
-        .btn-confirm:disabled { background: #444; color: #888; cursor: not-allowed; }
+        /* СТИЛЬНЫЕ УВЕДОМЛЕНИЯ */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+        .toast { background: #222; color: #fff; padding: 12px 20px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px; font-size: 14px; border-left: 4px solid #8b1a1a; animation: slideIn 0.3s ease-out forwards; }
+        .toast.success { border-left-color: #00ff88; }
+        .toast.error { border-left-color: #ff4d4d; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { transform: translateX(100%); opacity: 0; } }
     </style>
 </head>
 <body>
 
+    <div id="toast-container"></div>
+
     <div class="header">
         <a href="javascript:history.back()" class="back-btn">←</a>
-        <h3>Выбор места</h3>
+        <h3>Выбор мест</h3>
     </div>
 
     <div class="map-container" id="clubMap">
-        <div class="pc" id="pc-1" data-id="5" data-zone="7">1</div>
-        <div class="pc" id="pc-2" data-id="6" data-zone="7">2</div>
-        <div class="pc" id="pc-30" data-id="4" data-zone="9">30</div>
+        <div class="pc" id="pc-1" data-id="5" data-zone="7" style="top: 150px; left: 50px;">1</div>
+        <div class="pc" id="pc-2" data-id="6" data-zone="7" style="top: 150px; left: 100px;">2</div>
+        <div class="pc" id="pc-3" data-id="11" data-zone="7" style="top: 150px; left: 150px;">3</div>
+        <div class="pc" id="pc-4" data-id="12" data-zone="7" style="top: 150px; left: 200px;">4</div>
+        <div class="pc" id="pc-5" data-id="13" data-zone="7" style="top: 150px; left: 250px;">5</div>
+
+        <div class="pc vip" id="pc-30" data-id="4" data-zone="9" style="top: 320px; left: 50px;">30</div>
+        <div class="pc vip" id="pc-31" data-id="7" data-zone="9" style="top: 320px; left: 100px;">31</div>
+        <div class="pc vip" id="pc-32" data-id="8" data-zone="9" style="top: 320px; left: 150px;">32</div>
+        <div class="pc vip" id="pc-33" data-id="9" data-zone="9" style="top: 320px; left: 200px;">33</div>
+        <div class="pc vip" id="pc-34" data-id="10" data-zone="9" style="top: 320px; left: 250px;">34</div>
     </div>
 
     <div class="footer">
         <div class="date-selector" id="dateList"></div>
-
-        <div class="info-text">
-            Время: <b id="timeLabel">--:--</b><br>
-            Место: <b id="seatLabel">не выбрано</b>
+        <div class="info-grid">
+            <div>Время: <b id="timeLabel">--:--</b><br>Места: <b id="seatLabel">не выбраны</b></div>
+            <div style="text-align: right;">К оплате:<br><span class="price-tag" id="totalPriceLabel">0 ₸</span></div>
         </div>
-        <button class="btn-confirm" id="confirmBtn" onclick="handleBooking()">Подтвердить бронирование</button>
+        <button class="btn-confirm" id="confirmBtn" onclick="handleBooking()" disabled>Подтвердить</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
-        let selectedPC = null;
+        let selectedPCs = []; 
         let selectedDateStr = "";
 
-        // 1. Инициализация календаря (на 7 дней вперед)
+        const startTime = localStorage.getItem('booking_start_time') || "17:00";
+        const endTime = localStorage.getItem('booking_end_time') || "18:00";
+        const clubId = localStorage.getItem('selected_club_id') || 27;
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const icon = type === 'success' ? 'check_circle' : 'error';
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span class="material-symbols-outlined">${icon}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         function initCalendar() {
             const dateList = document.getElementById('dateList');
             const daysShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-            
             for (let i = 0; i < 7; i++) {
                 const d = new Date();
                 d.setDate(d.getDate() + i);
-                
-                const dayName = daysShort[d.getDay()];
-                const dayNum = d.getDate();
-                // Формат YYYY-MM-DD для API
                 const fullDate = d.toISOString().split('T')[0];
-
                 const item = document.createElement('div');
                 item.className = `date-item ${i === 0 ? 'active' : ''}`;
                 if (i === 0) selectedDateStr = fullDate;
-
-                item.innerHTML = `
-                    <div class="day-name">${dayName}</div>
-                    <div class="day-number">${dayNum}</div>
-                `;
-
+                item.innerHTML = `<div class="day-name">${daysShort[d.getDay()]}</div><div class="day-number">${d.getDate()}</div>`;
                 item.onclick = () => {
                     document.querySelectorAll('.date-item').forEach(el => el.classList.remove('active'));
                     item.classList.add('active');
                     selectedDateStr = fullDate;
-                    console.log("Выбрана дата:", selectedDateStr);
                 };
                 dateList.appendChild(item);
             }
         }
 
-        // 2. Загрузка данных из памяти
-        const startTime = localStorage.getItem('booking_start_time');
-        const endTime = localStorage.getItem('booking_end_time');
-        const clubId = localStorage.getItem('selected_club_id') || 27;
-
-        if (startTime && endTime) {
-            document.getElementById('timeLabel').innerText = `${startTime} - ${endTime}`;
-        }
-
-        // 3. Логика выбора ПК
         document.querySelectorAll('.pc').forEach(el => {
             el.addEventListener('click', function() {
-                document.querySelectorAll('.pc').forEach(p => p.classList.remove('selected'));
-                this.classList.add('selected');
+                const dbId = this.dataset.id;
+                const index = selectedPCs.findIndex(p => p.dbId === dbId);
 
-                selectedPC = {
-                    dbId: this.dataset.id,
-                    zoneId: this.dataset.zone,
-                    number: this.innerText
-                };
-                document.getElementById('seatLabel').innerText = `Компьютер №${selectedPC.number}`;
+                if (index > -1) {
+                    selectedPCs.splice(index, 1);
+                    this.classList.remove('selected');
+                } else {
+                    if (selectedPCs.length >= 5) return showToast("Максимум 5 мест!", "error");
+                    selectedPCs.push({ dbId, zoneId: this.dataset.zone, number: this.innerText });
+                    this.classList.add('selected');
+                }
+
+                document.getElementById('seatLabel').innerText = selectedPCs.length > 0 
+                    ? selectedPCs.map(p => p.number).join(', ') : 'не выбраны';
+                document.getElementById('confirmBtn').disabled = selectedPCs.length === 0;
             });
         });
 
-        // 4. Получение User ID из токена
-        function getUserIdFromToken(token) {
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                return payload.sub || payload.user_id; 
-            } catch (e) { return null; }
-        }
-
-        // 5. ОТПРАВКА БРОНИ
         async function handleBooking() {
-            if (!selectedPC) return alert("Выбери компьютер на карте!");
-            
             const token = localStorage.getItem('access_token');
-            const userId = getUserIdFromToken(token);
-
-            if (!userId) return alert("Нужно залогиниться!");
-
-            // Собираем данные в массив, как хочет Swagger
-            const bookingData = [{
-                "start_time": `${selectedDateStr}T${startTime}:00`,
-                "end_time": `${selectedDateStr}T${endTime}:00`,
-                "total_price": 0,
-                "user_id": Number(userId),
-                "computer_id": Number(selectedPC.dbId),
-                "zone_id": Number(selectedPC.zoneId),
-                "club_id": Number(clubId)
-            }];
+            if (!token) return showToast("Войдите в систему", "error");
 
             const btn = document.getElementById('confirmBtn');
             btn.disabled = true;
-            btn.innerText = "Отправка...";
+            btn.innerText = "Бронируем...";
 
             try {
-                const response = await axios.post(`${API_URL}/bookings/create_booking`, bookingData, {
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'ngrok-skip-browser-warning': '69420',
-                        'Content-Type': 'application/json'
-                    }
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const userId = payload.sub || payload.user_id;
+
+                const bookingData = selectedPCs.map(pc => ({
+                    "start_time": `${selectedDateStr}T${startTime}:00`,
+                    "end_time": `${selectedDateStr}T${endTime}:00`,
+                    "total_price": 0, // Временно 0, пока расчет отключен
+                    "user_id": parseInt(userId),
+                    "computer_id": parseInt(pc.dbId),
+                    "zone_id": parseInt(pc.zoneId),
+                    "club_id": parseInt(clubId)
+                }));
+
+                await axios.post(`${API_URL}/bookings/create_booking`, bookingData, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (response.status === 200 || response.status === 201) {
-                    alert("Бронь успешно создана!");
-                    window.location.href = 'booking.html'; // переход на список броней
-                }
+                showToast("Успешно забронировано!");
+                setTimeout(() => window.location.href = 'booking.html', 1500);
             } catch (error) {
-                console.error("Ошибка:", error.response?.data);
-                alert("Ошибка: " + JSON.stringify(error.response?.data?.detail || "Сервер отклонил запрос"));
-            } finally {
+                const msg = error.response?.data?.detail || "Ошибка сервера";
+                showToast(msg, "error");
                 btn.disabled = false;
-                btn.innerText = "Подтвердить бронирование";
+                btn.innerText = "Подтвердить";
             }
         }
 
-        // Запуск календаря при старте
-        document.addEventListener('DOMContentLoaded', initCalendar);
+        document.addEventListener('DOMContentLoaded', () => {
+            initCalendar();
+            document.getElementById('timeLabel').innerText = `${startTime} - ${endTime}`;
+        });
     </script>
 </body>
 </html>

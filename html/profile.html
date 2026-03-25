@@ -13,22 +13,16 @@
             --bg-light: #cccccc;
             --field-bg: #2d2d2d;
             --text-main: #ffffff;
+            --danger: #ff453a;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
 
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            overflow-x: hidden;
+            display: flex; justify-content: center;
+            min-height: 100vh; overflow-x: hidden;
         }
 
         /* --- БУРГЕР И МЕНЮ --- */
@@ -56,68 +50,73 @@
         .drawer-link span { margin-right: 15px; color: #888; }
 
         /* --- КОНТЕЙНЕР ПРОФИЛЯ --- */
-        .phone-container {
-            width: 100%;
-            max-width: 430px;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0 40px;
-        }
-
+        .phone-container { width: 100%; max-width: 430px; display: flex; flex-direction: column; padding: 20px; min-height: 100vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 40px; }
         .header h1 { font-size: 22px; font-weight: 700; }
-
         .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-main); display: flex; align-items: center; padding: 5px; }
 
-        .section-title {
-            color: var(--bg-light);
-            font-size: 14px;
-            font-weight: 700;
-            margin-bottom: 25px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .section-title { color: var(--bg-light); font-size: 12px; font-weight: 700; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.7; }
 
         .field-group { position: relative; margin-bottom: 25px; }
-
         .field-group label {
             position: absolute; top: -10px; left: 12px;
-            background-color: var(--bg-dark);
-            padding: 0 8px; font-size: 12px; font-weight: 700;
-            color: var(--bg-light); z-index: 1;
+            background-color: var(--bg-dark); padding: 0 8px;
+            font-size: 11px; font-weight: 700; color: var(--bg-light); z-index: 1;
         }
-
         .field-group input {
-            width: 100%; background: var(--field-bg);
-            border: 1px solid #555; border-radius: 12px;
+            width: 100%; background: var(--field-bg); border: 1px solid #444; border-radius: 12px;
             padding: 16px; color: white; font-size: 16px; outline: none;
         }
 
         .delete-btn {
-            width: 100%; background: transparent;
-            border: 2px solid #ff453a; color: #ff453a;
-            padding: 18px; border-radius: 15px;
-            font-size: 16px; font-weight: 700;
-            margin-top: auto; margin-bottom: 20px;
-            cursor: pointer; transition: 0.3s;
+            width: 100%; background: transparent; border: 1.5px solid var(--danger); color: var(--danger);
+            padding: 18px; border-radius: 15px; font-size: 14px; font-weight: 700;
+            margin-top: auto; margin-bottom: 20px; cursor: pointer; transition: 0.3s;
         }
+        .delete-btn:active { background: rgba(255, 69, 58, 0.1); }
 
-        @media (max-width: 768px) {
-            .phone-container { padding: 15px; }
-            .field-group input { padding: 14px; font-size: 0.95rem; }
+        /* --- МОДАЛЬНОЕ ОКНО (DELETE) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px);
+            display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px;
         }
+        .modal-overlay.active { display: flex; }
+        .modal-card {
+            background: #262626; width: 100%; max-width: 320px; padding: 30px;
+            border-radius: 28px; text-align: center; border: 1px solid rgba(255,255,255,0.05);
+            animation: modalIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-icon { font-size: 48px; color: var(--danger); margin-bottom: 15px; }
+        .modal-card h2 { font-size: 18px; margin-bottom: 12px; }
+        .modal-card p { font-size: 14px; color: #888; line-height: 1.5; margin-bottom: 25px; }
+        .modal-actions { display: flex; flex-direction: column; gap: 10px; }
+        .m-btn { padding: 16px; border-radius: 14px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .m-confirm { background: var(--danger); color: white; }
+        .m-cancel { background: transparent; color: white; }
+
+        @media (max-width: 768px) { .phone-container { padding: 15px; } }
     </style>
 </head>
 <body>
 
 <div class="overlay" id="overlay"></div>
+
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-card">
+        <span class="material-symbols-outlined modal-icon">heart_broken</span>
+        <h2>Удалить аккаунт?</h2>
+        <p>Вы потеряете доступ ко всем своим бронированиям и данным. Это действие необратимо.</p>
+        <div class="modal-actions">
+            <button class="m-btn m-confirm" id="confirmDeleteBtn">Да, удалить</button>
+            <button class="m-btn m-cancel" id="cancelDeleteBtn">Отмена</button>
+        </div>
+    </div>
+</div>
 
 <nav class="side-drawer" id="sideDrawer">
     <div class="user-block">
@@ -125,18 +124,10 @@
         <span class="user-phone" id="drawer_phone">...</span>
     </div>  
     <div class="drawer-nav">
-        <a href="mainpage.html" class="drawer-link">
-            <span class="material-symbols-outlined">home</span> Главная
-        </a>
-        <a href="map.html" class="drawer-link">
-            <span class="material-symbols-outlined">search</span> Карта клубов
-        </a>
-        <a href="booking.html" class="drawer-link">
-            <span class="material-symbols-outlined">diamond</span> Бронь
-        </a>
-        <a href="settings.html" class="drawer-link">
-            <span class="material-symbols-outlined">settings</span> Настройки
-        </a>
+        <a href="mainpage.html" class="drawer-link"><span class="material-symbols-outlined">home</span> Главная</a>
+        <a href="map.html" class="drawer-link"><span class="material-symbols-outlined">search</span> Карта клубов</a>
+        <a href="booking.html" class="drawer-link"><span class="material-symbols-outlined">diamond</span> Бронь</a>
+        <a href="settings.html" class="drawer-link"><span class="material-symbols-outlined">settings</span> Настройки</a>
     </div>
 </nav>
 
@@ -149,10 +140,7 @@
         </button>
         <h1>Профиль</h1>
         <button class="icon-btn" onclick="window.location.href='profile_edit.html'">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
+            <span class="material-symbols-outlined">edit_square</span>
         </button>
     </div>
 
@@ -173,8 +161,7 @@
         <input type="text" id="city" readonly value="...">
     </div>
 
-
-    <button class="delete-btn">Удалить аккаунт</button>
+    <button class="delete-btn" id="openDeleteModal">Удалить аккаунт</button>
 </div>
 
 <script>
@@ -185,14 +172,12 @@
         headers: { "ngrok-skip-browser-warning": "69420" }
     });
 
-    // 1. Интерцептор запроса
     api.interceptors.request.use(config => {
         const token = localStorage.getItem('access_token');
         if (token) config.headers.Authorization = `Bearer ${token}`;
         return config;
     });
 
-    // 2. Интерцептор ответа для автоматического Refresh Token
     api.interceptors.response.use(
         (response) => response,
         async (error) => {
@@ -203,22 +188,13 @@
                 if (refreshToken) {
                     try {
                         const res = await axios.post(`${API_URL}/auth/refresh`, {}, {
-                            headers: { 
-                                "Authorization": `Bearer ${refreshToken}`,
-                                "ngrok-skip-browser-warning": "69420"
-                            }
+                            headers: { "Authorization": `Bearer ${refreshToken}`, "ngrok-skip-browser-warning": "69420" }
                         });
-                        const newAccessToken = res.data.access_token;
-                        localStorage.setItem('access_token', newAccessToken);
-                        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                        localStorage.setItem('access_token', res.data.access_token);
+                        originalRequest.headers.Authorization = `Bearer ${res.data.access_token}`;
                         return api(originalRequest);
-                    } catch (refreshError) {
-                        localStorage.clear();
-                        window.location.href = 'check.html';
-                    }
-                } else {
-                    window.location.href = 'check.html';
-                }
+                    } catch (e) { localStorage.clear(); window.location.href = 'check.html'; }
+                } else { window.location.href = 'check.html'; }
             }
             return Promise.reject(error);
         }
@@ -226,41 +202,49 @@
 
     async function getProfile() {
         try {
-            const response = await api.get('/users/me');
-            const user = response.data;
-            
-            // Основные поля
+            const res = await api.get('/users/me');
+            const user = res.data;
             document.getElementById('full_name').value = user.full_name || "Не указано";
             document.getElementById('phone_number').value = user.phone_number || "Не указан";
             document.getElementById('city').value = user.city || "Не указан";
-            
-            // Поля в боковом меню (Drawer)
-            const drawerName = document.getElementById('drawer_name');
-            const drawerPhone = document.getElementById('drawer_phone');
-            if (drawerName) drawerName.innerText = user.full_name || "Пользователь";
-            if (drawerPhone) drawerPhone.innerText = user.phone_number || "";
-
-            // Обновляем локальное хранилище для кэша
-            if(user.full_name) localStorage.setItem('user_full_name', user.full_name);
-            if(user.phone_number) localStorage.setItem('user_phone', user.phone_number);
-            
-        } catch (error) {
-            console.error("Ошибка при получении профиля:", error);
-        }
+            document.getElementById('drawer_name').innerText = user.full_name || "Пользователь";
+            document.getElementById('drawer_phone').innerText = user.phone_number || "";
+        } catch (error) { console.error("Ошибка профиля:", error); }
     }
 
+    // --- ЛОГИКА МОДАЛКИ И УДАЛЕНИЯ ---
+    const modal = document.getElementById('deleteModal');
+    
+    document.getElementById('openDeleteModal').onclick = () => modal.classList.add('active');
+    document.getElementById('cancelDeleteBtn').onclick = () => modal.classList.remove('active');
+
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        const btn = document.getElementById('confirmDeleteBtn');
+        try {
+            btn.innerText = "Удаляем...";
+            btn.disabled = true;
+            await api.delete('/users/delete_user');
+            localStorage.clear();
+            window.location.href = 'check.html';
+        } catch (error) {
+            alert("Ошибка при удалении. Попробуйте позже.");
+            btn.innerText = "Да, удалить";
+            btn.disabled = false;
+            modal.classList.remove('active');
+        }
+    };
+
+    // Бургер
     const burgerBtn = document.getElementById('burger');
     const sideDrawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
-
     function toggleMenu() {
         burgerBtn.classList.toggle('open');
         sideDrawer.classList.toggle('open');
         overlay.classList.toggle('active');
     }
-
-    if (burgerBtn) burgerBtn.addEventListener('click', toggleMenu);
-    if (overlay) overlay.addEventListener('click', toggleMenu);
+    burgerBtn.onclick = toggleMenu;
+    overlay.onclick = toggleMenu;
 
     document.addEventListener('DOMContentLoaded', getProfile);
 </script>
