@@ -25,7 +25,6 @@
             min-height: 100vh; overflow-x: hidden;
         }
 
-        /* --- БУРГЕР И МЕНЮ --- */
         .burger-menu { background: none; border: none; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; }
         .burger-bar { width: 25px; height: 2px; background-color: #fff; transition: 0.3s; }
         .burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
@@ -49,7 +48,6 @@
         .drawer-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .drawer-link span { margin-right: 15px; color: #888; }
 
-        /* --- КОНТЕЙНЕР ПРОФИЛЯ --- */
         .phone-container { width: 100%; max-width: 430px; display: flex; flex-direction: column; padding: 20px; min-height: 100vh; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 40px; }
         .header h1 { font-size: 22px; font-weight: 700; }
@@ -75,7 +73,6 @@
         }
         .delete-btn:active { background: rgba(255, 69, 58, 0.1); }
 
-        /* --- МОДАЛЬНОЕ ОКНО (DELETE) --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px);
@@ -212,7 +209,6 @@
         } catch (error) { console.error("Ошибка профиля:", error); }
     }
 
-    // --- ЛОГИКА МОДАЛКИ И УДАЛЕНИЯ ---
     const modal = document.getElementById('deleteModal');
     
     document.getElementById('openDeleteModal').onclick = () => modal.classList.add('active');
@@ -234,7 +230,6 @@
         }
     };
 
-    // Бургер
     const burgerBtn = document.getElementById('burger');
     const sideDrawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');

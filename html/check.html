@@ -191,7 +191,6 @@ const errorDiv = document.getElementById("errorMessage");
 const createAccount = document.getElementById("createAccount");
 
 form.addEventListener("submit", async (e) => {
-    // 1. ОСТАНАВЛИВАЕМ ПЕРЕЗАГРУЗКУ (Самое важное!)
     e.preventDefault();
 
     errorDiv.textContent = ""; 
@@ -216,28 +215,22 @@ form.addEventListener("submit", async (e) => {
         const data = await res.json();
 
         if (!res.ok) {
-            // Случай ошибки (401, 404 и т.д.)
             errorDiv.textContent = data.detail || "Ошибка входа";
             return;
         }
 
-        /* --- УСПЕШНЫЙ ВХОД --- */
 console.log("✅ Ответ сервера:", data);
 
-// 1. Сохраняем только то, что пришло (токены)
 localStorage.setItem('access_token', data.access_token);
 localStorage.setItem('refresh_token', data.refresh_token);
 
-// 2. Сохраняем телефон, который юзер ввел в поле (переменная phone)
 localStorage.setItem('user_phone', phone);
 
-// 3. Очищаем старое имя из памяти, чтобы оно не мешало новой загрузке
 localStorage.removeItem('user_full_name');
 
 errorDiv.style.color = "#4cff88";
 errorDiv.textContent = "Успешно! Входим...";
 
-// 4. Просто переходим на главную. Имя подтянется ТАМ через токен.
 setTimeout(() => {
     window.location.href = "mainpage.html";
 }, 600);

@@ -144,7 +144,6 @@ api.interceptors.request.use(config => {
     return config;
 });
 
-// Меню
 const burgerBtn = document.getElementById('burger');
 const sideDrawer = document.getElementById('sideDrawer');
 const overlay = document.getElementById('overlay');
@@ -166,7 +165,6 @@ async function syncProfile() {
     } catch (err) { console.log("Profile sync skipped"); }
 }
 
-// Загрузка и Группировка
 async function loadBookings() {
     const listElement = document.getElementById('bookings-list');
     const emptyState = document.getElementById('empty-state');
@@ -185,7 +183,6 @@ async function loadBookings() {
 
         const groups = {};
         bookings.forEach(b => {
-            // Ключевое исправление: Добавляем zoneId в ключ группировки
             const zoneId = b.zone?.id || b.zone?.name || 'default';
             const key = `${b.club?.id}-${b.start_time}-${b.end_time}-${zoneId}`;
 
@@ -200,7 +197,6 @@ async function loadBookings() {
                     ids: [b.id]
                 };
             } else {
-                // Если ключ совпал (тот же клуб, время И зона) — добавляем комп в список
                 groups[key].pcs.push(b.computer?.number);
                 groups[key].ids.push(b.id);
             }
@@ -208,7 +204,6 @@ async function loadBookings() {
 
         emptyState.style.display = 'none';
         
-        // Сортируем группы по дате (новые сверху)
         const sortedGroups = Object.values(groups).sort((a, b) => b.start - a.start);
 
         listElement.innerHTML = sortedGroups.map(g => {
