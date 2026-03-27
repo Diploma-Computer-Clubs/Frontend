@@ -16,13 +16,12 @@
             --text-main: #ffffff;
             --accent: #8b1a1a;
             --text-gray: #888888;
-            --success: #00ff88;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
-        body { background-color: var(--bg-light); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
+        body { background-color: var(--bg-light); color: var(--text-main); min-height: 100vh; }
 
-        /* --- ХЕДЕР (Копия с главной) --- */
+        /* --- ХЕДЕР --- */
         .main-header {
             background-color: var(--bg-dark);
             display: flex;
@@ -33,9 +32,8 @@
             top: 0;
             z-index: 100;
         }
-
         .header-right { display: flex; align-items: center; gap: 15px; }
-        .logo-box img { height: 36px; width: auto; display: block; object-fit: contain; }
+        .logo-box img { height: 36px; width: auto; display: block; }
 
         .burger-menu {
             background: none; border: none; display: flex;
@@ -46,7 +44,7 @@
         .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
         .burger-menu.open .burger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        /* --- БОКОВОЕ МЕНЮ (Копия с главной) --- */
+        /* --- БОКОВОЕ МЕНЮ --- */
         .side-drawer {
             position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
             background-color: var(--menu-bg); z-index: 1000;
@@ -54,29 +52,17 @@
             display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.5);
         }
         .side-drawer.open { transform: translateX(0); }
-
-        .user-block {
-            padding: 60px 25px 30px;
-            background-color: #262626;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
+        .user-block { padding: 60px 25px 30px; background-color: #262626; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .user-name { font-weight: 700; font-size: 1.1rem; color: #fff; display: block; }
         .user-phone { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
 
-        .drawer-link {
-            display: flex; align-items: center; padding: 18px 25px;
-            color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.95rem;
-        }
+        .drawer-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .drawer-link span { margin-right: 15px; color: #888; font-size: 22px; }
 
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: none; z-index: 999;
-        }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 999; }
         .overlay.active { display: block; }
 
-        /* --- КОНТЕНТ БРОНИРОВАНИЙ --- */
+        /* --- КОНТЕНТ --- */
         .container { padding: 20px; max-width: 450px; margin: 0 auto; }
         .page-title { color: #333; font-size: 22px; font-weight: 700; margin-bottom: 25px; text-align: center; }
 
@@ -88,10 +74,11 @@
         }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         .delete-btn {
             position: absolute; top: 15px; right: 15px;
-            background: rgba(255,255,255,0.05); border: none;
+            background: rgba(255,255,255,0.1); border: none;
             color: #ff4d4d; cursor: pointer; width: 36px; height: 36px;
             border-radius: 10px; display: flex; align-items: center; justify-content: center;
             transition: 0.3s;
@@ -104,7 +91,6 @@
         .label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
         .value { font-size: 14px; font-weight: 600; color: #fff; margin-top: 2px; }
         .pc-badge { color: var(--accent); font-weight: 700; }
-        .total-price { grid-column: span 2; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); color: var(--success); font-weight: 700; }
 
         .loader { text-align: center; color: #333; margin-top: 100px; font-weight: 700; }
         #empty-state { text-align: center; color: #666; margin-top: 100px; display: none; }
@@ -120,18 +106,9 @@
         <span class="user-phone" id="drawer_phone">...</span>
     </div>  
     <div class="drawer-nav">
-        <a href="mainpage.html" class="drawer-link">
-            <span class="material-symbols-outlined">home</span> Главная
-        </a>
-        <a href="profile.html" class="drawer-link">
-            <span class="material-symbols-outlined">account_circle</span> Профиль
-        </a>
-        <a href="map.html" class="drawer-link">
-            <span class="material-symbols-outlined">search</span> Карта клубов
-        </a>
-        <a href="settings.html" class="drawer-link">
-            <span class="material-symbols-outlined">settings</span> Настройки
-        </a>
+        <a href="mainpage.html" class="drawer-link"><span class="material-symbols-outlined">home</span> Главная</a>
+        <a href="profile.html" class="drawer-link"><span class="material-symbols-outlined">account_circle</span> Профиль</a>
+        <a href="map.html" class="drawer-link"><span class="material-symbols-outlined">search</span> Карта клубов</a>
     </div>
 </nav>
 
@@ -154,7 +131,7 @@
 </div>
 
 <script>
-    const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -167,7 +144,7 @@ api.interceptors.request.use(config => {
     return config;
 });
 
-// --- МЕНЮ И ПРОФИЛЬ (БЕЗ ИЗМЕНЕНИЙ) ---
+// Меню
 const burgerBtn = document.getElementById('burger');
 const sideDrawer = document.getElementById('sideDrawer');
 const overlay = document.getElementById('overlay');
@@ -181,23 +158,15 @@ burgerBtn.addEventListener('click', toggleMenu);
 overlay.addEventListener('click', toggleMenu);
 
 async function syncProfile() {
-    const savedName = localStorage.getItem('user_full_name');
-    const savedPhone = localStorage.getItem('user_phone');
-    if (savedName) {
-        document.getElementById('drawer_name').innerText = savedName;
-        document.getElementById('drawer_phone').innerText = savedPhone || "";
-    }
     try {
         const response = await api.get('/users/me');
         const user = response.data;
         document.getElementById('drawer_name').innerText = user.full_name || "Пользователь";
         document.getElementById('drawer_phone').innerText = user.phone_number || "";
-        localStorage.setItem('user_full_name', user.full_name);
-        localStorage.setItem('user_phone', user.phone_number);
     } catch (err) { console.log("Profile sync skipped"); }
 }
 
-// --- ЛОГИКА ЗАГРУЗКИ ---
+// Загрузка и Группировка
 async function loadBookings() {
     const listElement = document.getElementById('bookings-list');
     const emptyState = document.getElementById('empty-state');
@@ -216,33 +185,40 @@ async function loadBookings() {
 
         const groups = {};
         bookings.forEach(b => {
-            const key = `${b.club?.id}-${b.start_time}-${b.end_time}`;
+            // Ключевое исправление: Добавляем zoneId в ключ группировки
+            const zoneId = b.zone?.id || b.zone?.name || 'default';
+            const key = `${b.club?.id}-${b.start_time}-${b.end_time}-${zoneId}`;
+
             if (!groups[key]) {
                 groups[key] = {
-                    club: b.club?.name || "Prime",
+                    club: b.club?.name || "UNDERLIE",
                     address: b.club?.address || "",
                     zone: b.zone?.name || "Стандарт",
                     start: new Date(b.start_time),
                     end: new Date(b.end_time),
                     pcs: [b.computer?.number],
-                    ids: [b.id],
-                    total: b.total_price || 0
+                    ids: [b.id]
                 };
             } else {
+                // Если ключ совпал (тот же клуб, время И зона) — добавляем комп в список
                 groups[key].pcs.push(b.computer?.number);
                 groups[key].ids.push(b.id);
-                groups[key].total += (b.total_price || 0);
             }
         });
 
         emptyState.style.display = 'none';
-        listElement.innerHTML = Object.values(groups).map(g => {
+        
+        // Сортируем группы по дате (новые сверху)
+        const sortedGroups = Object.values(groups).sort((a, b) => b.start - a.start);
+
+        listElement.innerHTML = sortedGroups.map(g => {
             const dateStr = g.start.toLocaleDateString('ru-RU');
             const timeStr = `${g.start.getHours().toString().padStart(2,'0')}:${g.start.getMinutes().toString().padStart(2,'0')} - ${g.end.getHours().toString().padStart(2,'0')}:${g.end.getMinutes().toString().padStart(2,'0')}`;
             const idsStr = JSON.stringify(g.ids);
+            const pcsList = g.pcs.sort((a, b) => a - b).join(', ');
             
             return `
-                <div class="booking-card" id="card-${g.ids[0]}">
+                <div class="booking-card">
                     <button class="delete-btn" onclick='confirmDelete(this, ${idsStr})'>
                         <span class="material-symbols-outlined">delete</span>
                     </button>
@@ -252,7 +228,7 @@ async function loadBookings() {
                         <div><div class="label">Дата</div><div class="value">${dateStr}</div></div>
                         <div><div class="label">Время</div><div class="value">${timeStr}</div></div>
                         <div><div class="label">Зона</div><div class="value">${g.zone}</div></div>
-                        <div><div class="label">Места</div><div class="value pc-badge">№${g.pcs.sort((a,b)=>a-b).join(', ')}</div></div>
+                        <div><div class="label">Места</div><div class="value pc-badge">№${pcsList}</div></div>
                     </div>
                 </div>
             `;
@@ -262,50 +238,37 @@ async function loadBookings() {
     }
 }
 
-// --- НОВАЯ ЛОГИКА УДАЛЕНИЯ БЕЗ CONFIRM ---
 async function confirmDelete(btn, ids) {
-    // Если кнопка уже в режиме подтверждения
     if (btn.classList.contains('confirm-mode')) {
         btn.innerHTML = `<span class="material-symbols-outlined" style="animation: spin 1s infinite linear">sync</span>`;
         btn.disabled = true;
-
         try {
-            // Удаляем все записи в группе
             await Promise.all(ids.map(id => api.delete('/bookings/delete_booking', { params: { booking_id: id } })));
-            
-            // Автоматически обновляем список БЕЗ перезагрузки всей страницы
             await loadBookings();
         } catch (e) {
             alert("Ошибка удаления");
-            btn.classList.remove('confirm-mode');
-            btn.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
-            btn.disabled = false;
+            resetDeleteBtn(btn);
         }
     } else {
-        // Первый клик: меняем вид кнопки
         btn.classList.add('confirm-mode');
-        btn.innerHTML = `<span style="font-size: 10px; font-weight: bold;">УДАЛИТЬ?</span>`;
-        btn.style.width = "80px";
+        btn.innerHTML = `<span style="font-size: 10px; font-weight: bold;">ОК?</span>`;
+        btn.style.width = "60px";
         btn.style.background = "#ff4d4d";
         btn.style.color = "#fff";
-
-        // Если юзер не нажал второй раз за 3 секунды — возвращаем как было
-        setTimeout(() => {
-            if (btn && btn.classList.contains('confirm-mode')) {
-                btn.classList.remove('confirm-mode');
-                btn.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
-                btn.style.width = "36px";
-                btn.style.background = "rgba(255,255,255,0.05)";
-                btn.style.color = "#ff4d4d";
-            }
-        }, 3000);
+        setTimeout(() => resetDeleteBtn(btn), 3000);
     }
 }
 
-// Добавь этот стиль в блок <style> для спиннера
-/*
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-*/
+function resetDeleteBtn(btn) {
+    if (btn && btn.classList.contains('confirm-mode')) {
+        btn.classList.remove('confirm-mode');
+        btn.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
+        btn.style.width = "36px";
+        btn.style.background = "rgba(255,255,255,0.1)";
+        btn.style.color = "#ff4d4d";
+        btn.disabled = false;
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     syncProfile();
