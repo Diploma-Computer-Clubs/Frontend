@@ -116,7 +116,6 @@ select option { background:#111; color:#fff; }
 
 <div class="slider-container">
 
-    <!-- СЛАЙД 0 — КАРТА -->
     <div class="slide-page" id="slide-map">
         <div class="top-bar">
             <button class="burger-menu" id="burger">
@@ -137,7 +136,6 @@ select option { background:#111; color:#fff; }
         </div>
     </div>
 
-    <!-- СЛАЙД 1 — СПИСОК КЛУБОВ -->
     <div class="slide-page" id="slide-clubs">
         <div class="slide-header">
             <button class="back-btn" onclick="goToSlide(0)"><span class="material-symbols-outlined">arrow_back</span></button>
@@ -216,7 +214,6 @@ function buildClubIcon(club) {
     return DG.divIcon({ html: `<div class="club-marker-wrap"><div class="club-marker">${img}<div class="club-marker-img-fallback" style="display:${fb}">🎮</div><span class="club-marker-name">${club.name}</span></div></div>`, className: '', iconAnchor: [0, 66], popupAnchor: [70, -66] });
 }
 
-/* Переход на страницу клуба — сохраняем данные в localStorage как кэш */
 function goToClub(clubId) {
     const club = clubsCache[clubId];
     if (club) {

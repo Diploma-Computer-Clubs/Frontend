@@ -79,7 +79,6 @@ html,body { height:100%; background:#111; color:#fff; overflow-y:auto; }
 </head>
 <body>
 
-<!-- Попап цены -->
 <div class="price-popup-overlay" id="pricePopup">
     <div class="price-popup">
         <button class="price-popup-close" onclick="closePricePopup()"><span class="material-symbols-outlined">close</span></button>
@@ -87,18 +86,15 @@ html,body { height:100%; background:#111; color:#fff; overflow-y:auto; }
     </div>
 </div>
 
-<!-- Кнопка забронировать -->
 <div class="book-bar">
     <button class="btn-book" id="btnBook">Забронировать</button>
 </div>
 
-<!-- Шапка -->
 <div class="slide-header">
     <a href="map.html" class="back-btn"><span class="material-symbols-outlined">arrow_back</span></a>
     <span class="slide-title" id="pageTitle">Клуб</span>
 </div>
 
-<!-- Контент -->
 <div id="pageContent">
     <div class="page-loading">
         <span class="material-symbols-outlined" style="font-size:36px;opacity:0.3">sports_esports</span>
@@ -132,7 +128,6 @@ api.interceptors.response.use(r => r, async err => {
     return Promise.reject(err);
 });
 
-/* ── Читаем club_id из URL ── */
 const params = new URLSearchParams(window.location.search);
 const clubId = parseInt(params.get('club_id'));
 
@@ -140,14 +135,10 @@ if (!clubId) {
     window.location.href = 'map.html';
 }
 
-/* ── Кнопка забронировать ── */
-/* ── Кнопка забронировать ── */
 document.getElementById('btnBook').addEventListener('click', () => {
-    // Теперь переходим на страницу выбора времени
     window.location.href = `select_time.html?club_id=${clubId}`;
 });
 
-/* ── Попап цены ── */
 function openPricePopup(imgUrl) {
     const content = document.getElementById('pricePopupContent');
     content.innerHTML = imgUrl
@@ -160,7 +151,6 @@ document.getElementById('pricePopup').addEventListener('click', e => {
     if (e.target === document.getElementById('pricePopup')) closePricePopup();
 });
 
-/* ── Рендер страницы клуба ── */
 function renderClub(club, minPrice) {
     document.getElementById('pageTitle').textContent = club.name;
 
@@ -178,13 +168,11 @@ function renderClub(club, minPrice) {
     const hasPriceImg = club.image_price_url && club.image_price_url !== 'string' && club.image_price_url !== null;
     const priceImgUrl = hasPriceImg ? API_URL + club.image_price_url : '';
 
-    // описание
     const hasDesc = club.description && club.description !== 'string';
     const descHtml = hasDesc
         ? `<div class="detail-description">${club.description}</div>`
         : '';
 
-    // акции
     const hasPromos = club.promos && club.promos.length > 0;
     const promosHtml = hasPromos ? `
         <div class="promos-section">
@@ -218,7 +206,6 @@ function renderClub(club, minPrice) {
 
     loadZones(clubId);
 
-    // если цена ещё не известна — грузим
     if (minPrice == null) {
         api.get(`/clubs/get_min_price?club_id=${clubId}`)
            .then(p => {
@@ -247,7 +234,6 @@ async function loadZones(id) {
     } catch(e) { el.innerHTML = '<div class="zones-loading">Ошибка загрузки зон</div>'; console.log('Zones:', e); }
 }
 
-/* ── Инициализация ── */
 async function init() {
     // 1. Пробуем взять из кэша (localStorage), чтобы страница открылась мгновенно
     let club = null;
