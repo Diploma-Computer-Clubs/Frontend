@@ -156,6 +156,49 @@
                 {n: 34, id: 10, zid: 9, x: 250, y: 320, isVip: true}
             ];
 
+
+            async function calculatePrice() {
+    if (selected.length === 0) return 0;
+
+    const zonesCount = selected.reduce((acc, pc) => {
+        acc[pc.zid] = (acc[pc.zid] || 0) + 1;
+        return acc;
+    }, {});
+
+    const items = Object.entries(zonesCount).map(([zid, count]) => ({
+        zone_id: parseInt(zid),
+        count: count
+    }));
+
+    // ЛОГИКА ПЕРЕХОДА СУТОК
+    let endDateTime = `${selectedDateStr}T${endTime}:00Z`;
+    if (endTime <= startTime) {
+        let nextDay = new Date(selectedDateStr);
+        nextDay.setDate(nextDay.getDate() + 1);
+        const y = nextDay.getFullYear();
+        const m = String(nextDay.getMonth() + 1).padStart(2, '0');
+        const d = String(nextDay.getDate()).padStart(2, '0');
+        endDateTime = `${y}-${m}-${d}T${endTime}:00Z`;
+    }
+
+    const payload = [{
+        items: items,
+        start_time: `${selectedDateStr}T${startTime}:00Z`,
+        end_time: endDateTime
+    }];
+
+    try {
+        const res = await axios.post(`${API_URL}/pricing/calculate_bulk`, payload, {
+            headers: { "ngrok-skip-browser-warning": "69420" }
+        });
+        return res.data.total_amount;
+    } catch (e) {
+        console.error("Ошибка расчета цены:", e);
+        return 0;
+    }
+}
+
+
             async function fetchClubInfo() {
                 try {
                     const cached = localStorage.getItem('club_cache_' + clubId);
@@ -212,61 +255,93 @@
                 });
             }
 
-            function updateUI() {
-                const btn = document.getElementById('confirmBtn');
-                const label = document.getElementById('seatLabel');
-                if (selected.length > 0) {
-                    const grouped = selected.reduce((acc, curr) => {
-                        const zone = curr.isVip ? "Vip зона" : "Общий зал";
-                        acc[zone] = acc[zone] || [];
-                        acc[zone].push(`№${curr.n}`);
-                        return acc;
-                    }, {});
-                    label.innerHTML = Object.entries(grouped).map(([z, nums]) => `${z} <b>${nums.join(', ')}</b>`).join('<br>');
-                    btn.classList.add('active');
-                } else {
-                    label.innerHTML = '<span>не выбраны</span>';
-                    btn.classList.remove('active');
+                            async function updateUI() {
+                    const btn = document.getElementById('confirmBtn');
+                    const label = document.getElementById('seatLabel');
+                    
+                    if (selected.length > 0) {
+                        // Вызываем расчет цены
+                        const totalPrice = await calculatePrice();
+                        window.currentTotalPrice = totalPrice; // Сохраняем для handleBooking
+
+                        const grouped = selected.reduce((acc, curr) => {
+                            const zone = curr.isVip ? "Vip зона" : "Общий зал";
+                            acc[zone] = acc[zone] || [];
+                            acc[zone].push(`№${curr.n}`);
+                            return acc;
+                        }, {});
+
+                        label.innerHTML = Object.entries(grouped)
+                            .map(([z, nums]) => `${z} <b>${nums.join(', ')}</b>`)
+                            .join('<br>') + `<br><span style="color:#4CAF50; font-size:16px;">К оплате: ${totalPrice} ₸</span>`;
+                        
+                        btn.classList.add('active');
+                    } else {
+                        label.innerHTML = '<span>не выбраны</span>';
+                        btn.classList.remove('active');
+                        window.currentTotalPrice = 0;
+                    }
                 }
-            }
 
             async function handleBooking() {
-                const btn = document.getElementById('confirmBtn');
-                btn.innerText = "БРОНИРУЕМ...";
-                btn.classList.remove('active');
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    const userId = payload.sub || payload.user_id;
-                    const data = selected.map(s => ({
-                        "start_time": `${selectedDateStr}T${startTime}:00`,
-                        "end_time": `${selectedDateStr}T${endTime}:00`,
-                        "total_price": 0,
-                        "user_id": parseInt(userId),
-                        "computer_id": s.id, 
-                        "zone_id": s.zid,    
-                        "club_id": parseInt(clubId)
-                    }));
-                    await axios.post(`${API_URL}/bookings/create_booking`, data, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    showToast("Успешно забронировано!", "success");
-                    setTimeout(() => { window.location.href = 'booking.html'; }, 1500);
-                } catch (e) {
-                    showToast(e.response?.data?.detail || "Ошибка бронирования");
-                    btn.innerText = "ПОДТВЕРДИТЬ БРОНИРОВАНИЕ";
-                    btn.classList.add('active');
-                }
-            }
+    const btn = document.getElementById('confirmBtn');
+    if (!window.currentTotalPrice || window.currentTotalPrice === 0) {
+        showToast("Ошибка: цена не рассчитана");
+        return;
+    }
+
+    // ЛОГИКА ПЕРЕХОДА СУТОК ДЛЯ БРОНИ
+    let endDateTimeStr = `${selectedDateStr}T${endTime}:00`;
+    if (endTime <= startTime) {
+        let nextDay = new Date(selectedDateStr);
+        nextDay.setDate(nextDay.getDate() + 1);
+        const y = nextDay.getFullYear();
+        const m = String(nextDay.getMonth() + 1).padStart(2, '0');
+        const d = String(nextDay.getDate()).padStart(2, '0');
+        endDateTimeStr = `${y}-${m}-${d}T${endTime}:00`;
+    }
+
+    btn.innerText = "БРОНИРУЕМ...";
+    btn.classList.remove('active');
+    
+    try {
+        const payloadToken = JSON.parse(atob(token.split('.')[1]));
+        const userId = payloadToken.sub || payloadToken.user_id;
+        const pricePerPc = window.currentTotalPrice / selected.length;
+
+        const data = selected.map(s => ({
+            "start_time": `${selectedDateStr}T${startTime}:00`,
+            "end_time": endDateTimeStr, // Теперь тут корректная дата следующего дня
+            "total_price": pricePerPc, 
+            "user_id": parseInt(userId),
+            "computer_id": s.id, 
+            "zone_id": s.zid,    
+            "club_id": parseInt(clubId)
+        }));
+
+        await axios.post(`${API_URL}/bookings/create_booking`, data, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        showToast("Успешно забронировано!", "success");
+        setTimeout(() => { window.location.href = 'booking.html'; }, 1500);
+    } catch (e) {
+        showToast(e.response?.data?.detail || "Ошибка бронирования");
+        btn.innerText = "ПОДТВЕРДИТЬ БРОНИРОВАНИЕ";
+        btn.classList.add('active');
+    }
+}
 
 function initCalendar() {
     const list = document.getElementById('dateSelector');
     const daysShort = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+    list.innerHTML = ''; // Очистка, чтобы не дублировалось
     
     for (let i = 0; i < 7; i++) {
         const d = new Date();
         d.setDate(d.getDate() + i);
         
-        // КОРРЕКТНОЕ ЛОКАЛЬНОЕ ФОРМИРОВАНИЕ ДАТЫ (ГГГГ-ММ-ДД)
+        // ТВОЙ РАБОЧИЙ ВАРИАНТ ФОРМИРОВАНИЯ
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
@@ -279,23 +354,40 @@ function initCalendar() {
 
         item.innerHTML = `<span>${daysShort[d.getDay()]}</span><b>${d.getDate()}</b>`;
         
-        item.onclick = () => {
+        // ДОБАВЛЯЕМ ASYNC И ВЫЗОВ updateUI
+        item.onclick = async () => {
             const allItems = document.querySelectorAll('.date-item');
             allItems.forEach(el => el.classList.remove('active'));
             item.classList.add('active');
-            selectedDateStr = iso;
-            console.log("Выбрана дата:", selectedDateStr); // Для проверки
+            
+            selectedDateStr = iso; 
+            console.log("Выбрана дата:", selectedDateStr);
+            
+            // Это критически важно: пересчитать цену для новой даты!
+            await updateUI(); 
         };
         list.appendChild(item);
     }
 }
+document.addEventListener('DOMContentLoaded', () => {
+    // Если выбранное время начала уже прошло сегодня, 
+    // давай подскажем юзеру или просто выведем в консоль
+    const now = new Date();
+    const [h, m] = startTime.split(':');
+    const bookingDate = new Date(selectedDateStr);
+    bookingDate.setHours(h, m);
 
-            document.addEventListener('DOMContentLoaded', () => {
-                fetchClubInfo();
-                renderMap();
-                initCalendar();
-                document.getElementById('timeLabel').innerText = `${startTime} - ${endTime}`;
-            });
+    if (bookingDate < now) {
+        console.warn("Бронь в прошлом! Измените время в select_time.html");
+        // Можно вызывать алерт, чтобы ты не тыкал зря
+        // showToast("Выберите время минимум на 30 мин позже текущего");
+    }
+
+    fetchClubInfo();
+    renderMap();
+    initCalendar();
+    document.getElementById('timeLabel').innerText = `${startTime} - ${endTime}`;
+});
         </script>
     </body>
     </html>
