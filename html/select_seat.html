@@ -258,25 +258,37 @@
                 }
             }
 
-            function initCalendar() {
-                const list = document.getElementById('dateSelector');
-                const daysShort = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-                for (let i = 0; i < 7; i++) {
-                    const d = new Date();
-                    d.setDate(d.getDate() + i);
-                    const iso = d.toISOString().split('T')[0];
-                    const item = document.createElement('div');
-                    item.className = `date-item ${i === 0 ? 'active' : ''}`;
-                    if (i === 0) selectedDateStr = iso;
-                    item.innerHTML = `<span>${daysShort[d.getDay()]}</span><b>${d.getDate()}</b>`;
-                    item.onclick = () => {
-                        document.querySelectorAll('.date-item').forEach(el => el.classList.remove('active'));
-                        item.classList.add('active');
-                        selectedDateStr = iso;
-                    };
-                    list.appendChild(item);
-                }
-            }
+function initCalendar() {
+    const list = document.getElementById('dateSelector');
+    const daysShort = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+    
+    for (let i = 0; i < 7; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() + i);
+        
+        // КОРРЕКТНОЕ ЛОКАЛЬНОЕ ФОРМИРОВАНИЕ ДАТЫ (ГГГГ-ММ-ДД)
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const iso = `${year}-${month}-${day}`; 
+
+        const item = document.createElement('div');
+        item.className = `date-item ${i === 0 ? 'active' : ''}`;
+        
+        if (i === 0) selectedDateStr = iso;
+
+        item.innerHTML = `<span>${daysShort[d.getDay()]}</span><b>${d.getDate()}</b>`;
+        
+        item.onclick = () => {
+            const allItems = document.querySelectorAll('.date-item');
+            allItems.forEach(el => el.classList.remove('active'));
+            item.classList.add('active');
+            selectedDateStr = iso;
+            console.log("Выбрана дата:", selectedDateStr); // Для проверки
+        };
+        list.appendChild(item);
+    }
+}
 
             document.addEventListener('DOMContentLoaded', () => {
                 fetchClubInfo();
