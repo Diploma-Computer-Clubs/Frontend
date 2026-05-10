@@ -38,21 +38,49 @@
 </div>
 
 <script>
+    // Пробрасываем club_id из URL
+    const _params = new URLSearchParams(window.location.search);
+    const _clubId = _params.get('club_id') || '';
+
     function saveTimeAndProceed() {
         const start = document.getElementById('startTime').value;
-        const end = document.getElementById('endTime').value;
+        const end   = document.getElementById('endTime').value;
 
         if (!start || !end) {
             alert("Пожалуйста, выберите время");
             return;
         }
 
-        // Сохраняем время 
+        // Вычисляем дату начала: если выбранное время < now+30мин — это завтра
+        const now = new Date();
+        const [sh, sm] = start.split(':').map(Number);
+        const [eh, em] = end.split(':').map(Number);
+
+        // Пробуем сегодня
+        const startDt = new Date(now);
+        startDt.setHours(sh, sm, 0, 0);
+
+        // Если время уже прошло или меньше 30 мин — сдвигаем на завтра
+        if ((startDt - now) < 30 * 60 * 1000) {
+            startDt.setDate(startDt.getDate() + 1);
+        }
+
+        // Дата конца: если end <= start (переход через полночь) — следующий день от start
+        const endDt = new Date(startDt);
+        endDt.setHours(eh, em, 0, 0);
+        if (endDt <= startDt) {
+            endDt.setDate(endDt.getDate() + 1);
+        }
+
+        // Форматируем дату как YYYY-MM-DD
+        const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
         localStorage.setItem('booking_start_time', start);
         localStorage.setItem('booking_end_time', end);
+        localStorage.setItem('booking_start_date', fmt(startDt)); // дата начала
+        localStorage.setItem('booking_end_date',   fmt(endDt));   // дата конца
 
-        // Уходим на выбор 
-        window.location.href = 'select_seat.html';
+        window.location.href = 'select_seat.html' + (_clubId ? '?club_id=' + _clubId : '');
     }
 </script>
 </body>

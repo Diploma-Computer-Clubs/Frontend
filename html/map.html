@@ -224,44 +224,45 @@ function goToClub(clubId) {
 
 async function loadClubsByCity(cityId) {
     try {
-        // Два запроса параллельно: список для карточек + маркеры с координатами
-        const [listRes, mapRes] = await Promise.all([
-            api.get(`/clubs/get_clubs_in_city?city_id=${cityId}`),
-            api.get(`/clubs/get_clubs_map?city_id=${cityId}`).catch(() => ({ data: [] }))
-        ]);
-        const clubs    = listRes.data;
+        // Загружаем маркеры с координатами
+        const mapRes = await api.get(`/clubs/get_clubs_map?city_id=${cityId}`);
         const mapClubs = mapRes.data;
 
-        document.getElementById('clubsCountNum').textContent = clubs.length || '—';
-        clubs.forEach(club => { clubsCache[club.id] = club; });
+        document.getElementById('clubsCountNum').textContent = mapClubs.length || '—';
 
-        // Маркеры — из get_clubs_map (там есть координаты)
-        // Мерджим имя/картинку из кэша если бэк вернул только координаты
+        // Расставляем маркеры сразу (данных уже достаточно)
         markers.forEach(m => map.removeLayer(m)); markers = [];
         mapClubs.forEach(mc => {
             const lat = mc.latitude  ?? mc.lat;
             const lng = mc.longitude ?? mc.lng ?? mc.lon;
             if (!lat || !lng) return;
-            // берём полные данные из кэша, иначе используем то что пришло
-            const club = clubsCache[mc.id] || mc;
+            clubsCache[mc.id] = { ...clubsCache[mc.id], ...mc };
             markers.push(
-                DG.marker([lat, lng], { icon: buildClubIcon(club) })
+                DG.marker([lat, lng], { icon: buildClubIcon(mc) })
                   .addTo(map)
-                  .bindPopup(`<b>${club.name}</b>`)
-                  .on('click', () => goToClub(club.id))
+                  .bindPopup(`<b>${mc.name}</b>`)
+                  .on('click', () => goToClub(mc.id))
             );
         });
 
-        const prices = await Promise.all(
-            clubs.map(club =>
-                api.get(`/clubs/get_min_price?club_id=${club.id}`)
-                   .then(p => ({ id: club.id, price: p.data.min_price }))
-                   .catch(() => ({ id: club.id, price: null }))
+        // Загружаем детальную инфу по каждому клубу параллельно
+        const details = await Promise.all(
+            mapClubs.map(mc =>
+                api.get(`/clubs/get_club_info?club_id=${mc.id}`)
+                   .then(r => r.data)
+                   .catch(() => mc)
             )
         );
-        prices.forEach(p => { if (clubsCache[p.id]) clubsCache[p.id]._minPrice = p.price; });
 
-        renderClubsList(clubs);
+        details.forEach(club => {
+            // Минимальная цена из zones
+            if (club.zones && club.zones.length) {
+                club._minPrice = Math.min(...club.zones.map(z => z.cost));
+            }
+            clubsCache[club.id] = { ...clubsCache[club.id], ...club };
+        });
+
+        renderClubsList(details);
 
     } catch(e) {
         console.log('Клубы:', e);
@@ -281,7 +282,7 @@ function renderClubsList(clubs) {
             ? `<img class="club-card-bg" src="${API_URL}${club.img_background}" alt="${club.name}" onerror="this.style.display='none'">`
             : `<div class="club-card-bg-placeholder">${hasLogo ? `<img src="${API_URL}${club.image_url}" style="width:64px;height:64px;border-radius:12px;object-fit:cover">` : '🎮'}</div>`;
         const stars    = '★'.repeat(Math.round(club.rating || 0)) + '☆'.repeat(5 - Math.round(club.rating || 0));
-        const minPrice = clubsCache[club.id]?._minPrice;
+        const minPrice = club._minPrice ?? clubsCache[club.id]?._minPrice;
         const priceHtml = minPrice != null
             ? `<div class="club-card-price"><span class="material-symbols-outlined" style="font-size:14px">payments</span>от <b>${minPrice} ₸</b> / ч</div>`
             : '';

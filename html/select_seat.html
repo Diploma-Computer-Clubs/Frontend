@@ -24,10 +24,12 @@
             .map-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px; position: relative; overflow: auto; background: #0a0a0a; }
             .map-container { position: relative; width: 340px; height: 460px; background: #000; border: 1px solid #222; border-radius: 20px; }
             .label { position: absolute; font-size: 10px; font-weight: 700; color: #333; text-transform: uppercase; }
-            .pc { position: absolute; width: 32px; height: 32px; background: #111; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; color: #666; }
+            .pc { position: absolute; width: 36px; height: 36px; background: #111; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; transition: background 0.2s, border-color 0.2s; color: #666; }
             .pc.selected { background: #8b1a1a; border-color: #ff4d4d; color: #fff; box-shadow: 0 0 12px rgba(139,26,26,0.6); }
             .pc.vip { border-color: #8b1a1a; color: #8b1a1a; }
             .pc.vip.selected { background: #ff4d4d; color: #000; }
+            .pc.busy { background: #141414 !important; border-color: #222 !important; color: #2a2a2a !important; cursor: default; }
+            .pc.free { box-shadow: 0 0 6px rgba(80,80,180,0.15); }
 
             .footer { background: #000; padding: 20px 16px 30px; border-top: 1px solid #1a1a1a; z-index: 20; }
             .date-selector { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 15px; scrollbar-width: none; }
@@ -86,8 +88,6 @@
             <div class="static-obj wc" style="top: 190px; right: 10px;">WC</div>
             
 
-            <div class="label" style="top: 130px; left: 145px;">main</div>
-            <div class="label" style="top: 290px; left: 140px;">vip zone</div>
 
             <div id="pcsLayer"></div>
         </div>
