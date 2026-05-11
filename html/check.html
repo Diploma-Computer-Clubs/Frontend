@@ -29,34 +29,23 @@ background:#000;
 position:relative;
 }
 
-/* фон */
-
 body::before{
 content:"";
 position:absolute;
-
 top:-40px;
 left:-40px;
 right:-40px;
 bottom:-40px;
-
-
 background: url("../img/bg.png") center/cover no-repeat;
-
 filter: blur(8px) brightness(0.2);
-
 z-index:-1;
 }
-
-/* контейнер */
 
 .container{
 width:340px;
 display:flex;
 flex-direction:column;
 }
-
-/* логотип */
 
 .logo{
 display:flex;
@@ -67,8 +56,6 @@ margin-bottom:50px;
 .logo img{
 width:170px;
 }
-
-/* форма */
 
 .field{
 display:flex;
@@ -92,8 +79,6 @@ outline:none;
 color:#ccc;
 }
 
-/* забыли пароль */
-
 .forgot{
 font-size:13px;
 text-align:right;
@@ -107,8 +92,6 @@ display:block;
 text-decoration:underline;
 }
 
-/* кнопки */
-
 button{
 width:100%;
 padding:16px;
@@ -118,19 +101,14 @@ font-size:16px;
 cursor:pointer;
 }
 
-/* кнопка войти */
-
 .login{
 background:#e9e9e9;
 color:#000;
 margin-bottom:25px;
-
 box-shadow:
 0 4px 8px rgba(0,0,0,0.25),
 inset 0 1px 0 rgba(255,255,255,0.6);
 }
-
-/* создать аккаунт */
 
 .register{
 background:none;
@@ -168,11 +146,7 @@ transform:scale(0.97);
 
 <a href="forgot-1.html" class="forgot">Забыли пароль?</a>
 
-
-
 <div id="errorMessage" style="color:#ff6b6b; margin-bottom:15px; font-size:14px;"></div>
-<!-- Tut -->
-
 
 <button class="login" type="submit">Войти</button>
 
@@ -193,13 +167,14 @@ const createAccount = document.getElementById("createAccount");
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    errorDiv.textContent = ""; 
+    errorDiv.textContent = "";
     errorDiv.style.color = "#ff6b6b";
 
     const phone = form.phone.value;
     const password = form.password.value;
 
     try {
+        // Шаг 1: логин, получаем токены
         const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/auth/login", {
             method: "POST",
             headers: {
@@ -219,21 +194,39 @@ form.addEventListener("submit", async (e) => {
             return;
         }
 
-console.log("✅ Ответ сервера:", data);
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
+        localStorage.setItem('user_phone', phone);
+        localStorage.removeItem('user_full_name');
 
-localStorage.setItem('access_token', data.access_token);
-localStorage.setItem('refresh_token', data.refresh_token);
+        errorDiv.style.color = "#4cff88";
+        errorDiv.textContent = "Успешно! Входим...";
 
-localStorage.setItem('user_phone', phone);
+        // Шаг 2: проверяем роль
+        const meRes = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/users/me", {
+            headers: {
+                "Authorization": `Bearer ${data.access_token}`,
+                "ngrok-skip-browser-warning": "69420"
+            }
+        });
 
-localStorage.removeItem('user_full_name');
+        if (meRes.ok) {
+            const me = await meRes.json();
+            localStorage.setItem('user_full_name', me.full_name);
+            localStorage.setItem('user_role', me.role);
 
-errorDiv.style.color = "#4cff88";
-errorDiv.textContent = "Успешно! Входим...";
+            setTimeout(() => {
+                if (me.role === "admin") {
+                    window.location.href = "admin.html";
+                } else {
+                    window.location.href = "mainpage.html";
+                }
+            }, 600);
+        } else {
+            // Не удалось получить роль — идём как обычный пользователь
+            setTimeout(() => { window.location.href = "mainpage.html"; }, 600);
+        }
 
-setTimeout(() => {
-    window.location.href = "mainpage.html";
-}, 600);
     } catch (err) {
         console.error("❌ Ошибка запроса:", err);
         errorDiv.textContent = "Сервер недоступен или ошибка сети";
@@ -247,9 +240,4 @@ createAccount.addEventListener("click", () => {
 </script>
 
 </body>
-</html> 
-
-
-
-
-
+</html>

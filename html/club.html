@@ -219,7 +219,7 @@ async function loadZones(id) {
     const el = document.getElementById('zonesContent');
     if (!el) return;
     try {
-        const r = await api.get(`/zones/get_zones?club_id=${id}`);
+        const r = await api.get(`/zones/?club_id=${id}`);
         if (!r.data || !r.data.length) { el.innerHTML = '<div class="zones-loading">Зон нет</div>'; return; }
         const skip = new Set(['id', 'club_id', 'name', 'title', 'created_at', 'updated_at']);
         el.innerHTML = r.data.map(zone => {
@@ -260,7 +260,7 @@ async function init() {
     if (!club) {
         // Попробуем получить клуб напрямую
         try {
-            const r = await api.get(`/clubs/get_club?club_id=${clubId}`);
+            const r = await api.get(`/clubs/${clubId}`);
             club = r.data;
         } catch {
             // Нет прямого эндпоинта — покажем ошибку

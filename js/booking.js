@@ -38,7 +38,7 @@ async function loadBookings() {
     const loader = document.getElementById('loader');
 
     try {
-        const res = await api.get('/bookings/get_bookings');
+        const res = await api.get('/bookings/me');
         const bookings = Array.isArray(res.data) ? res.data : [];
         loader.style.display = 'none';
 
@@ -51,7 +51,7 @@ async function loadBookings() {
         const groups = {};
         bookings.forEach(b => {
             const zoneId = b.zone?.id || b.zone?.name || 'default';
-            const key = `${b.club?.id}-${b.start_time}-${b.end_time}-${zoneId}`;
+            const key = `${b.club?.name}-${b.start_time}-${b.end_time}-${zoneId}`;
 
             if (!groups[key]) {
                 groups[key] = {
@@ -61,11 +61,13 @@ async function loadBookings() {
                     start: new Date(b.start_time),
                     end: new Date(b.end_time),
                     pcs: [b.computer?.number],
-                    ids: [b.id]
+                    ids: [b.id],
+                    totalPrice: b.total_price || 0  // берём цену первого, суммируем ниже
                 };
             } else {
                 groups[key].pcs.push(b.computer?.number);
                 groups[key].ids.push(b.id);
+                groups[key].totalPrice += b.total_price || 0;  // суммируем цены всех мест
             }
         });
 
@@ -92,6 +94,10 @@ async function loadBookings() {
                         <div><div class="label">Зона</div><div class="value">${g.zone}</div></div>
                         <div><div class="label">Места</div><div class="value pc-badge">№${pcsList}</div></div>
                     </div>
+                    <div class="price-row">
+                        <span class="material-symbols-outlined" style="font-size:16px">payments</span>
+                        Итого: <b>${g.totalPrice} ₸</b>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -105,7 +111,11 @@ async function confirmDelete(btn, ids) {
         btn.innerHTML = `<span class="material-symbols-outlined" style="animation: spin 1s infinite linear">sync</span>`;
         btn.disabled = true;
         try {
-            await Promise.all(ids.map(id => api.delete('/bookings/delete_booking', { params: { booking_id: id } })));
+            await Promise.all(
+    ids.map(id =>
+        api.delete(`/bookings/${id}`)
+    )
+);
             await loadBookings();
         } catch (e) {
             alert("Ошибка удаления");

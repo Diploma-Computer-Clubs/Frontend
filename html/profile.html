@@ -47,6 +47,8 @@
         .drawer-nav { display: flex; flex-direction: column; }
         .drawer-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .drawer-link span { margin-right: 15px; color: #888; }
+        .drawer-link.logout { color: #ff6b6b; border-top: 1px solid rgba(255,255,255,0.07); }
+        .drawer-link.logout span { color: #ff6b6b; }
 
         .phone-container { width: 100%; max-width: 430px; display: flex; flex-direction: column; padding: 20px; min-height: 100vh; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 40px; }
@@ -125,6 +127,7 @@
         <a href="map.html" class="drawer-link"><span class="material-symbols-outlined">search</span> Карта клубов</a>
         <a href="booking.html" class="drawer-link"><span class="material-symbols-outlined">diamond</span> Бронь</a>
         <a href="settings.html" class="drawer-link"><span class="material-symbols-outlined">settings</span> Настройки</a>
+        <a href="#" class="drawer-link logout" id="logoutLink"><span class="material-symbols-outlined">logout</span> Выйти</a>
     </div>
 </nav>
 
@@ -161,5 +164,12 @@
     <button class="delete-btn" id="openDeleteModal">Удалить аккаунт</button>
 </div>
 <script src="../js/profile.js"></script>
+<script>
+    document.getElementById('logoutLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = 'check.html';
+    });
+</script>
 </body>
 </html>

@@ -64,25 +64,47 @@
     );
 
     async function loadCities(currentCityName) {
-        try {
-            const res = await fetch(`${API_URL}/cities/get_all_cities`, {
-                headers: { "ngrok-skip-browser-warning": "69420" }
-            });
-            const data = await res.json();
-            const select = document.getElementById("city_id");
-            select.innerHTML = "";
+    try {
 
-            data.forEach(city => {
-                const option = document.createElement("option");
-                option.value = city.id;
-                option.textContent = city.city;
-                if (city.city === currentCityName) option.selected = true;
-                select.appendChild(option);
-            });
-        } catch (err) {
-            showToast("Не удалось загрузить города", "error");
+        const res = await api.get('/cities/');
+        const data = res.data;
+
+        console.log('Cities:', data);
+
+        const select = document.getElementById("city_id");
+        select.innerHTML = "";
+
+        data.forEach(city => {
+
+            const option = document.createElement("option");
+
+            option.value = city.id;
+            option.textContent = city.city;
+
+            select.appendChild(option);
+        });
+
+        const selectedCity = data.find(
+            c => c.city === currentCityName
+        );
+
+        if (selectedCity) {
+            select.value = selectedCity.id;
         }
+
+    } catch (err) {
+
+        console.error(
+            'Cities error:',
+            err.response?.data || err
+        );
+
+        showToast(
+            "Не удалось загрузить города",
+            "error"
+        );
     }
+}
 
     async function initPage() {
         try {
@@ -111,7 +133,7 @@
         };
 
         try {
-            const res = await api.patch('/users/change_user', payload);
+            const res = await api.patch('/users/me', payload);
             if (res.status === 200 || res.status === 204) {
                 showToast("Данные успешно обновлены!");
                 setTimeout(() => {

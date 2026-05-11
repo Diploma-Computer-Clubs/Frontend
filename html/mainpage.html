@@ -116,6 +116,9 @@
 
         .drawer-link:hover span { color: #fff; }
 
+        .drawer-link.logout { color: #ff6b6b; border-top: 1px solid rgba(255,255,255,0.07); }
+        .drawer-link.logout span { color: #ff6b6b; }
+
         /* --- ШАГИ --- */
         .hero-section {
             background-color: var(--bg-dark);
@@ -196,6 +199,9 @@
         <a href="settings.html" class="drawer-link">
             <span class="material-symbols-outlined">settings</span> Настройки
         </a>
+        <a href="#" class="drawer-link logout" id="logoutLink">
+            <span class="material-symbols-outlined">logout</span> Выйти
+        </a>
     </div>
 </nav>
 
@@ -253,5 +259,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="../js/main.js"></script>
+<script>
+    document.getElementById('logoutLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = 'check.html';
+    });
+</script>
 </body>
 </html>

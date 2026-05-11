@@ -7,8 +7,6 @@ const startTime = localStorage.getItem('booking_start_time') || "17:00";
 const endTime   = localStorage.getItem('booking_end_time')   || "18:00";
 const token     = localStorage.getItem('access_token');
 
-// Дата берётся из select_time (он уже посчитал нужный день с учётом полуночи)
-// Если не сохранена — используем сегодня как fallback
 function getTodayISO() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -45,11 +43,8 @@ async function fetchAvailability() {
     const layer = document.getElementById('pcsLayer');
     layer.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#444;font-size:12px;">Загрузка...</div>';
 
-    // Формируем start/end в ISO с учётом что endTime может быть следующего дня
     const startISO = `${selectedDateStr}T${startTime}:00`;
-    // endDate уже правильно посчитан в select_time (учитывает переход через полночь)
-    // при смене даты в календаре пересчитываем endDate относительно новой startDate
-    const endISO = `${selectedEndDateStr}T${endTime}:00`;
+    const endISO   = `${selectedEndDateStr}T${endTime}:00`;
 
     try {
         const res = await axios.get(
@@ -70,34 +65,30 @@ async function fetchAvailability() {
         return;
     }
 
-    // Сбрасываем выбор при смене даты
     selected = [];
     updateUI();
     renderMap();
 }
 
 // ─── MAP RENDER ───────────────────────────────────────────────────────────────
-// Авто-раскладка: зоны идут вертикально блоками
 function renderMap() {
     const layer = document.getElementById('pcsLayer');
     layer.innerHTML = '';
 
-    // Убираем старые динамические лейблы (статические оставляем)
     document.querySelectorAll('.dynamic-label').forEach(el => el.remove());
 
     const mapContainer = document.getElementById('clubMap');
     const PC_SIZE  = 36;
     const PC_GAP   = 8;
-    const ZONE_GAP = 30; // отступ между зонами
+    const ZONE_GAP = 30;
     const START_X  = 20;
-    const START_Y  = 140; // ниже стойки администратора
+    const START_Y  = 140;
 
     let currentY = START_Y;
 
     availabilityData.forEach(zone => {
         if (!zone.computers || zone.computers.length === 0) return;
 
-        // Лейбл зоны
         const lbl = document.createElement('div');
         lbl.className = 'label dynamic-label';
         lbl.style.top  = (currentY - 18) + 'px';
@@ -122,14 +113,12 @@ function renderMap() {
             el.style.height = PC_SIZE + 'px';
 
             if (!isFree) {
-                // Занятый — тёмно-серый, некликабельный
                 el.style.background   = '#1a1a1a';
                 el.style.borderColor  = '#2a2a2a';
                 el.style.color        = '#333';
                 el.style.cursor       = 'default';
                 el.title = 'Занято';
             } else {
-                // Свободный — яркий
                 if (isVip) {
                     el.style.background  = '#1a0a0a';
                     el.style.borderColor = '#8b1a1a';
@@ -146,7 +135,6 @@ function renderMap() {
                     if (idx > -1) {
                         selected.splice(idx, 1);
                         el.classList.remove('selected');
-                        // Восстанавливаем свободный вид
                         if (isVip) {
                             el.style.background  = '#1a0a0a';
                             el.style.borderColor = '#8b1a1a';
@@ -195,7 +183,7 @@ async function calculatePrice() {
     const payload = [{ items, start_time: `${selectedDateStr}T${startTime}:00`, end_time: `${selectedEndDateStr}T${endTime}:00` }];
 
     try {
-        const res = await axios.post(`${API_URL}/pricing/calculate_bulk`, payload, {
+        const res = await axios.post(`${API_URL}/pricing/calculate`, payload, {
             headers: { "ngrok-skip-browser-warning": "69420" }
         });
         return res.data.total_amount;
@@ -242,27 +230,23 @@ async function handleBooking() {
         return;
     }
 
-    const endDateTimeStr = `${selectedEndDateStr}T${endTime}:00`;
-
     btn.innerText = "БРОНИРУЕМ...";
     btn.classList.remove('active');
 
     try {
-        const payloadToken = JSON.parse(atob(token.split('.')[1]));
-        const userId = payloadToken.sub || payloadToken.user_id;
         const pricePerPc = window.currentTotalPrice / selected.length;
 
+        // FIX: убран user_id (бэк берёт из токена), эндпоинт /bookings/create_booking → /bookings
         const data = selected.map(s => ({
-            "start_time":   `${selectedDateStr}T${startTime}:00`,
-            "end_time":     endDateTimeStr,
-            "total_price":  pricePerPc,
-            "user_id":      parseInt(userId),
-            "computer_id":  s.id,
-            "zone_id":      s.zid,
-            "club_id":      parseInt(clubId)
+            "start_time":  `${selectedDateStr}T${startTime}:00`,
+            "end_time":    `${selectedEndDateStr}T${endTime}:00`,
+            "total_price": pricePerPc,
+            "computer_id": s.id,
+            "zone_id":     s.zid,
+            "club_id":     parseInt(clubId)
         }));
 
-        await axios.post(`${API_URL}/bookings/create_booking`, data, {
+        await axios.post(`${API_URL}/bookings`, data, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'ngrok-skip-browser-warning': '69420'
@@ -283,7 +267,9 @@ async function fetchClubInfo() {
     try {
         const cached = localStorage.getItem('club_cache_' + clubId);
         if (cached) renderHeader(JSON.parse(cached));
-        const r = await axios.get(`${API_URL}/clubs/get_club_info?club_id=${clubId}`, {
+
+        // FIX: /clubs/get_club_info?club_id= → /clubs/{id}
+        const r = await axios.get(`${API_URL}/clubs/${clubId}`, {
             headers: { "ngrok-skip-browser-warning": "69420" }
         });
         renderHeader(r.data);
@@ -326,7 +312,6 @@ function initCalendar() {
         const item = document.createElement('div');
         item.className = `date-item ${i === 0 ? 'active' : ''}`;
         if (i === 0) {
-            // При первой загрузке берём дату из select_time
             selectedDateStr    = savedStartDate;
             selectedEndDateStr = savedEndDate;
         }
@@ -337,7 +322,6 @@ function initCalendar() {
             document.querySelectorAll('.date-item').forEach(el => el.classList.remove('active'));
             item.classList.add('active');
             selectedDateStr = iso;
-            // Пересчитываем дату конца: если end <= start — следующий день
             if (endTime <= startTime) {
                 const next = new Date(iso);
                 next.setDate(next.getDate() + 1);
@@ -355,7 +339,6 @@ function initCalendar() {
 document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('timeLabel').innerText = `${startTime} – ${endTime}`;
     fetchClubInfo();
-    initCalendar(); // выставляет selectedDateStr (сегодня)
-
+    initCalendar();
     await fetchAvailability();
 });

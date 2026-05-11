@@ -21,7 +21,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
         body { background-color: var(--bg-light); color: var(--text-main); min-height: 100vh; }
 
-        /* --- ХЕДЕР --- */
         .main-header {
             background-color: var(--bg-dark);
             display: flex;
@@ -44,7 +43,6 @@
         .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
         .burger-menu.open .burger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        /* --- БОКОВОЕ МЕНЮ --- */
         .side-drawer {
             position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
             background-color: var(--menu-bg); z-index: 1000;
@@ -62,7 +60,6 @@
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 999; }
         .overlay.active { display: block; }
 
-        /* --- КОНТЕНТ --- */
         .container { padding: 20px; max-width: 450px; margin: 0 auto; }
         .page-title { color: #333; font-size: 22px; font-weight: 700; margin-bottom: 25px; text-align: center; }
 
@@ -91,6 +88,15 @@
         .label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
         .value { font-size: 14px; font-weight: 600; color: #fff; margin-top: 2px; }
         .pc-badge { color: var(--accent); font-weight: 700; }
+
+        /* Строка с ценой */
+        .price-row {
+            display: flex; align-items: center; gap: 6px;
+            margin-top: 16px; padding-top: 14px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            font-size: 13px; color: #aaa;
+        }
+        .price-row b { color: #4CAF50; font-size: 15px; }
 
         .loader { text-align: center; color: #333; margin-top: 100px; font-weight: 700; }
         #empty-state { text-align: center; color: #666; margin-top: 100px; display: none; }

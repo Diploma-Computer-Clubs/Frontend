@@ -27,6 +27,8 @@ html,body { height:100%; background:#000; color:#fff; overflow:hidden; }
 .drawer-link span { margin-right:15px; color:#888; font-size:22px; }
 .drawer-link:hover span, .drawer-link.active span { color:#fff; }
 .drawer-link.active { background:rgba(255,255,255,0.05); }
+.drawer-link.logout { color:#ff6b6b; border-top:1px solid rgba(255,255,255,0.07); }
+.drawer-link.logout span { color:#ff6b6b; }
 
 .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; z-index:1999; }
 .overlay.active { display:block; }
@@ -51,7 +53,7 @@ select option { background:#111; color:#fff; }
 .slide-handle { pointer-events:all; cursor:pointer; padding:10px 20px 0; display:flex; flex-direction:column; align-items:center; }
 .slide-handle-bar { width:40px; height:4px; background:rgba(255,255,255,0.35); border-radius:2px; transition:background 0.2s; }
 .slide-handle:hover .slide-handle-bar { background:rgba(255,255,255,0.7); }
-.clubs-count-label { pointer-events:all; cursor:pointer; padding:10px 0 20px; font-size:14px; font-weight:700; color:#fff; text-align:center; width:100%; animation:wobble 2.6s ease-in-out infinite; text-shadow:0 0 20px rgba(255,255,255,0.2); }
+.clubs-count-label { pointer-events:all; cursor:pointer; padding:10px 0 20px; font-size:14px; font-weight:700; color:#030303; text-align:center; width:100%; animation:wobble 2.6s ease-in-out infinite; text-shadow:0 0 20px rgba(255,255,255,0.2); }
 .clubs-count-label span { font-weight:400; opacity:0.7; }
 @keyframes wobble {
     0%,100% { transform:rotate(0deg) scale(1); }
@@ -111,6 +113,7 @@ select option { background:#111; color:#fff; }
         <a href="map.html"      class="drawer-link active"><span class="material-symbols-outlined">search</span> Карта клубов</a>
         <a href="booking.html"  class="drawer-link"><span class="material-symbols-outlined">diamond</span> Бронь</a>
         <a href="settings.html" class="drawer-link"><span class="material-symbols-outlined">settings</span> Настройки</a>
+        <a href="#" class="drawer-link logout" id="logoutLink"><span class="material-symbols-outlined">logout</span> Выйти</a>
     </div>
 </nav>
 
@@ -131,7 +134,7 @@ select option { background:#111; color:#fff; }
         <div class="bottom-panel">
             <div class="slide-handle" id="slideHandle"><div class="slide-handle-bar"></div></div>
             <div class="clubs-count-label" onclick="goToSlide(1)">
-                Доступно компов: <span id="clubsCountNum">—</span>
+                Доступно клубов: <span id="clubsCountNum">—</span>
             </div>
         </div>
     </div>
@@ -201,7 +204,8 @@ DG.then(() => { map = DG.map('map', { center: [51.1694, 71.4491], zoom: 13 }); }
 
 async function loadCities() {
     try {
-        const r = await api.get('/cities/get_all_cities');
+        // FIX: /cities/get_all_cities → /cities/
+        const r = await api.get('/cities/');
         const sel = document.getElementById('citySelect');
         r.data.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.city; sel.appendChild(o); });
     } catch(e) { console.log('Города:', e); }
@@ -224,13 +228,12 @@ function goToClub(clubId) {
 
 async function loadClubsByCity(cityId) {
     try {
-        // Загружаем маркеры с координатами
-        const mapRes = await api.get(`/clubs/get_clubs_map?city_id=${cityId}`);
+        // FIX: /clubs/get_clubs_map?city_id= → /clubs/map?city_id=
+        const mapRes = await api.get(`/clubs/map?city_id=${cityId}`);
         const mapClubs = mapRes.data;
 
         document.getElementById('clubsCountNum').textContent = mapClubs.length || '—';
 
-        // Расставляем маркеры сразу (данных уже достаточно)
         markers.forEach(m => map.removeLayer(m)); markers = [];
         mapClubs.forEach(mc => {
             const lat = mc.latitude  ?? mc.lat;
@@ -245,17 +248,16 @@ async function loadClubsByCity(cityId) {
             );
         });
 
-        // Загружаем детальную инфу по каждому клубу параллельно
+        // FIX: /clubs/get_club_info?club_id= → /clubs/{id}
         const details = await Promise.all(
             mapClubs.map(mc =>
-                api.get(`/clubs/get_club_info?club_id=${mc.id}`)
+                api.get(`/clubs/${mc.id}`)
                    .then(r => r.data)
                    .catch(() => mc)
             )
         );
 
         details.forEach(club => {
-            // Минимальная цена из zones
             if (club.zones && club.zones.length) {
                 club._minPrice = Math.min(...club.zones.map(z => z.cost));
             }
@@ -340,6 +342,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     syncProfile();
     await loadCities();
     await loadUserCity();
+});
+
+document.getElementById('logoutLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    localStorage.clear();
+    window.location.href = 'check.html';
 });
 </script>
 </body>
