@@ -202,30 +202,31 @@ form.addEventListener("submit", async (e) => {
         errorDiv.style.color = "#4cff88";
         errorDiv.textContent = "Успешно! Входим...";
 
-        // Шаг 2: проверяем роль
-        const meRes = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/users/me", {
-            headers: {
-                "Authorization": `Bearer ${data.access_token}`,
-                "ngrok-skip-browser-warning": "69420"
-            }
-        });
+        // Шаг 2: проверяем роль через /users/me
+        setTimeout(async () => {
+            try {
+                const meRes = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/users/me", {
+                    headers: {
+                        "Authorization": `Bearer ${data.access_token}`,
+                        "ngrok-skip-browser-warning": "69420"
+                    }
+                });
+                const me = await meRes.json();
 
-        if (meRes.ok) {
-            const me = await meRes.json();
-            localStorage.setItem('user_full_name', me.full_name);
-            localStorage.setItem('user_role', me.role);
-
-            setTimeout(() => {
-                if (me.role === "admin") {
-                    window.location.href = "admin.html";
+                if (me.staff_role === "admin" && me.club_ids && me.club_ids.length > 0) {
+                    // Сохраняем club_id для admin страниц
+                    localStorage.setItem('admin_club_id', me.club_ids[0]);
+                    // Перенаправляем на admin_select_seat вместо admin_select_time
+                    window.location.href = "admin_select_seat.html?club_id=" + me.club_ids[0];
                 } else {
                     window.location.href = "mainpage.html";
                 }
-            }, 600);
-        } else {
-            // Не удалось получить роль — идём как обычный пользователь
-            setTimeout(() => { window.location.href = "mainpage.html"; }, 600);
-        }
+            } catch (err) {
+                console.error("❌ Ошибка получения роли:", err);
+                // Fallback — идём на обычную главную
+                window.location.href = "mainpage.html";
+            }
+        }, 600);
 
     } catch (err) {
         console.error("❌ Ошибка запроса:", err);

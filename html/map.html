@@ -339,6 +339,10 @@ document.getElementById('citySelect').addEventListener('change', function() {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+    if (!localStorage.getItem('access_token')) { window.location.href = 'check.html'; return; }
+    try {
+        await api.get('/users/me');
+    } catch { window.location.href = 'check.html'; return; }
     syncProfile();
     await loadCities();
     await loadUserCity();

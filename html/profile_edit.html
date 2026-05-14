@@ -168,10 +168,32 @@
 </div>
     <script src="../js/profile_edit.js"></script>
 <script>
+    // ── AUTH GUARD ──
+    (function() { if (!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
+
+    const _API_pe = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+    const _api_pe = axios.create({ baseURL: _API_pe, headers: { "ngrok-skip-browser-warning": "69420" } });
+    _api_pe.interceptors.request.use(cfg => { const t = localStorage.getItem('access_token'); if (t) cfg.headers.Authorization = `Bearer ${t}`; return cfg; });
+    _api_pe.interceptors.response.use(r => r, async err => {
+        if (err.response?.status === 401 && !err.config._retry) {
+            err.config._retry = true;
+            const rt = localStorage.getItem('refresh_token');
+            if (rt) {
+                try {
+                    const r = await axios.post(`${_API_pe}/auth/refresh`, {}, { headers: { "Authorization": `Bearer ${rt}`, "ngrok-skip-browser-warning": "69420" } });
+                    localStorage.setItem('access_token', r.data.access_token);
+                    err.config.headers.Authorization = `Bearer ${r.data.access_token}`;
+                    return _api_pe(err.config);
+                } catch { localStorage.clear(); window.location.href = 'check.html'; }
+            } else { localStorage.clear(); window.location.href = 'check.html'; }
+        }
+        return Promise.reject(err);
+    });
+    document.addEventListener('DOMContentLoaded', async () => {
+        try { await _api_pe.get('/users/me'); } catch { window.location.href = 'check.html'; }
+    });
     document.getElementById('logoutLink').addEventListener('click', function(e) {
-        e.preventDefault();
-        localStorage.clear();
-        window.location.href = 'check.html';
+        e.preventDefault(); localStorage.clear(); window.location.href = 'check.html';
     });
 </script>
 </body>

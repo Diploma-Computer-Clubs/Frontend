@@ -70,6 +70,127 @@ async function fetchAvailability() {
     renderMap();
 }
 
+// ─── TOOLTIP ──────────────────────────────────────────────────────────────────
+// Парсим время напрямую из строки "2026-05-15T19:00:00" — без Date(), без сдвига таймзоны
+function formatTime(isoStr) {
+    if (!isoStr) return '--:--';
+    const timePart = isoStr.split('T')[1] || isoStr;
+    const parts = timePart.split(':');
+    return `${parts[0]}:${parts[1]}`;
+}
+
+function getOrCreateTooltip() {
+    let tt = document.getElementById('pcTooltip');
+    if (!tt) {
+        // Inject CSS matching admin design exactly
+        const s = document.createElement('style');
+        s.textContent = `
+            .pc-tooltip {
+                position: fixed;
+                z-index: 9998;
+                background: rgba(15,15,15,0.97);
+                border: 1px solid rgba(139,26,26,0.6);
+                border-radius: 12px;
+                padding: 10px 14px;
+                pointer-events: none;
+                opacity: 0;
+                transform: translateY(6px) scale(0.97);
+                transition: opacity 0.18s ease, transform 0.18s ease;
+                box-shadow: 0 8px 28px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+                min-width: 170px;
+                max-width: 230px;
+                font-family: 'Montserrat', sans-serif;
+            }
+            .pc-tooltip.visible {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            .pc-tooltip-header {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                margin-bottom: 8px;
+            }
+            .pc-tooltip-dot {
+                width: 7px; height: 7px;
+                border-radius: 50%;
+                background: #ff4d4d;
+                box-shadow: 0 0 6px #ff4d4d;
+                flex-shrink: 0;
+            }
+            .pc-tooltip-title {
+                font-size: 11px;
+                font-weight: 700;
+                color: rgba(255,255,255,0.45);
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+            }
+            .pc-tooltip-time {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                background: rgba(255,255,255,0.05);
+                border-radius: 8px;
+                padding: 6px 10px;
+            }
+            .pc-tooltip-time-icon {
+                font-size: 14px;
+                color: rgba(255,255,255,0.4);
+            }
+            .pc-tooltip-time-text {
+                font-size: 13px;
+                font-weight: 700;
+                color: #fff;
+                letter-spacing: 0.3px;
+            }
+        `;
+        document.head.appendChild(s);
+
+        tt = document.createElement('div');
+        tt.id = 'pcTooltip';
+        tt.className = 'pc-tooltip';
+        tt.innerHTML = `
+            <div class="pc-tooltip-header">
+                <div class="pc-tooltip-dot"></div>
+                <span class="pc-tooltip-title">Занято</span>
+            </div>
+            <div class="pc-tooltip-time">
+                <span class="material-symbols-outlined pc-tooltip-time-icon">schedule</span>
+                <span class="pc-tooltip-time-text" id="tooltipTimeText"></span>
+            </div>`;
+        document.body.appendChild(tt);
+    }
+    return tt;
+}
+
+function showPcTooltip(el, bookings) {
+    const tt = getOrCreateTooltip();
+    const lines = bookings.map(b => `${formatTime(b.start_time)} – ${formatTime(b.end_time)}`);
+    const timeEl = document.getElementById('tooltipTimeText');
+    if (timeEl) timeEl.textContent = lines.join(', ');
+    tt.classList.add('visible');
+    movePcTooltip(el);
+}
+
+function movePcTooltip(el) {
+    const tt = document.getElementById('pcTooltip');
+    if (!tt) return;
+    const rect = el.getBoundingClientRect();
+    const ttW = 200;
+    let left = rect.left + rect.width / 2 - ttW / 2;
+    let top  = rect.top - tt.offsetHeight - 10;
+    if (top < 8) top = rect.bottom + 10;
+    if (left < 8) left = 8;
+    if (left + ttW > window.innerWidth - 8) left = window.innerWidth - ttW - 8;
+    tt.style.left = left + 'px';
+    tt.style.top  = top + 'px';
+}
+
+function hidePcTooltip() {
+    const tt = document.getElementById('pcTooltip');
+    if (tt) tt.classList.remove('visible');
+}
+
 // ─── MAP RENDER ───────────────────────────────────────────────────────────────
 function renderMap() {
     const layer = document.getElementById('pcsLayer');
@@ -117,7 +238,14 @@ function renderMap() {
                 el.style.borderColor  = '#2a2a2a';
                 el.style.color        = '#333';
                 el.style.cursor       = 'default';
-                el.title = 'Занято';
+                if (comp.bookings && comp.bookings.length > 0) {
+                    el.addEventListener('mouseenter', () => showPcTooltip(el, comp.bookings));
+                    el.addEventListener('mouseleave', hidePcTooltip);
+                    el.addEventListener('mousemove',  () => movePcTooltip(el));
+                    // touch support for mobile
+                    el.addEventListener('touchstart', (e) => { e.preventDefault(); showPcTooltip(el, comp.bookings); }, { passive: false });
+                    el.addEventListener('touchend',   () => setTimeout(hidePcTooltip, 1500));
+                }
             } else {
                 if (isVip) {
                     el.style.background  = '#1a0a0a';

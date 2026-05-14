@@ -38,6 +38,9 @@
 </div>
 
 <script>
+    // ── AUTH GUARD ──
+    (function() { if (!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
+
     // Пробрасываем club_id из URL
     const _params = new URLSearchParams(window.location.search);
     const _clubId = _params.get('club_id') || '';

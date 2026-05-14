@@ -54,7 +54,11 @@
         .user-name { font-weight: 700; font-size: 1.1rem; color: #fff; display: block; }
         .user-phone { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
 
-        .drawer-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .drawer-link.logout { color: #ff6b6b; border-top: 1px solid rgba(255,255,255,0.07); }
+        .drawer-link.logout span { color: #ff6b6b; }
+
+        .drawer-nav { display: flex; flex-direction: column; }
+        .drawer-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; }
         .drawer-link span { margin-right: 15px; color: #888; font-size: 22px; }
 
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 999; }
@@ -115,6 +119,7 @@
         <a href="mainpage.html" class="drawer-link"><span class="material-symbols-outlined">home</span> Главная</a>
         <a href="profile.html" class="drawer-link"><span class="material-symbols-outlined">account_circle</span> Профиль</a>
         <a href="map.html" class="drawer-link"><span class="material-symbols-outlined">search</span> Карта клубов</a>
+        <a href="#" class="drawer-link logout" id="logoutLink"><span class="material-symbols-outlined">logout</span> Выйти</a>
     </div>
 </nav>
 
@@ -136,5 +141,35 @@
     <div id="empty-state">У вас пока нет активных бронирований.</div>
 </div>
 <script src="../js/booking.js"></script>
+<script>
+    // ── AUTH GUARD ──
+    (function() { if (!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
+
+    const _API_b = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+    const _api_b = axios.create({ baseURL: _API_b, headers: { "ngrok-skip-browser-warning": "69420" } });
+    _api_b.interceptors.request.use(cfg => { const t = localStorage.getItem('access_token'); if (t) cfg.headers.Authorization = `Bearer ${t}`; return cfg; });
+    _api_b.interceptors.response.use(r => r, async err => {
+        if (err.response?.status === 401 && !err.config._retry) {
+            err.config._retry = true;
+            const rt = localStorage.getItem('refresh_token');
+            if (rt) {
+                try {
+                    const r = await axios.post(`${_API_b}/auth/refresh`, {}, { headers: { "Authorization": `Bearer ${rt}`, "ngrok-skip-browser-warning": "69420" } });
+                    localStorage.setItem('access_token', r.data.access_token);
+                    err.config.headers.Authorization = `Bearer ${r.data.access_token}`;
+                    return _api_b(err.config);
+                } catch { localStorage.clear(); window.location.href = 'check.html'; }
+            } else { localStorage.clear(); window.location.href = 'check.html'; }
+        }
+        return Promise.reject(err);
+    });
+    document.addEventListener('DOMContentLoaded', async () => {
+        try { await _api_b.get('/users/me'); } catch { window.location.href = 'check.html'; }
+    });
+
+    document.getElementById('logoutLink').addEventListener('click', function(e) {
+        e.preventDefault(); localStorage.clear(); window.location.href = 'check.html';
+    });
+</script>
 </body>
 </html>
