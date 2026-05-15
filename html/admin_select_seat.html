@@ -344,10 +344,49 @@
             font-family: 'Montserrat', sans-serif; transition: background 0.15s; text-align: left;
         }
         .pc-ctx-btn:hover { background: rgba(255,255,255,0.07); }
-        .pc-ctx-btn.turn-on  { color: #4CAF50; }
-        .pc-ctx-btn.turn-off { color: #ff6b6b; }
+        .pc-ctx-btn.turn-on     { color: #4CAF50; }
+        .pc-ctx-btn.turn-off    { color: #ff6b6b; }
+        .pc-ctx-btn.delete-book { color: #ff9800; }
         .pc-ctx-btn .material-symbols-outlined { font-size: 18px; }
         .pc-ctx-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 4px 0; }
+
+        /* Confirm delete modal */
+        .del-modal-overlay {
+            position: fixed; inset: 0; z-index: 9995;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+        }
+        .del-modal-overlay.visible { display: flex; }
+        .del-modal {
+            background: #111; border: 1px solid rgba(255,100,0,0.3);
+            border-radius: 18px; padding: 24px 20px 20px;
+            min-width: 280px; max-width: 320px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+        }
+        .del-modal-icon { font-size: 32px; text-align: center; margin-bottom: 12px; }
+        .del-modal-title { font-size: 15px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+        .del-modal-sub { font-size: 12px; color: rgba(255,255,255,0.45); text-align: center; margin-bottom: 18px; line-height: 1.5; }
+        .del-modal-booking {
+            background: rgba(255,255,255,0.05); border-radius: 10px;
+            padding: 10px 14px; margin-bottom: 16px;
+        }
+        .del-modal-booking-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .del-modal-booking-time { font-size: 12px; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 6px; }
+        .del-modal-btns { display: flex; gap: 10px; }
+        .del-modal-cancel {
+            flex: 1; padding: 13px; background: rgba(255,255,255,0.06);
+            border: none; border-radius: 12px; color: #fff;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            font-family: 'Montserrat', sans-serif; transition: 0.2s;
+        }
+        .del-modal-cancel:active { background: rgba(255,255,255,0.12); }
+        .del-modal-confirm {
+            flex: 1; padding: 13px; background: #8b1a1a;
+            border: none; border-radius: 12px; color: #fff;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            font-family: 'Montserrat', sans-serif; transition: 0.2s;
+        }
+        .del-modal-confirm:active { background: #a32424; transform: scale(0.97); }
 
         /* ── TOAST ── */
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
@@ -446,6 +485,30 @@
     <button class="pc-ctx-btn turn-off" id="pcCtxTurnOff" onclick="togglePc(false)">
         <span class="material-symbols-outlined">power_off</span> Выключить
     </button>
+    <div class="pc-ctx-divider" id="pcCtxDelDivider" style="display:none"></div>
+    <button class="pc-ctx-btn delete-book" id="pcCtxDeleteBook" style="display:none" onclick="openDeleteModal()">
+        <span class="material-symbols-outlined">event_busy</span> Удалить бронь
+    </button>
+</div>
+
+<!-- Delete booking confirmation modal -->
+<div class="del-modal-overlay" id="delModalOverlay">
+    <div class="del-modal">
+        <div class="del-modal-icon">🗑️</div>
+        <div class="del-modal-title">Удалить бронирование?</div>
+        <div class="del-modal-sub">Это действие нельзя отменить</div>
+        <div class="del-modal-booking" id="delModalBookingInfo">
+            <div class="del-modal-booking-name" id="delModalName">—</div>
+            <div class="del-modal-booking-time">
+                <span class="material-symbols-outlined" style="font-size:14px;color:rgba(255,255,255,0.4)">schedule</span>
+                <span id="delModalTime">—</span>
+            </div>
+        </div>
+        <div class="del-modal-btns">
+            <button class="del-modal-cancel" onclick="closeDeleteModal()">Отмена</button>
+            <button class="del-modal-confirm" id="delModalConfirmBtn" onclick="confirmDeleteBooking()">Удалить</button>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -534,13 +597,21 @@ api.interceptors.response.use(r => r, async err => {
 
 // ── PC Toggle (включить / выключить) ──
 let ctxCompId = null;
+let ctxCompBookings = [];
 let holdTimer = null;
 
 function openCtxMenu(el, comp) {
     ctxCompId = comp.id;
+    ctxCompBookings = comp.bookings || [];
     document.getElementById('pcCtxTitle').textContent = `ПК №${comp.number}`;
     document.getElementById('pcCtxTurnOn').style.display  = comp.is_Active ? 'none' : 'flex';
     document.getElementById('pcCtxTurnOff').style.display = comp.is_Active ? 'flex' : 'none';
+
+    // Показываем кнопку удаления если есть брони
+    const hasBookings = ctxCompBookings.length > 0;
+    document.getElementById('pcCtxDeleteBook').style.display = hasBookings ? 'flex' : 'none';
+    document.getElementById('pcCtxDelDivider').style.display = hasBookings ? 'block' : 'none';
+
     const menu = document.getElementById('pcCtxMenu');
     const rect = el.getBoundingClientRect();
     let left = rect.left + rect.width / 2 - 100;
@@ -552,6 +623,39 @@ function openCtxMenu(el, comp) {
     menu.style.top  = top  + 'px';
     document.getElementById('pcCtxOverlay').classList.add('visible');
     requestAnimationFrame(() => menu.classList.add('visible'));
+}
+
+function openDeleteModal() {
+    closeCtxMenu();
+    if (!ctxCompBookings || ctxCompBookings.length === 0) return;
+    const b = ctxCompBookings[0];
+    document.getElementById('delModalName').textContent = b.full_name;
+    document.getElementById('delModalTime').textContent = `${formatTime(b.start_time)} – ${formatTime(b.end_time)}`;
+    document.getElementById('delModalConfirmBtn').textContent = 'Удалить';
+    document.getElementById('delModalConfirmBtn').disabled = false;
+    document.getElementById('delModalOverlay').classList.add('visible');
+}
+
+function closeDeleteModal() {
+    document.getElementById('delModalOverlay').classList.remove('visible');
+}
+
+async function confirmDeleteBooking() {
+    if (!ctxCompBookings || ctxCompBookings.length === 0) return;
+    const bookingId = ctxCompBookings[0].id;
+    const btn = document.getElementById('delModalConfirmBtn');
+    btn.textContent = 'Удаляем...';
+    btn.disabled = true;
+    try {
+        await api.delete(`/bookings/${bookingId}/admin`, { params: { club_id: clubId } });
+        closeDeleteModal();
+        showToast('Бронирование удалено', 'success');
+        connectWS();
+    } catch (e) {
+        btn.textContent = 'Удалить';
+        btn.disabled = false;
+        showToast(e.response?.data?.detail || 'Ошибка при удалении');
+    }
 }
 
 function closeCtxMenu() {
@@ -868,4 +972,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 </body>
-</html>     
+</html>
