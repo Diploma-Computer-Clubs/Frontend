@@ -193,6 +193,12 @@
         <a href="map.html" class="drawer-link">
             <span class="material-symbols-outlined">search</span> Карта клубов
         </a>
+        <a href="admin_create_club.html" class="drawer-link" id="ownerLink" style="display: none;">
+            <span class="material-symbols-outlined">add_business</span> Создать свой клуб
+        </a>
+        <a href="admin_dashboard.html" class="drawer-link" id="dashboardLink" style="display: none;">
+            <span class="material-symbols-outlined">add_business</span> Мой клуб
+        </a>
         <a href="booking.html" class="drawer-link">
             <span class="material-symbols-outlined">diamond</span> Бронь
         </a>
@@ -202,6 +208,8 @@
         <a href="#" class="drawer-link logout" id="logoutLink">
             <span class="material-symbols-outlined">logout</span> Выйти
         </a>
+
+
     </div>
 </nav>
 
@@ -281,8 +289,52 @@
         }
         return Promise.reject(err);
     });
-    document.addEventListener('DOMContentLoaded', async () => {
-        try { await _api.get('/users/me'); } catch { window.location.href = 'check.html'; }
+    // Тот самый блок, который делает всё красиво
+   document.addEventListener('DOMContentLoaded', async () => {
+        try { 
+            const res = await _api.get('/users/me'); 
+            const user = res.data;
+            
+            console.log("Данные юзера загружены:", user);
+
+            // если бэк отдаёт club_id прямо в профиле — сохраняем сразу
+            if (user.club_id) {
+                localStorage.setItem('owner_club_id', user.club_id);
+            }
+
+            if (user.club_ids?.length > 0) {
+             localStorage.setItem('owner_club_id', user.club_ids[0]);
+            }
+
+            // 1. Имя и Телефон (теперь поля правильные)
+            const dName = document.getElementById('drawer_name');
+            const dPhone = document.getElementById('drawer_phone');
+            
+            if (dName) dName.innerText = user.full_name || "Пользователь";
+            if (dPhone) dPhone.innerText = user.phone_number || ""; // Поменяли на phone_number
+
+            // 2. Кнопка создания клуба (теперь пускает админов)
+            const ownerLink = document.getElementById('ownerLink');
+            
+            // Проверяем роль: пускаем и admin, и owner на всякий случай
+            if (ownerLink && (user.role === 'admin' || user.role === 'owner')) {
+                ownerLink.style.display = 'flex';
+                console.log("Доступ в админку открыт для роли:", user.role);
+            }
+
+            const createLink = document.getElementById('createClubLink');
+            const dashLink = document.getElementById('dashboardLink');
+
+
+            if (user.role === 'admin' || user.role === 'owner') {
+                    if (createLink) createLink.style.display = 'flex';
+                    if (dashLink) dashLink.style.display = 'flex';
+            }
+
+        } catch (err) { 
+            console.error("Ошибка входа:", err);
+            // window.location.href = 'check.html'; 
+        }
     });
 
     document.getElementById('logoutLink').addEventListener('click', function(e) {
@@ -290,6 +342,12 @@
         localStorage.clear();
         window.location.href = 'check.html';
     });
+
+
+
+
+
+    
 </script>
 </body>
 </html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underlie - Панель управления</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #333333;
+            --bg-light: #cccccc;
+            --field-bg: #2d2d2d;
+            --card-bg: #2a2a2a;
+            --text-main: #ffffff;
+            --accent-green: #00ff00;
+            --danger: #ff453a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        /* ── Бургер ── */
+        .burger-menu { background: none; border: none; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; }
+        .burger-bar { width: 25px; height: 2px; background-color: #fff; transition: 0.3s; }
+        .burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
+        .burger-menu.open .burger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* ── Шторка ── */
+        .side-drawer {
+            position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
+            background-color: #2d2d2d; z-index: 1000; transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+        .side-drawer.open { transform: translateX(0); }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 999; }
+        .overlay.active { display: block; }
+        .user-block { padding: 60px 25px 30px; background-color: #262626; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .user-name { font-weight: 700; color: #fff; display: block; }
+        .user-phone { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
+        .drawer-nav { display: flex; flex-direction: column; }
+        .drawer-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .drawer-link span { margin-right: 15px; color: #888; }
+        .drawer-link.logout { color: #ff6b6b; border-top: 1px solid rgba(255,255,255,0.07); }
+        .drawer-link.logout span { color: #ff6b6b; }
+
+        /* ── Контент ── */
+        .phone-container { width: 100%; max-width: 430px; display: flex; flex-direction: column; padding: 20px; padding-bottom: 40px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 30px; }
+        .header h1 { font-size: 20px; font-weight: 700; text-transform: uppercase; }
+
+        .section-title {
+            color: var(--bg-light); font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.7;
+            margin-bottom: 14px; margin-top: 28px;
+        }
+
+        /* ── Карточка клуба ── */
+        .club-card {
+            background: var(--card-bg);
+            border: 1px solid #444;
+            border-radius: 18px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .club-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: var(--accent-green);
+        }
+        .club-name {
+            font-size: 20px; font-weight: 700; margin-bottom: 6px;
+        }
+        .club-meta {
+            font-size: 13px; color: #888; display: flex; flex-direction: column; gap: 4px;
+        }
+        .club-meta-row { display: flex; align-items: center; gap: 6px; }
+        .club-meta-row .material-symbols-outlined { font-size: 16px; color: #666; }
+        .club-id-badge {
+            display: inline-block; background: rgba(0,255,0,0.08);
+            border: 1px solid rgba(0,255,0,0.2); color: var(--accent-green);
+            font-size: 11px; font-weight: 700; padding: 3px 10px;
+            border-radius: 20px; margin-top: 10px;
+        }
+
+        /* ── Стат карточки ── */
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-card {
+            background: var(--card-bg); border: 1px solid #444;
+            border-radius: 14px; padding: 18px 16px;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .stat-label { font-size: 11px; color: #666; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 28px; font-weight: 700; color: var(--accent-green); }
+        .stat-sub { font-size: 11px; color: #555; }
+
+        /* ── Кнопки действий ── */
+        .action-btn {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--card-bg); border: 1px solid #444;
+            border-radius: 14px; padding: 18px 20px;
+            color: var(--text-main); text-decoration: none;
+            font-size: 14px; font-weight: 700;
+            margin-bottom: 10px; cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .action-btn:active { background: #333; }
+        .action-btn.green { border-color: rgba(0,255,0,0.3); }
+        .action-btn.green:hover { border-color: var(--accent-green); }
+        .action-btn-left { display: flex; align-items: center; gap: 14px; }
+        .action-btn-left .material-symbols-outlined { color: #888; font-size: 22px; }
+        .action-btn.green .action-btn-left .material-symbols-outlined { color: var(--accent-green); }
+        .action-btn .material-symbols-outlined.arrow { color: #555; font-size: 20px; }
+
+        /* ── Скелетон загрузки ── */
+        .skeleton {
+            background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px; height: 20px;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .error-box {
+            display: none; background: rgba(255,69,58,0.12);
+            border: 1px solid var(--danger); color: var(--danger);
+            border-radius: 12px; padding: 14px 16px;
+            font-size: 13px; line-height: 1.6; margin-top: 14px;
+        }
+        .error-box.visible { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<nav class="side-drawer" id="sideDrawer">
+    <div class="user-block">
+        <span class="user-name" id="drawer_name">Загрузка...</span>
+        <span class="user-phone" id="drawer_phone">...</span>
+    </div>
+    <div class="drawer-nav">
+        <a href="mainpage.html" class="drawer-link"><span class="material-symbols-outlined">home</span> Главная</a>
+        <a href="profile.html" class="drawer-link"><span class="material-symbols-outlined">account_circle</span> Профиль</a>
+        <a href="map.html" class="drawer-link"><span class="material-symbols-outlined">search</span> Карта клубов</a>
+        <a href="booking.html" class="drawer-link"><span class="material-symbols-outlined">diamond</span> Бронь</a>
+        <a href="#" class="drawer-link logout" id="logoutLink"><span class="material-symbols-outlined">logout</span> Выйти</a>
+    </div>
+</nav>
+
+<div class="phone-container">
+    <div class="header">
+        <button class="burger-menu" id="burger">
+            <span class="burger-bar"></span>
+            <span class="burger-bar"></span>
+            <span class="burger-bar"></span>
+        </button>
+        <h1>Мой клуб</h1>
+        <div style="width:25px;"></div>
+    </div>
+
+    <!-- Карточка клуба -->
+    <p class="section-title" style="margin-top:0;">Информация</p>
+    <div class="club-card" id="clubCard">
+        <div class="skeleton" style="width:60%;height:24px;margin-bottom:10px;"></div>
+        <div class="skeleton" style="width:80%;height:14px;margin-bottom:6px;"></div>
+        <div class="skeleton" style="width:50%;height:14px;"></div>
+    </div>
+
+    <!-- Статистика -->
+    <p class="section-title">Статистика</p>
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-label">Зоны</span>
+            <span class="stat-value" id="zonesCount">—</span>
+            <span class="stat-sub">компьютеров</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Рейтинг</span>
+            <span class="stat-value" id="clubRating">—</span>
+            <span class="stat-sub">из 5.0</span>
+        </div>
+    </div>
+
+    <!-- Действия -->
+    <p class="section-title">Управление</p>
+
+    <a class="action-btn green" id="btnEditZones">
+        <div class="action-btn-left">
+            <span class="material-symbols-outlined">edit</span>
+            Редактировать зоны
+        </div>
+        <span class="material-symbols-outlined arrow">chevron_right</span>
+    </a>
+
+    <a class="action-btn green" id="btnAddZones">
+        <div class="action-btn-left">
+            <span class="material-symbols-outlined">add_circle</span>
+            Добавить зоны
+        </div>
+        <span class="material-symbols-outlined arrow">chevron_right</span>
+    </a>
+
+    <a class="action-btn" id="btnEditClub">
+        <div class="action-btn-left">
+            <span class="material-symbols-outlined">store</span>
+            Редактировать клуб
+        </div>
+        <span class="material-symbols-outlined arrow">chevron_right</span>
+    </a>
+
+    <div class="error-box" id="errorBox"></div>
+</div>
+
+<script>
+    (function() { if (!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
+
+    const _API = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+    const _api = axios.create({ baseURL: _API, headers: { "ngrok-skip-browser-warning": "69420" } });
+
+    _api.interceptors.request.use(cfg => {
+        const t = localStorage.getItem('access_token');
+        if (t) cfg.headers.Authorization = `Bearer ${t}`;
+        return cfg;
+    });
+
+    _api.interceptors.response.use(r => r, async err => {
+        if (err.response?.status === 401 && !err.config._retry) {
+            err.config._retry = true;
+            const rt = localStorage.getItem('refresh_token');
+            if (rt) {
+                try {
+                    const r = await axios.post(`${_API}/auth/refresh`, {}, {
+                        headers: { "Authorization": `Bearer ${rt}`, "ngrok-skip-browser-warning": "69420" }
+                    });
+                    localStorage.setItem('access_token', r.data.access_token);
+                    err.config.headers.Authorization = `Bearer ${r.data.access_token}`;
+                    return _api(err.config);
+                } catch { localStorage.clear(); window.location.href = 'check.html'; }
+            } else { localStorage.clear(); window.location.href = 'check.html'; }
+        }
+        return Promise.reject(err);
+    });
+
+    // ── Бургер ──
+    const burger = document.getElementById('burger');
+    const drawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('overlay');
+    burger.addEventListener('click', () => { burger.classList.toggle('open'); drawer.classList.toggle('open'); overlay.classList.toggle('active'); });
+    overlay.addEventListener('click', () => { burger.classList.remove('open'); drawer.classList.remove('open'); overlay.classList.remove('active'); });
+    document.getElementById('logoutLink').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); window.location.href = 'check.html'; });
+
+    function showError(msg) {
+        const box = document.getElementById('errorBox');
+        box.textContent = msg;
+        box.classList.toggle('visible', !!msg);
+    }
+
+    function renderClubCard(club) {
+        document.getElementById('clubCard').innerHTML = `
+            <div class="club-name">${club.name}</div>
+            <div class="club-meta">
+                <div class="club-meta-row">
+                    <span class="material-symbols-outlined">location_on</span>
+                    ${club.address}
+                </div>
+                <div class="club-meta-row">
+                    <span class="material-symbols-outlined">location_city</span>
+                    ${club.city_name || 'Город не указан'}
+                </div>
+                ${club.description ? `<div class="club-meta-row" style="margin-top:4px;color:#aaa;font-size:12px;">${club.description}</div>` : ''}
+            </div>
+            <span class="club-id-badge">ID клуба: ${club.id}</span>
+        `;
+        document.getElementById('clubRating').textContent = club.rating ?? '—';
+    }
+
+   document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // 1. Сначала грузим юзера (токен уже в интерцепторе)
+        const userRes = await _api.get('/users/me');
+        document.getElementById('drawer_name').textContent = userRes.data.full_name || "Пользователь";
+        document.getElementById('drawer_phone').textContent = userRes.data.phone_number || "";
+
+        // 2. Пробуем получить club_id — из URL, потом localStorage, потом с бэка
+        const urlParams = new URLSearchParams(window.location.search);
+        let CLUB_ID = parseInt(urlParams.get('club_id')) || 
+              (userRes.data.club_ids?.[0]) ||  // ← ВОТ ЭТО
+              parseInt(localStorage.getItem('owner_club_id')) || 
+              null;
+        // 3. Если нет — пробуем получить клуб владельца с бэка
+        if (!CLUB_ID) {
+            try {
+                const clubsRes = await _api.get('/clubs/', { params: { owner_id: userRes.data.id } });
+                if (clubsRes.data.length > 0) {
+                    CLUB_ID = clubsRes.data[0].id;
+                    localStorage.setItem('owner_club_id', CLUB_ID); // кэшируем
+                }
+            } catch {}
+        }
+
+        if (!CLUB_ID) {
+            showError("Клуб не найден. Сначала создайте клуб через страницу регистрации.");
+            document.getElementById('clubCard').innerHTML = '<span style="color:#666;font-size:13px;">Нет данных</span>';
+            return;
+        }
+
+        // 4. Навешиваем ссылки
+        document.getElementById('btnEditZones').href = `admin_zones_edit.html?club_id=${CLUB_ID}`;
+        document.getElementById('btnAddZones').href = `admin_zones.html?club_id=${CLUB_ID}`;
+        document.getElementById('btnEditClub').href = `admin_sandbox.html?club_id=${CLUB_ID}`;
+        // 5. Грузим клуб и зоны
+        const clubRes = await _api.get(`/clubs/${CLUB_ID}`);
+        renderClubCard(clubRes.data);
+
+        const zonesRes = await _api.get('/zones/', { params: { club_id: CLUB_ID } });
+        document.getElementById('zonesCount').textContent = zonesRes.data.length ?? 0;
+
+    } catch (err) {
+        console.error(err);
+        showError(`Ошибка загрузки: ${err.response?.status || err.message}`);
+    }
+});
+</script>
+</body>
+</html>

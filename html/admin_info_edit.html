@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underlie - Редактировать клуб</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #333333;
+            --field-bg: #2d2d2d;
+            --card-bg: #2a2a2a;
+            --text-main: #ffffff;
+            --accent-green: #00ff00;
+            --bg-light: #cccccc;
+            --danger: #ff453a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        /* ── Бургер ── */
+        .burger-menu { background: none; border: none; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; }
+        .burger-bar { width: 25px; height: 2px; background-color: #fff; transition: 0.3s; }
+        .burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
+        .burger-menu.open .burger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* ── Шторка ── */
+        .side-drawer {
+            position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
+            background-color: #2d2d2d; z-index: 1000; transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+        .side-drawer.open { transform: translateX(0); }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 999; }
+        .overlay.active { display: block; }
+
+        .user-block { padding: 60px 25px 30px; background-color: #262626; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .user-name { font-weight: 700; color: #fff; display: block; }
+        .user-phone { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
+        .drawer-nav { display: flex; flex-direction: column; }
+        .drawer-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .drawer-link span { margin-right: 15px; color: #888; }
+        .drawer-link.logout { color: #ff6b6b; border-top: 1px solid rgba(255,255,255,0.07); }
+        .drawer-link.logout span { color: #ff6b6b; }
+
+        /* ── Контент ── */
+        .phone-container { width: 100%; max-width: 430px; display: flex; flex-direction: column; padding: 20px; padding-bottom: 40px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 30px; width: 100%; }
+        .header h1 { font-size: 20px; font-weight: 700; text-transform: uppercase; }
+
+        .back-btn {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-main); display: flex; align-items: center; padding: 5px;
+        }
+
+        .section-title {
+            color: var(--bg-light); font-size: 12px; font-weight: 700;
+            margin-bottom: 20px; text-transform: uppercase;
+            letter-spacing: 1.5px; opacity: 0.7;
+        }
+
+        /* ── Скелетон ── */
+        .skeleton {
+            background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* ── Поля ── */
+        .field-group { position: relative; margin-bottom: 25px; }
+        .field-group label {
+            position: absolute; top: -10px; left: 12px;
+            background-color: var(--bg-dark); padding: 0 8px;
+            font-size: 11px; font-weight: 700; color: var(--bg-light); z-index: 1;
+        }
+        .field-group input,
+        .field-group textarea,
+        .select-wrapper select {
+            width: 100%; background: var(--field-bg);
+            border: 1px solid #555; border-radius: 12px;
+            padding: 16px; color: white; font-size: 15px; outline: none;
+            transition: border-color 0.3s; font-family: 'Montserrat', sans-serif;
+        }
+        .field-group input:focus,
+        .field-group textarea:focus,
+        .select-wrapper select:focus { border-color: var(--accent-green); }
+        .field-group textarea { resize: vertical; min-height: 90px; }
+
+        .select-wrapper { position: relative; }
+        .select-wrapper select { appearance: none; cursor: pointer; }
+        .select-wrapper::after {
+            content: ""; position: absolute; right: 15px; top: 50%;
+            width: 8px; height: 8px; border-right: 2px solid #aaa; border-bottom: 2px solid #aaa;
+            transform: translateY(-70%) rotate(45deg); pointer-events: none;
+        }
+        select option { background: #2d2d2d; color: white; }
+
+        /* ── Превью фото ── */
+        .img-preview {
+            width: 100%; height: 140px; border-radius: 12px;
+            object-fit: cover; margin-bottom: 8px;
+            background: var(--card-bg); border: 1px solid #444;
+            display: none;
+        }
+        .img-preview.visible { display: block; }
+
+        /* ── Кнопка сохранить ── */
+        .save-btn {
+            width: 100%; background: transparent;
+            border: 1px solid var(--accent-green); color: var(--accent-green);
+            padding: 18px; border-radius: 12px;
+            font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
+            text-transform: uppercase; font-family: 'Montserrat', sans-serif;
+        }
+        .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .save-btn:not(:disabled):active { background: var(--accent-green); color: black; }
+
+        /* ── Сообщения ── */
+        .error-box {
+            display: none; background: rgba(255, 69, 58, 0.12);
+            border: 1px solid var(--danger); color: var(--danger);
+            border-radius: 12px; padding: 14px 16px;
+            font-size: 13px; line-height: 1.6; white-space: pre-wrap; margin-top: 14px;
+        }
+        .error-box.visible { display: block; }
+        .success-box {
+            display: none; background: rgba(0, 255, 0, 0.08);
+            border: 1px solid var(--accent-green); color: var(--accent-green);
+            border-radius: 12px; padding: 14px 16px;
+            font-size: 13px; line-height: 1.6; margin-top: 14px;
+        }
+        .success-box.visible { display: block; }
+
+        /* ── ID Badge ── */
+        .club-id-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(0,255,0,0.08); border: 1px solid rgba(0,255,0,0.2);
+            color: var(--accent-green); font-size: 11px; font-weight: 700;
+            padding: 5px 12px; border-radius: 20px; margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<nav class="side-drawer" id="sideDrawer">
+    <div class="user-block">
+        <span class="user-name" id="drawer_name">Загрузка...</span>
+        <span class="user-phone" id="drawer_phone">...</span>
+    </div>
+    <div class="drawer-nav">
+        <a href="mainpage.html" class="drawer-link"><span class="material-symbols-outlined">home</span> Главная</a>
+        <a href="profile.html" class="drawer-link"><span class="material-symbols-outlined">account_circle</span> Профиль</a>
+        <a href="map.html" class="drawer-link"><span class="material-symbols-outlined">search</span> Карта клубов</a>
+        <a href="admin_dashboard.html" class="drawer-link"><span class="material-symbols-outlined">store</span> Мой клуб</a>
+        <a href="#" class="drawer-link logout" id="logoutLink"><span class="material-symbols-outlined">logout</span> Выйти</a>
+    </div>
+</nav>
+
+<div class="phone-container">
+    <div class="header">
+        <button class="back-btn" onclick="history.back()">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <h1>Редактировать клуб</h1>
+        <div style="width:25px;"></div>
+    </div>
+
+    <div class="club-id-badge" id="clubIdBadge" style="display:none;">
+        <span class="material-symbols-outlined" style="font-size:14px;">tag</span>
+        <span id="clubIdText">ID: —</span>
+    </div>
+
+    <p class="section-title">Основное</p>
+
+    <div class="field-group">
+        <label>Город</label>
+        <div class="select-wrapper">
+            <select id="city_id">
+                <option value="" disabled selected>Загрузка городов...</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="field-group">
+        <label>Название клуба</label>
+        <input type="text" id="name" placeholder="Underlie Arena">
+    </div>
+
+    <div class="field-group">
+        <label>Адрес</label>
+        <input type="text" id="address" placeholder="ул. Абая, 10">
+    </div>
+
+    <div class="field-group">
+        <label>Описание</label>
+        <textarea id="description" rows="3" placeholder="Опишите клуб..."></textarea>
+    </div>
+
+    <p class="section-title">Медиа</p>
+
+    <div class="field-group">
+        <label>URL Фото клуба</label>
+        <input type="text" id="image_url" placeholder="https://..." oninput="previewImg('image_url','imgPreview1')">
+    </div>
+    <img class="img-preview" id="imgPreview1" alt="Превью фото">
+
+    <div class="field-group">
+        <label>URL Фона зала (песочница)</label>
+        <input type="text" id="img_background" placeholder="https://..." oninput="previewImg('img_background','imgPreview2')">
+    </div>
+    <img class="img-preview" id="imgPreview2" alt="Превью фона">
+
+    <button class="save-btn" id="saveBtn">Сохранить изменения</button>
+    <div class="error-box" id="errorBox"></div>
+    <div class="success-box" id="successBox"></div>
+</div>
+
+<script>
+    (function() { if (!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
+
+    const _API = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+    const _api = axios.create({ baseURL: _API, headers: { "ngrok-skip-browser-warning": "69420" } });
+
+    _api.interceptors.request.use(cfg => {
+        const t = localStorage.getItem('access_token');
+        if (t) cfg.headers.Authorization = `Bearer ${t}`;
+        return cfg;
+    });
+
+    _api.interceptors.response.use(r => r, async err => {
+        if (err.response?.status === 401 && !err.config._retry) {
+            err.config._retry = true;
+            const rt = localStorage.getItem('refresh_token');
+            if (rt) {
+                try {
+                    const r = await axios.post(`${_API}/auth/refresh`, {}, {
+                        headers: { "Authorization": `Bearer ${rt}`, "ngrok-skip-browser-warning": "69420" }
+                    });
+                    localStorage.setItem('access_token', r.data.access_token);
+                    err.config.headers.Authorization = `Bearer ${r.data.access_token}`;
+                    return _api(err.config);
+                } catch { localStorage.clear(); window.location.href = 'check.html'; }
+            } else { localStorage.clear(); window.location.href = 'check.html'; }
+        }
+        return Promise.reject(err);
+    });
+
+    // ── Бургер ──
+    const burger = document.getElementById('burger');
+    const drawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('overlay');
+    burger?.addEventListener('click', () => { burger.classList.toggle('open'); drawer.classList.toggle('open'); overlay.classList.toggle('active'); });
+    overlay.addEventListener('click', () => { burger.classList.remove('open'); drawer.classList.remove('open'); overlay.classList.remove('active'); });
+    document.getElementById('logoutLink').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); window.location.href = 'check.html'; });
+
+    // ── Превью изображений ──
+    function previewImg(inputId, previewId) {
+        const url = document.getElementById(inputId).value.trim();
+        const img = document.getElementById(previewId);
+        if (url) {
+            img.src = url;
+            img.classList.add('visible');
+            img.onerror = () => img.classList.remove('visible');
+        } else {
+            img.classList.remove('visible');
+        }
+    }
+
+    function showError(msg) {
+        const box = document.getElementById('errorBox');
+        box.textContent = msg;
+        box.classList.toggle('visible', !!msg);
+        document.getElementById('successBox').classList.remove('visible');
+    }
+
+    function showSuccess(msg) {
+        const box = document.getElementById('successBox');
+        box.textContent = msg;
+        box.classList.add('visible');
+        document.getElementById('errorBox').classList.remove('visible');
+    }
+
+    // ── Города ──
+    async function loadCities(selectedCityId) {
+        const select = document.getElementById('city_id');
+        try {
+            const res = await _api.get('/cities');
+            select.innerHTML = '<option value="" disabled>Выберите город</option>';
+            res.data.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.dataset.cityName = c.city;
+                opt.textContent = c.city;
+                if (c.id === selectedCityId) opt.selected = true;
+                select.appendChild(opt);
+            });
+        } catch {
+            select.innerHTML = '<option value="">Ошибка загрузки городов</option>';
+        }
+    }
+
+    // ── Загрузка данных клуба ──
+    async function loadClubData(clubId) {
+        try {
+            const res = await _api.get(`/clubs/${clubId}`);
+            const club = res.data;
+
+            document.getElementById('name').value = club.name || '';
+            document.getElementById('address').value = club.address || '';
+            document.getElementById('description').value = club.description || '';
+            document.getElementById('image_url').value = club.image_url || '';
+            document.getElementById('img_background').value = club.img_background || '';
+
+            // Показать превью если есть URL
+            if (club.image_url) previewImg('image_url', 'imgPreview1');
+            if (club.img_background) previewImg('img_background', 'imgPreview2');
+
+            // Badge с ID
+            const badge = document.getElementById('clubIdBadge');
+            document.getElementById('clubIdText').textContent = `ID клуба: ${club.id}`;
+            badge.style.display = 'inline-flex';
+
+            await loadCities(club.city_id);
+        } catch (err) {
+            showError(`Ошибка загрузки клуба: ${err.response?.status || err.message}`);
+        }
+    }
+
+    // ── Сохранение ──
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('saveBtn');
+        const citySelect = document.getElementById('city_id');
+        const selectedOption = citySelect.options[citySelect.selectedIndex];
+
+        if (!citySelect.value) { showError("Выберите город!"); return; }
+
+        const payload = {
+            name: document.getElementById('name').value.trim(),
+            address: document.getElementById('address').value.trim(),
+            description: document.getElementById('description').value.trim(),
+            image_url: document.getElementById('image_url').value.trim() || "string",
+            image_price_url: "string",
+            img_background: document.getElementById('img_background').value.trim() || "string",
+            city_id: Number(citySelect.value),
+            city_name: selectedOption?.dataset.cityName || "",
+            promos: [],
+            rating: 5
+        };
+
+        btn.disabled = true;
+        btn.textContent = "Сохранение...";
+        showError("");
+
+        try {
+            await _api.patch(`/clubs/${CLUB_ID}`, payload);
+            showSuccess("✅ Клуб успешно обновлён!");
+            setTimeout(() => window.location.href = 'admin_dashboard.html', 1500);
+        } catch (err) {
+            const status = err.response?.status;
+            const detail = err.response?.data?.detail;
+            let msg = "";
+            if (status === 403) {
+                msg = "❌ 403 Forbidden — недостаточно прав.";
+            } else if (Array.isArray(detail)) {
+                msg = `❌ ${status} Validation:\n` + detail.map(d => `• ${d.loc?.join('.')} — ${d.msg}`).join('\n');
+            } else if (typeof detail === 'string') {
+                msg = `❌ ${status}: ${detail}`;
+            } else {
+                msg = `❌ ${status || '?'} Error:\n${JSON.stringify(err.response?.data, null, 2)}`;
+            }
+            showError(msg);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Сохранить изменения";
+        }
+    });
+
+    // ── ИНИТ ──
+    let CLUB_ID = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const userRes = await _api.get('/users/me');
+            document.getElementById('drawer_name').textContent = userRes.data.full_name || "Пользователь";
+            document.getElementById('drawer_phone').textContent = userRes.data.phone_number || "";
+
+            // Получаем club_id
+            const urlParams = new URLSearchParams(window.location.search);
+            CLUB_ID = parseInt(urlParams.get('club_id')) ||
+                      userRes.data.club_ids?.[0] ||
+                      parseInt(localStorage.getItem('owner_club_id')) ||
+                      null;
+
+            if (CLUB_ID) {
+                localStorage.setItem('owner_club_id', CLUB_ID);
+                await loadClubData(CLUB_ID);
+            } else {
+                showError("Клуб не найден. Вернитесь в дашборд.");
+                document.getElementById('saveBtn').disabled = true;
+            }
+        } catch (err) {
+            console.error(err);
+            showError("Ошибка загрузки данных.");
+        }
+    });
+</script>
+</body>
+</html>

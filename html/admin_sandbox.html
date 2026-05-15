@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Underlie — Схема зала</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"/>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<style>
+:root {
+    --bg:#1a1a1a; --surface:#242424; --card:#2c2c2c;
+    --border:#383838; --text:#fff; --muted:#777;
+    --green:#00ff41; --green-dim:rgba(0,255,65,0.1);
+    --danger:#ff453a;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Montserrat',sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);z-index:200;gap:10px;flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--text);display:flex;align-items:center;padding:4px;border-radius:8px;}
+.topbar h1{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+
+.btn{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.5px;border:1px solid;transition:0.2s;white-space:nowrap;}
+.btn-green{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+.btn-green:not(:disabled):hover{background:rgba(0,255,65,0.2);}
+.btn-green:not(:disabled):active{background:var(--green);color:#000;}
+.btn-ghost{background:transparent;border-color:var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:#555;color:var(--text);}
+.btn:disabled{opacity:0.35;cursor:not-allowed;}
+
+/* LAYOUT */
+.layout{display:flex;flex:1;overflow:hidden;}
+
+/* PANEL */
+.panel{width:200px;min-width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;padding:14px 10px;gap:12px;flex-shrink:0;}
+.panel-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+.panel-divider{height:1px;background:var(--border);}
+
+.stats-row{display:flex;gap:6px;}
+.stat-pill{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;}
+.stat-val{font-size:18px;font-weight:700;color:var(--green);}
+.stat-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;}
+
+/* Zone chips in panel */
+.zone-chips{display:flex;flex-direction:column;gap:5px;}
+.zone-chip{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;background:var(--card);border:1.5px solid transparent;cursor:pointer;transition:0.2s;}
+.zone-chip:hover{border-color:#555;}
+.zone-chip.sel{border-color:var(--green);background:var(--green-dim);}
+.zone-chip.hidden-zone{opacity:0.4;}
+.z-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.z-info{flex:1;min-width:0;}
+.z-name{font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.z-count{font-size:9px;color:var(--muted);}
+.z-eye{background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;font-size:16px;padding:0;}
+.z-eye:hover{color:var(--text);}
+
+.add-pc-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:9px;border:1.5px dashed var(--green);background:var(--green-dim);color:var(--green);font-size:11px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;text-transform:uppercase;transition:0.2s;}
+.add-pc-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.add-pc-btn.active{background:var(--green);color:#000;border-style:solid;animation:glow 1.2s ease-in-out infinite;}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(0,255,65,0.4)}50%{box-shadow:0 0 0 6px rgba(0,255,65,0)}}
+
+.hint-box{background:rgba(255,200,0,0.07);border:1px solid rgba(255,200,0,0.25);color:#ffc800;border-radius:8px;padding:8px 9px;font-size:9px;line-height:1.6;display:none;}
+.hint-box.show{display:block;}
+
+/* CANVAS */
+.canvas-wrap{flex:1;position:relative;overflow:hidden;background:var(--bg);}
+
+/* Dot grid background */
+.canvas-wrap::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,#2e2e2e 1px,transparent 1px);background-size:28px 28px;pointer-events:none;}
+
+.canvas{position:absolute;inset:0;overflow:hidden;}
+
+/* Zone BLOCK */
+.zone-block{
+    position:absolute;
+    background:rgba(30,30,30,0.95);
+    border:2px solid;
+    border-radius:12px;
+    padding:10px;
+    cursor:grab;
+    user-select:none;
+    min-width:80px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.5);
+    transition:box-shadow 0.2s;
+}
+.zone-block:active{cursor:grabbing;}
+.zone-block.dragging{box-shadow:0 12px 40px rgba(0,0,0,0.8);z-index:1000;opacity:0.95;}
+.zone-block.placing-target{ring:2px;}
+
+.zone-block-header{display:flex;align-items:center;gap:6px;margin-bottom:8px;pointer-events:none;}
+.zone-block-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.zone-block-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.9);}
+
+/* PC grid inside block */
+.pc-grid{display:flex;flex-wrap:wrap;gap:4px;pointer-events:none;}
+.pc-grid.placing-mode{pointer-events:auto;}
+
+.pc-seat{
+    width:36px;height:36px;border-radius:7px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;
+    cursor:default;
+    border:1.5px solid;
+    position:relative;
+    transition:transform 0.1s;
+    flex-shrink:0;
+}
+.pc-seat.occupied{color:rgba(0,0,0,0.85);}
+.pc-seat.empty-slot{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:#333;cursor:crosshair;}
+.pc-seat.empty-slot:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);}
+.pc-seat.occupied:hover .pc-x{display:flex;}
+.pc-x{position:absolute;inset:0;background:rgba(255,69,58,0.85);border-radius:6px;display:none;align-items:center;justify-content:center;font-size:13px;color:#fff;cursor:pointer;pointer-events:auto;}
+
+/* Add row button */
+.add-row-btn{width:100%;margin-top:5px;padding:5px;border-radius:6px;border:1px dashed rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.2);font-size:9px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;text-transform:uppercase;transition:0.2s;pointer-events:auto;}
+.add-row-btn:hover{border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.5);}
+
+/* Zoom controls */
+.zoom-ctrl{position:absolute;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:100;}
+.zoom-btn{width:36px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.2s;}
+.zoom-btn:hover{background:var(--card);}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;border:1px solid var(--border);color:var(--text);padding:11px 20px;border-radius:12px;font-size:12px;font-weight:600;z-index:9999;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.green{border-color:var(--green);color:var(--green);}
+.toast.red{border-color:var(--danger);color:var(--danger);}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9998;flex-direction:column;gap:14px;}
+.loading-overlay.hidden{display:none;}
+.spinner{width:34px;height:34px;border:3px solid #333;border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:12px;color:var(--muted);}
+
+/* Scrollbar */
+.panel::-webkit-scrollbar{width:4px;}
+.panel::-webkit-scrollbar-thumb{background:#444;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Загрузка зон...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+    <div class="topbar-left">
+        <button class="back-btn" onclick="history.back()">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <h1>Схема зала</h1>
+    </div>
+    <div class="topbar-actions">
+        <button class="btn btn-ghost" id="resetViewBtn">
+            <span class="material-symbols-outlined" style="font-size:14px;">center_focus_strong</span>
+            Сброс
+        </button>
+        <button class="btn btn-green" id="saveBtn">
+            <span class="material-symbols-outlined" style="font-size:14px;">save</span>
+            Сохранить
+        </button>
+    </div>
+</div>
+
+<div class="layout">
+    <!-- PANEL -->
+    <div class="panel">
+        <span class="panel-label">Статистика</span>
+        <div class="stats-row">
+            <div class="stat-pill"><div class="stat-val" id="statPc">0</div><div class="stat-lbl">ПК</div></div>
+            <div class="stat-pill"><div class="stat-val" id="statZones">0</div><div class="stat-lbl">Зон</div></div>
+        </div>
+
+        <div class="panel-divider"></div>
+        <span class="panel-label">Зоны</span>
+        <div class="zone-chips" id="zoneChips">
+            <div style="color:var(--muted);font-size:11px;padding:4px;">Загрузка...</div>
+        </div>
+
+        <div class="panel-divider"></div>
+        <span class="panel-label">Выбранная зона</span>
+        <button class="add-pc-btn" id="addPcBtn" disabled>
+            <span class="material-symbols-outlined" style="font-size:15px;">add</span>
+            <span id="addLabel">Добавить ПК</span>
+        </button>
+        <div class="hint-box" id="hintBox">
+            Нажми на пустой слот в блоке зоны — добавишь ПК.<br><br>
+            ✕ на ПК — удалить.<br>
+            Тяни блок зоны — переставить.
+        </div>
+
+        <div class="panel-divider"></div>
+        <span class="panel-label">Управление холстом</span>
+        <div style="font-size:9px;color:var(--muted);line-height:1.6;padding:0 2px;">
+            🖱 Тяни фон — прокрутка<br>
+            📦 Тяни блок — перемещение<br>
+            🔍 ± — масштаб
+        </div>
+    </div>
+
+    <!-- CANVAS -->
+    <div class="canvas-wrap" id="canvasWrap">
+        <div class="canvas" id="canvas"></div>
+        <div class="zoom-ctrl">
+            <button class="zoom-btn" id="zoomIn">+</button>
+            <button class="zoom-btn" id="zoomOut">−</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){ if(!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
+
+const _API='https://subopposite-nonheretical-brynn.ngrok-free.dev';
+const _api=axios.create({baseURL:_API,headers:{"ngrok-skip-browser-warning":"69420"}});
+_api.interceptors.request.use(cfg=>{const t=localStorage.getItem('access_token');if(t)cfg.headers.Authorization=`Bearer ${t}`;return cfg;});
+_api.interceptors.response.use(r=>r,async err=>{
+    if(err.response?.status===401&&!err.config._retry){
+        err.config._retry=true;const rt=localStorage.getItem('refresh_token');
+        if(rt){try{const r=await axios.post(`${_API}/auth/refresh`,{},{headers:{Authorization:`Bearer ${rt}`,"ngrok-skip-browser-warning":"69420"}});localStorage.setItem('access_token',r.data.access_token);err.config.headers.Authorization=`Bearer ${r.data.access_token}`;return _api(err.config);}catch{localStorage.clear();window.location.href='check.html';}}
+        else{localStorage.clear();window.location.href='check.html';}
+    }
+    return Promise.reject(err);
+});
+
+// ── COLORS ──
+const COLORS=['#00e5ff','#ff6b35','#a78bfa','#fbbf24','#34d399','#f472b6','#60a5fa','#4ade80','#fb923c','#e879f9','#38bdf8','#facc15'];
+
+// ── STATE ──
+let CLUB_ID=null;
+let zones=[];           // {id,name,color,blockX,blockY,computers:[{id?,number,x,y,isNew}],cols,visible}
+let activeZoneId=null;
+let placingMode=false;
+let newComputers=[];    // pending saves
+
+// Canvas pan/zoom
+let scale=1, panX=0, panY=0;
+let isPanning=false, panStart={x:0,y:0}, panOrigin={x:0,y:0};
+
+// ── TOAST ──
+function toast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${type} show`;setTimeout(()=>el.classList.remove('show'),2800);}
+
+// ── CANVAS TRANSFORM ──
+function applyTransform(){
+    document.getElementById('canvas').style.transform=`translate(${panX}px,${panY}px) scale(${scale})`;
+    document.getElementById('canvas').style.transformOrigin='0 0';
+}
+
+// Pan on canvas background
+const wrap=document.getElementById('canvasWrap');
+wrap.addEventListener('mousedown',e=>{
+    if(e.target!==wrap&&e.target!==document.getElementById('canvas')&&!e.target.classList.contains('canvas-wrap')) return;
+    isPanning=true; panStart={x:e.clientX,y:e.clientY}; panOrigin={x:panX,y:panY};
+    wrap.style.cursor='grabbing';
+});
+window.addEventListener('mousemove',e=>{
+    if(!isPanning)return;
+    panX=panOrigin.x+(e.clientX-panStart.x);
+    panY=panOrigin.y+(e.clientY-panStart.y);
+    applyTransform();
+});
+window.addEventListener('mouseup',()=>{isPanning=false;wrap.style.cursor='';});
+
+// Wheel zoom
+wrap.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const delta=e.deltaY>0?-0.08:0.08;
+    scale=Math.min(2,Math.max(0.3,scale+delta));
+    applyTransform();
+},{passive:false});
+
+document.getElementById('zoomIn').addEventListener('click',()=>{scale=Math.min(2,scale+0.15);applyTransform();});
+document.getElementById('zoomOut').addEventListener('click',()=>{scale=Math.max(0.3,scale-0.15);applyTransform();});
+document.getElementById('resetViewBtn').addEventListener('click',()=>{scale=1;panX=20;panY=20;applyTransform();});
+
+// ── RENDER ALL ──
+function renderAll(){
+    const canvas=document.getElementById('canvas');
+    canvas.innerHTML='';
+    zones.forEach(z=>{ if(z.visible!==false) renderZoneBlock(z); });
+    updateStats();
+    renderPanel();
+}
+
+function updateStats(){
+    const total=zones.reduce((s,z)=>s+z.computers.length,0);
+    document.getElementById('statPc').textContent=total;
+    document.getElementById('statZones').textContent=zones.filter(z=>z.visible!==false).length;
+}
+
+// ── ZONE BLOCK ──
+function renderZoneBlock(zone){
+    const canvas=document.getElementById('canvas');
+
+    const block=document.createElement('div');
+    block.className='zone-block';
+    block.id=`block-${zone.id}`;
+    block.style.left=(zone.blockX||40)+'px';
+    block.style.top=(zone.blockY||40)+'px';
+    block.style.borderColor=zone.color;
+    block.style.boxShadow=`0 0 0 1px ${zone.color}22, 0 4px 24px rgba(0,0,0,0.5)`;
+
+    // Header
+    const header=document.createElement('div');
+    header.className='zone-block-header';
+    header.innerHTML=`<div class="zone-block-dot" style="background:${zone.color};box-shadow:0 0 6px ${zone.color};"></div><div class="zone-block-name" style="color:${zone.color};">${zone.name}</div>`;
+    block.appendChild(header);
+
+    // PC Grid
+    const cols=zone.cols||6;
+    const pcGrid=document.createElement('div');
+    pcGrid.className='pc-grid'+(placingMode&&zone.id===activeZoneId?' placing-mode':'');
+    pcGrid.style.maxWidth=(cols*40)+'px';
+
+    // Render occupied + empty slots
+    const totalSlots=Math.max(zone.computers.length+1, cols); // at least one empty
+    const rows=Math.ceil(totalSlots/cols);
+    const slotsCount=rows*cols;
+
+    // Map occupied positions by slot index
+    const occupied=new Map();
+    zone.computers.forEach((pc,i)=>occupied.set(i,pc));
+
+    for(let i=0;i<slotsCount;i++){
+        const seat=document.createElement('div');
+        seat.className='pc-seat';
+
+        if(occupied.has(i)){
+            const pc=occupied.get(i);
+            seat.classList.add('occupied');
+            seat.style.background=zone.color;
+            seat.style.borderColor=zone.color;
+            seat.innerHTML=`<span>${pc.number}</span><div class="pc-x">✕</div>`;
+            seat.querySelector('.pc-x').addEventListener('click',e=>{
+                e.stopPropagation();
+                removeComputer(zone.id,i);
+            });
+        } else {
+            seat.classList.add('empty-slot');
+            seat.textContent='+';
+            if(placingMode&&zone.id===activeZoneId){
+                seat.addEventListener('click',e=>{
+                    e.stopPropagation();
+                    addComputerToZone(zone.id,i);
+                });
+            }
+        }
+        pcGrid.appendChild(seat);
+    }
+    block.appendChild(pcGrid);
+
+    // Add row button (always visible when this zone is selected)
+    if(zone.id===activeZoneId){
+        const addRow=document.createElement('button');
+        addRow.className='add-row-btn';
+        addRow.textContent='+ Добавить ряд';
+        addRow.addEventListener('click',e=>{e.stopPropagation();expandZone(zone.id);});
+        block.appendChild(addRow);
+    }
+
+    canvas.appendChild(block);
+    makeDraggable(block,zone);
+}
+
+// ── DRAG BLOCK ──
+function makeDraggable(block, zone){
+    let dragging=false, sx=0, sy=0, ox=0, oy=0;
+
+    block.addEventListener('mousedown',e=>{
+        // Don't drag when clicking pc-x or empty-slot (placing mode)
+        if(e.target.classList.contains('pc-x')||e.target.classList.contains('empty-slot')||e.target.classList.contains('add-row-btn')) return;
+        dragging=true;
+        sx=e.clientX; sy=e.clientY;
+        ox=zone.blockX||0; oy=zone.blockY||0;
+        block.classList.add('dragging');
+        e.stopPropagation();
+    });
+
+    window.addEventListener('mousemove',e=>{
+        if(!dragging)return;
+        const dx=(e.clientX-sx)/scale;
+        const dy=(e.clientY-sy)/scale;
+        zone.blockX=ox+dx;
+        zone.blockY=oy+dy;
+        block.style.left=zone.blockX+'px';
+        block.style.top=zone.blockY+'px';
+    });
+
+    window.addEventListener('mouseup',()=>{
+        if(dragging){dragging=false;block.classList.remove('dragging');}
+    });
+
+    // Touch support
+    block.addEventListener('touchstart',e=>{
+        if(e.target.classList.contains('pc-x')||e.target.classList.contains('empty-slot')) return;
+        const t=e.touches[0];
+        dragging=true; sx=t.clientX; sy=t.clientY; ox=zone.blockX||0; oy=zone.blockY||0;
+        block.classList.add('dragging');
+        e.stopPropagation();
+    },{passive:true});
+
+    window.addEventListener('touchmove',e=>{
+        if(!dragging)return;
+        const t=e.touches[0];
+        const dx=(t.clientX-sx)/scale; const dy=(t.clientY-sy)/scale;
+        zone.blockX=ox+dx; zone.blockY=oy+dy;
+        block.style.left=zone.blockX+'px'; block.style.top=zone.blockY+'px';
+    },{passive:true});
+
+    window.addEventListener('touchend',()=>{if(dragging){dragging=false;block.classList.remove('dragging');}});
+}
+
+// ── COMPUTERS ──
+function addComputerToZone(zoneId, slotIndex){
+    const zone=zones.find(z=>z.id===zoneId); if(!zone) return;
+    const maxNum=zone.computers.length ? Math.max(...zone.computers.map(p=>p.number)) : 0;
+    const num=maxNum+1;
+    // Insert at slot index
+    zone.computers.splice(slotIndex,0,{number:num,x:slotIndex%zone.cols,y:Math.floor(slotIndex/zone.cols),isNew:true,zone_id:zoneId});
+    // Renumber
+    zone.computers.forEach((pc,i)=>{pc.number=i+1;pc.x=i%(zone.cols||6);pc.y=Math.floor(i/(zone.cols||6));});
+    renderAll();
+    toast(`ПК #${num} добавлен в "${zone.name}"`,'green');
+}
+
+function removeComputer(zoneId, slotIndex){
+    const zone=zones.find(z=>z.id===zoneId); if(!zone) return;
+    const pc=zone.computers[slotIndex];
+    if(!pc) return;
+    // If existing (has id) — mark for deletion, else just remove
+    zone.computers.splice(slotIndex,1);
+    // Renumber
+    zone.computers.forEach((p,i)=>{p.number=i+1;p.x=i%(zone.cols||6);p.y=Math.floor(i/(zone.cols||6));});
+    renderAll();
+}
+
+function expandZone(zoneId){
+    const zone=zones.find(z=>z.id===zoneId); if(!zone) return;
+    zone.cols=(zone.cols||6); // Add a row = add cols more empty slots (they fill automatically)
+    // Just add a placeholder to force more rows
+    const current=zone.computers.length;
+    const cols=zone.cols||6;
+    const currentRows=Math.ceil(current/cols);
+    const targetSlots=(currentRows+1)*cols;
+    // no change to computers, just re-render with more slots shown
+    zone._extraRows=(zone._extraRows||0)+1;
+    renderAll();
+}
+
+// ── PANEL ──
+function renderPanel(){
+    const container=document.getElementById('zoneChips');
+    container.innerHTML='';
+    zones.forEach(zone=>{
+        const chip=document.createElement('div');
+        chip.className='zone-chip'+(zone.id===activeZoneId?' sel':'')+(zone.visible===false?' hidden-zone':'');
+        chip.innerHTML=`
+            <div class="z-dot" style="background:${zone.color};box-shadow:0 0 5px ${zone.color}66;"></div>
+            <div class="z-info">
+                <div class="z-name">${zone.name}</div>
+                <div class="z-count">${zone.computers.length} ПК</div>
+            </div>
+            <button class="z-eye" data-zoneid="${zone.id}" title="Скрыть/показать">
+                <span class="material-symbols-outlined" style="font-size:16px;">${zone.visible===false?'visibility_off':'visibility'}</span>
+            </button>`;
+        chip.addEventListener('click',e=>{
+            if(e.target.closest('.z-eye')) return;
+            selectZone(zone.id);
+        });
+        chip.querySelector('.z-eye').addEventListener('click',e=>{
+            e.stopPropagation();
+            zone.visible=zone.visible===false?true:false;
+            renderAll();
+        });
+        container.appendChild(chip);
+    });
+}
+
+function selectZone(id){
+    activeZoneId=id;
+    document.getElementById('addPcBtn').disabled=false;
+    setPlacing(false);
+    renderAll();
+}
+
+function setPlacing(on){
+    placingMode=on;
+    const btn=document.getElementById('addPcBtn');
+    const hint=document.getElementById('hintBox');
+    if(on){
+        btn.classList.add('active');
+        document.getElementById('addLabel').textContent='Отмена';
+        hint.classList.add('show');
+    } else {
+        btn.classList.remove('active');
+        document.getElementById('addLabel').textContent='Добавить ПК';
+        hint.classList.remove('show');
+    }
+    renderAll();
+}
+
+document.getElementById('addPcBtn').addEventListener('click',()=>{
+    if(!activeZoneId){toast('Выберите зону','red');return;}
+    setPlacing(!placingMode);
+});
+
+// ── SAVE ──
+document.getElementById('saveBtn').addEventListener('click', async()=>{
+    const btn=document.getElementById('saveBtn');
+    const newPcs=[];
+    zones.forEach(zone=>{
+        zone.computers.filter(p=>p.isNew).forEach(pc=>{
+            newPcs.push({number:pc.number,specification:"string",zone_id:zone.id,x:pc.x,y:pc.y});
+        });
+    });
+
+    if(!newPcs.length){toast('Нет новых ПК для сохранения');return;}
+
+    btn.disabled=true;
+    try{
+        await _api.post('/computers/',newPcs,{params:{club_id:CLUB_ID}});
+        zones.forEach(z=>z.computers.forEach(p=>p.isNew=false));
+        toast(`✅ ${newPcs.length} ПК сохранено!`,'green');
+    }catch(err){
+        const d=err.response?.data?.detail;
+        toast(`❌ ${typeof d==='string'?d:'Ошибка '+err.response?.status}`,'red');
+        console.error(err.response?.data);
+    }finally{btn.disabled=false;}
+});
+
+// ── LOAD ──
+async function loadAll(){
+    const urlParams=new URLSearchParams(window.location.search);
+
+    const userRes=await _api.get('/users/me');
+    CLUB_ID=parseInt(urlParams.get('club_id'))||userRes.data.club_ids?.[0]||parseInt(localStorage.getItem('owner_club_id'))||null;
+    if(CLUB_ID) localStorage.setItem('owner_club_id',CLUB_ID);
+    if(!CLUB_ID){toast('Клуб не найден','red');return;}
+
+    // Load zones
+    document.getElementById('loadingText').textContent='Загрузка зон...';
+    const zonesRes=await _api.get('/zones/',{params:{club_id:CLUB_ID}});
+
+    let startX=30, startY=30, rowH=0;
+    zones=zonesRes.data.map((z,i)=>{
+        const color=COLORS[i%COLORS.length];
+        const bx=startX; const by=startY;
+        startX+=220;
+        if(startX>900){startX=30;startY+=200;}
+        return {id:z.id,name:z.name,color,blockX:bx,blockY:by,computers:[],cols:6,visible:true};
+    });
+
+    // Load computers per zone
+    document.getElementById('loadingText').textContent='Загрузка компьютеров...';
+    for(const zone of zones){
+        try{
+            const res=await _api.get('/computers/',{params:{zone_id:zone.id}});
+            zone.computers=res.data.map(pc=>({id:pc.id,number:pc.number,x:pc.x,y:pc.y,isNew:false,zone_id:zone.id}));
+            zone.computers.sort((a,b)=>a.number-b.number);
+        }catch{}
+    }
+
+    panX=20; panY=20; applyTransform();
+    renderAll();
+}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+    try{ await loadAll(); }
+    catch(err){ console.error(err); toast('Ошибка загрузки','red'); }
+    finally{ document.getElementById('loadingOverlay').classList.add('hidden'); }
+});
+</script>
+</body>
+</html>
