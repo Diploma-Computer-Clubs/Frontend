@@ -669,7 +669,7 @@ async function togglePc(turnOn) {
     const compId = ctxCompId;
     closeCtxMenu();
     try {
-        await api.post(`/computers/${compId}/${turnOn ? 'turn-on' : 'turn-off'}`);
+        await api.post(`/computers/${compId}/${turnOn ? 'turn-on' : 'turn-off'}`, {}, { params: { club_id: clubId } });
         showToast(turnOn ? 'Компьютер включён' : 'Компьютер выключен', 'success');
         connectWS();
     } catch (e) {
@@ -900,13 +900,14 @@ async function handleBooking() {
     try {
         const pricePerPc = window.currentTotalPrice / selected.length;
         const data = selected.map(s => ({
-            "start_time": `${selectedDateStr}T${startTime}:00`, "end_time": `${selectedEndDateStr}T${endTime}:00`,
+            "start_time": `${selectedDateStr}T${startTime}:00.000`, "end_time": `${selectedEndDateStr}T${endTime}:00.000`,
             "total_price": pricePerPc, "computer_id": s.id, "zone_id": s.zid, "club_id": parseInt(clubId)
         }));
-        await api.post(`/bookings`, data);
+        await api.post(`/bookings/admin`, data, { params: { club_id: clubId } });
         showToast("Успешно!", "success");
-        setTimeout(() => { window.location.href = 'booking.html'; }, 1500);
-    } catch (e) { 
+        selected = [];
+        updateUI();
+        connectWS();    } catch (e) { 
         showToast(e.response?.data?.detail || "Ошибка");
         btn.innerText = "ПОДТВЕРДИТЬ БРОНИРОВАНИЕ";
     }
@@ -917,6 +918,12 @@ async function fetchClubInfo() {
         const r = await api.get(`/clubs/${clubId}`);
         document.getElementById('clubNameHeader').innerText = r.data.name;
         document.getElementById('clubAddrHeader').innerHTML = `<span class="material-symbols-outlined" style="font-size:12px">location_on</span> ${r.data.address}`;
+        if (r.data.image_url) {
+            const img = document.getElementById('clubLogoImg');
+            img.src = API_URL + r.data.image_url;
+            img.style.display = 'block';
+            document.getElementById('clubLogoPlaceholder').style.display = 'none';
+        }
     } catch {}
 }
 
