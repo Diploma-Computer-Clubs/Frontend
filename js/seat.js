@@ -220,6 +220,7 @@ function renderMap() {
         const isVip = zone.name.toLowerCase().includes('vip');
 
         zone.computers.forEach((comp, idx) => {
+            const isOffline = !comp.is_Active;
             const isFree = comp.is_Active && comp.bookings && comp.bookings.length === 0;
 
             const x = START_X + idx * (PC_SIZE + PC_GAP);
@@ -227,13 +228,21 @@ function renderMap() {
 
             const el = document.createElement('div');
             el.className = `pc ${isVip ? 'vip' : ''} ${isFree ? 'free' : 'busy'}`;
-            el.innerText = comp.number;
             el.style.top    = y + 'px';
             el.style.left   = x + 'px';
             el.style.width  = PC_SIZE + 'px';
             el.style.height = PC_SIZE + 'px';
 
-            if (!isFree) {
+            if (isOffline) {
+                // Выключен — показываем иконку, выбрать нельзя
+                el.style.background  = '#0d0d0d';
+                el.style.borderColor = '#1a1a1a';
+                el.style.cursor      = 'default';
+                el.style.opacity     = '0.5';
+                el.innerHTML = `<img src="../img/offline.png" style="width:20px;height:20px;object-fit:contain;opacity:0.6;" alt="offline">`;
+                el.title = `ПК №${comp.number} — не активен`;
+            } else if (!isFree) {
+                el.innerText = comp.number;
                 el.style.background   = '#1a1a1a';
                 el.style.borderColor  = '#2a2a2a';
                 el.style.color        = '#333';
@@ -242,11 +251,11 @@ function renderMap() {
                     el.addEventListener('mouseenter', () => showPcTooltip(el, comp.bookings));
                     el.addEventListener('mouseleave', hidePcTooltip);
                     el.addEventListener('mousemove',  () => movePcTooltip(el));
-                    // touch support for mobile
                     el.addEventListener('touchstart', (e) => { e.preventDefault(); showPcTooltip(el, comp.bookings); }, { passive: false });
                     el.addEventListener('touchend',   () => setTimeout(hidePcTooltip, 1500));
                 }
             } else {
+                el.innerText = comp.number;
                 if (isVip) {
                     el.style.background  = '#1a0a0a';
                     el.style.borderColor = '#8b1a1a';

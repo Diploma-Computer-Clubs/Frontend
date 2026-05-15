@@ -319,6 +319,36 @@
             letter-spacing: 0.3px;
         }
 
+        /* ── PC CONTEXT MENU ── */
+        .pc-ctx-overlay {
+            position: fixed; inset: 0; z-index: 9990;
+            background: rgba(0,0,0,0.55); backdrop-filter: blur(2px); display: none;
+        }
+        .pc-ctx-overlay.visible { display: block; }
+        .pc-ctx-menu {
+            position: fixed; z-index: 9991; background: #111;
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+            padding: 8px; min-width: 200px; box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+            transform: scale(0.92) translateY(6px); opacity: 0;
+            transition: opacity 0.15s ease, transform 0.15s ease; pointer-events: none;
+        }
+        .pc-ctx-menu.visible { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+        .pc-ctx-title {
+            font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.35);
+            text-transform: uppercase; letter-spacing: 1px; padding: 6px 10px 10px;
+        }
+        .pc-ctx-btn {
+            width: 100%; display: flex; align-items: center; gap: 10px;
+            background: none; border: none; color: #fff; padding: 12px;
+            border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+            font-family: 'Montserrat', sans-serif; transition: background 0.15s; text-align: left;
+        }
+        .pc-ctx-btn:hover { background: rgba(255,255,255,0.07); }
+        .pc-ctx-btn.turn-on  { color: #4CAF50; }
+        .pc-ctx-btn.turn-off { color: #ff6b6b; }
+        .pc-ctx-btn .material-symbols-outlined { font-size: 18px; }
+        .pc-ctx-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 4px 0; }
+
         /* ── TOAST ── */
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
         .toast {
@@ -405,6 +435,19 @@
     </div>
 </div>
 
+<!-- PC Context Menu -->
+<div class="pc-ctx-overlay" id="pcCtxOverlay" onclick="closeCtxMenu()"></div>
+<div class="pc-ctx-menu" id="pcCtxMenu">
+    <div class="pc-ctx-title" id="pcCtxTitle">ПК №—</div>
+    <div class="pc-ctx-divider"></div>
+    <button class="pc-ctx-btn turn-on" id="pcCtxTurnOn" onclick="togglePc(true)">
+        <span class="material-symbols-outlined">power</span> Включить
+    </button>
+    <button class="pc-ctx-btn turn-off" id="pcCtxTurnOff" onclick="togglePc(false)">
+        <span class="material-symbols-outlined">power_off</span> Выключить
+    </button>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
 // ... (Скрипты остаются прежними до функции initCalendar) ...
@@ -489,6 +532,54 @@ api.interceptors.response.use(r => r, async err => {
     return Promise.reject(err);
 });
 
+// ── PC Toggle (включить / выключить) ──
+let ctxCompId = null;
+let holdTimer = null;
+
+function openCtxMenu(el, comp) {
+    ctxCompId = comp.id;
+    document.getElementById('pcCtxTitle').textContent = `ПК №${comp.number}`;
+    document.getElementById('pcCtxTurnOn').style.display  = comp.is_Active ? 'none' : 'flex';
+    document.getElementById('pcCtxTurnOff').style.display = comp.is_Active ? 'flex' : 'none';
+    const menu = document.getElementById('pcCtxMenu');
+    const rect = el.getBoundingClientRect();
+    let left = rect.left + rect.width / 2 - 100;
+    let top  = rect.top - 140;
+    if (top < 8) top = rect.bottom + 8;
+    if (left < 8) left = 8;
+    if (left + 200 > window.innerWidth - 8) left = window.innerWidth - 208;
+    menu.style.left = left + 'px';
+    menu.style.top  = top  + 'px';
+    document.getElementById('pcCtxOverlay').classList.add('visible');
+    requestAnimationFrame(() => menu.classList.add('visible'));
+}
+
+function closeCtxMenu() {
+    document.getElementById('pcCtxMenu').classList.remove('visible');
+    document.getElementById('pcCtxOverlay').classList.remove('visible');
+    ctxCompId = null;
+}
+
+async function togglePc(turnOn) {
+    if (!ctxCompId) return;
+    const compId = ctxCompId;
+    closeCtxMenu();
+    try {
+        await api.post(`/computers/${compId}/${turnOn ? 'turn-on' : 'turn-off'}`);
+        showToast(turnOn ? 'Компьютер включён' : 'Компьютер выключен', 'success');
+        connectWS();
+    } catch (e) {
+        showToast(e.response?.data?.detail || 'Ошибка при переключении');
+    }
+}
+
+function attachPcHold(el, comp) {
+    el.addEventListener('contextmenu', (e) => { e.preventDefault(); openCtxMenu(el, comp); });
+    el.addEventListener('pointerdown', () => { holdTimer = setTimeout(() => openCtxMenu(el, comp), 600); });
+    el.addEventListener('pointerup',   () => clearTimeout(holdTimer));
+    el.addEventListener('pointerleave',() => clearTimeout(holdTimer));
+}
+
 function connectWS() {
     if (ws) { ws.onclose = null; ws.close(); }
     const dot = document.getElementById('wsDot');
@@ -503,7 +594,12 @@ function connectWS() {
         try {
             const data = JSON.parse(event.data);
             availabilityData = Array.isArray(data) ? data : (data.zones || data.computers || []);
-            selected = [];
+            const freeIds = new Set(
+                availabilityData.flatMap(z => z.computers || [])
+                    .filter(c => c.is_Active && c.bookings?.length === 0)
+                    .map(c => c.id)
+            );
+            selected = selected.filter(s => freeIds.has(s.id));
             updateUI();
             renderMap();
         } catch (e) { console.error('WS parse error:', e); }
@@ -518,7 +614,12 @@ async function fetchAvailabilityREST() {
     try {
         const res = await api.get(`/clubs/${clubId}/availability`, { params: { start_time: startISO, end_time: endISO } });
         availabilityData = res.data;
-        selected = [];
+        const freeIds = new Set(
+            availabilityData.flatMap(z => z.computers || [])
+                .filter(c => c.is_Active && c.bookings?.length === 0)
+                .map(c => c.id)
+        );
+        selected = selected.filter(s => freeIds.has(s.id));
         updateUI();
         renderMap();
     } catch (e) { console.error('Availability error:', e); }
@@ -594,37 +695,64 @@ function renderMap() {
         mapContainer.appendChild(lbl);
         const isVip = zone.name.toLowerCase().includes('vip');
         zone.computers.forEach((comp, idx) => {
+            const isOffline = !comp.is_Active;
             const isFree = comp.is_Active && comp.bookings && comp.bookings.length === 0;
+            const isSelected = !!selected.find(s => s.id === comp.id);
             const el = document.createElement('div');
             el.className = `pc ${isFree ? 'free' : 'busy'}`;
-            el.innerText = comp.number;
             el.style.top = currentY + 'px';
             el.style.left = (START_X + idx * (PC_SIZE + PC_GAP)) + 'px';
-            if (!isFree) {
+
+            if (isOffline) {
+                // Неактивный комп — offline иконка
+                el.style.background = '#0d0d0d';
+                el.style.borderColor = '#1a1a1a';
+                el.style.cursor = 'default';
+                el.style.opacity = '0.5';
+                el.innerHTML = `<img src="../img/offline.png" style="width:20px;height:20px;object-fit:contain;opacity:0.6;" alt="offline">`;
+                el.title = `ПК №${comp.number} — не активен`;
+                attachPcHold(el, comp);
+            } else if (!isFree) {
+                el.innerText = comp.number;
                 el.style.background = '#1a1a1a'; el.style.borderColor = '#2a2a2a'; el.style.color = '#333';
                 if (comp.bookings && comp.bookings.length > 0) {
                     el.addEventListener('mouseenter', () => showPcTooltip(el, comp.bookings));
                     el.addEventListener('mouseleave', hidePcTooltip);
                     el.addEventListener('mousemove', () => movePcTooltip(el));
                 }
+                attachPcHold(el, comp);
             } else {
-                el.style.background = isVip ? '#1a0a0a' : '#1a1a2e';
-                el.style.borderColor = isVip ? '#8b1a1a' : '#4a4a8a';
-                el.style.color = isVip ? '#ff6b6b' : '#aaaaff';
+                el.innerText = comp.number;
+                // Восстанавливаем визуал если комп уже был выбран
+                if (isSelected) {
+                    el.classList.add('selected');
+                    el.style.background = '#8b1a1a';
+                    el.style.borderColor = '#ff4d4d';
+                    el.style.color = '#fff';
+                } else {
+                    el.style.background = isVip ? '#1a0a0a' : '#1a1a2e';
+                    el.style.borderColor = isVip ? '#8b1a1a' : '#4a4a8a';
+                    el.style.color = isVip ? '#ff6b6b' : '#aaaaff';
+                }
                 el.onclick = () => {
                     const i = selected.findIndex(s => s.id === comp.id);
                     if (i > -1) {
                         selected.splice(i, 1);
                         el.classList.remove('selected');
                         el.style.background = isVip ? '#1a0a0a' : '#1a1a2e';
+                        el.style.borderColor = isVip ? '#8b1a1a' : '#4a4a8a';
+                        el.style.color = isVip ? '#ff6b6b' : '#aaaaff';
                     } else {
                         if (selected.length >= 5) { showToast("Максимум 5 мест"); return; }
                         selected.push({ id: comp.id, n: comp.number, zid: zone.id, isVip });
                         el.classList.add('selected');
                         el.style.background = '#8b1a1a';
+                        el.style.borderColor = '#ff4d4d';
+                        el.style.color = '#fff';
                     }
                     updateUI();
                 };
+                attachPcHold(el, comp);
             }
             layer.appendChild(el);
         });
@@ -740,4 +868,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 </body>
-</html>
+</html>     
