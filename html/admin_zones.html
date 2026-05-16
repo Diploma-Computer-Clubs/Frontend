@@ -216,10 +216,14 @@
     const urlParams = new URLSearchParams(window.location.search);
     const _rawId = urlParams.get('club_id') || localStorage.getItem('owner_club_id');
     let CLUB_ID = _rawId ? parseInt(_rawId, 10) : null;
+    console.log("URL params:", window.location.search);
+    console.log("club_id from URL:", urlParams.get('club_id'));
+    console.log("club_id from localStorage:", localStorage.getItem('owner_club_id'));
+    console.log("CLUB_ID final:", CLUB_ID);
     console.log("club_id resolved:", CLUB_ID);
 
     // ── API ──
-    const _API = 'http://138.16.224.101:8000/';
+    const _API = 'http://138.16.224.101:8000';
     const _api = axios.create({ baseURL: _API, headers: { "ngrok-skip-browser-warning": "69420" } });
 
     _api.interceptors.request.use(cfg => {
@@ -268,25 +272,33 @@
         window.location.href = 'check.html';
     });
 
-    // ── ДАННЫЕ ЮЗЕРА + АВТО CLUB_ID ──
-    async function loadUserData() {
-        try {
-            const res = await _api.get('/users/me');
-            document.getElementById('drawer_name').textContent = res.data.full_name || "Пользователь";
-            document.getElementById('drawer_phone').textContent = res.data.phone_number || "";
+   async function loadUserData() {
+    try {
+        const res = await _api.get('/users/me');
+        document.getElementById('drawer_name').textContent = res.data.full_name || "Пользователь";
+        document.getElementById('drawer_phone').textContent = res.data.phone_number || "";
 
-            // Если club_id не пришёл — пробуем resolveClubId
-            if (!CLUB_ID || isNaN(CLUB_ID)) {
-                await resolveClubId();
-            } else {
-                // Показываем инфо о клубе
+        if (!CLUB_ID || isNaN(CLUB_ID)) {
+            // Берём первый club_id из профиля
+            const ids = res.data.club_ids;
+            if (ids && ids.length > 0) {
+                CLUB_ID = ids[0];
+                localStorage.setItem('owner_club_id', CLUB_ID);
                 try {
                     const clubRes = await _api.get(`/clubs/${CLUB_ID}`);
                     showClubInfo(clubRes.data.name);
                 } catch { showClubInfo(`ID: ${CLUB_ID}`); }
+            } else {
+                await resolveClubId(); // club_ids пустой — показываем ошибку
             }
-        } catch {}
-    }
+        } else {
+            try {
+                const clubRes = await _api.get(`/clubs/${CLUB_ID}`);
+                showClubInfo(clubRes.data.name);
+            } catch { showClubInfo(`ID: ${CLUB_ID}`); }
+        }
+    } catch {}
+}
 
     async function resolveClubId() {
         // Нет эндпоинта для "мои клубы" — club_id должен быть в localStorage
