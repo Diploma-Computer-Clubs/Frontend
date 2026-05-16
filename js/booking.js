@@ -1,4 +1,4 @@
-const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+const API_URL = 'http://138.16.224.101:8000';
 
 const api = axios.create({
     baseURL: API_URL,
