@@ -145,7 +145,7 @@
     // ── AUTH GUARD ──
     (function() { if (!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
 
-    const _API_b = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+    const _API_b = 'http://138.16.224.101:8000/';
     const _api_b = axios.create({ baseURL: _API_b, headers: { "ngrok-skip-browser-warning": "69420" } });
     _api_b.interceptors.request.use(cfg => { const t = localStorage.getItem('access_token'); if (t) cfg.headers.Authorization = `Bearer ${t}`; return cfg; });
     _api_b.interceptors.response.use(r => r, async err => {

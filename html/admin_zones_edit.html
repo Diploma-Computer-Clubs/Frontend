@@ -235,7 +235,7 @@
     const rawId = urlParams.get('club_id') || localStorage.getItem('owner_club_id');
     const CLUB_ID = rawId ? parseInt(rawId, 10) : null;
 
-    const _API = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+    const _API = 'http://138.16.224.101:8000/';
     const _api = axios.create({ baseURL: _API, headers: { "ngrok-skip-browser-warning": "69420" } });
 
     _api.interceptors.request.use(cfg => {

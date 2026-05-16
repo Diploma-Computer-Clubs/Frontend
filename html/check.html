@@ -175,7 +175,7 @@ form.addEventListener("submit", async (e) => {
 
     try {
         // Шаг 1: логин, получаем токены
-        const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/auth/login", {
+        const res = await fetch("http://138.16.224.101:8000/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -205,7 +205,7 @@ form.addEventListener("submit", async (e) => {
         // Шаг 2: проверяем роль через /users/me
         setTimeout(async () => {
             try {
-                const meRes = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/users/me", {
+                const meRes = await fetch("http://138.16.224.101:8000/users/me", {
                     headers: {
                         "Authorization": `Bearer ${data.access_token}`,
                         "ngrok-skip-browser-warning": "69420"

@@ -228,7 +228,7 @@ let cities = [];
 
 async function loadCities(){
   try{
-    const res = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/cities/get_all_cities", {
+    const res = await fetch("http://138.16.224.101:8000/cities/", {
       headers:{
         "ngrok-skip-browser-warning": "69420"
       }
@@ -319,7 +319,7 @@ error.textContent = "";
 
 try{
 
-const response = await fetch("https://subopposite-nonheretical-brynn.ngrok-free.dev/users/registration",{
+const response = await fetch("http://138.16.224.101:8000/users/registration",{
 
 method:"POST",
 

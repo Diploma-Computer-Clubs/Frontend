@@ -103,7 +103,7 @@ html,body { height:100%; background:#111; color:#fff; overflow-y:auto; }
 </div>
 
 <script>
-const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+const API_URL = 'http://138.16.224.101:8000/';
 
 const api = axios.create({ baseURL: API_URL, headers: { "ngrok-skip-browser-warning": "69420" } });
 api.interceptors.request.use(cfg => {

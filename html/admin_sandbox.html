@@ -212,7 +212,7 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direc
 // ── AUTH ──
 (function(){ if(!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
 
-const _BASE = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+const _BASE = 'http://138.16.224.101:8000/';
 
 // axios уже загружен через <script> выше
 const _api = axios.create({ baseURL: _BASE, headers: { "ngrok-skip-browser-warning": "69420" } });

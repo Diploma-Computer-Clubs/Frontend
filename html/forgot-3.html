@@ -185,7 +185,7 @@ form.addEventListener("submit", async (e) => {
   try {
 
     const res = await fetch(
-      `https://subopposite-nonheretical-brynn.ngrok-free.dev/users/reset-password?new_password=${encodeURIComponent(password)}`,
+      `http://138.16.224.101:8000/users/reset-password?new_password=${encodeURIComponent(password)}`,
       {
         method: "PATCH",
         headers: {
