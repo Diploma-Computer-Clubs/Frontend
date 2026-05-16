@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underlie - Прайсинг</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #333333;
+            --card-bg: #2a2a2a;
+            --field-bg: #1e1e1e;
+            --text-main: #ffffff;
+            --bg-light: #cccccc;
+            --accent-green: #00ff00;
+            --danger: #ff453a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        /* ── Бургер ── */
+        .burger-menu { background: none; border: none; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; }
+        .burger-bar { width: 25px; height: 2px; background-color: #fff; transition: 0.3s; }
+        .burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
+        .burger-menu.open .burger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .side-drawer {
+            position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
+            background-color: #2d2d2d; z-index: 1000; transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+        .side-drawer.open { transform: translateX(0); }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 999; }
+        .overlay.active { display: block; }
+
+        .user-block { padding: 60px 25px 30px; background-color: #262626; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .user-name { font-weight: 700; color: #fff; display: block; }
+        .user-phone { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
+        .drawer-nav { display: flex; flex-direction: column; }
+        .drawer-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .drawer-link span { margin-right: 15px; color: #888; }
+        .drawer-link.logout { color: #ff6b6b; border-top: 1px solid rgba(255,255,255,0.07); }
+        .drawer-link.logout span { color: #ff6b6b; }
+
+        /* ── Контент ── */
+        .phone-container { width: 100%; max-width: 430px; display: flex; flex-direction: column; padding: 20px; padding-bottom: 40px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 30px; }
+        .header h1 { font-size: 20px; font-weight: 700; text-transform: uppercase; }
+
+        .section-title {
+            color: var(--bg-light); font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.7; margin-bottom: 16px;
+        }
+
+        /* ── Поля ── */
+        .field-group { position: relative; margin-bottom: 20px; }
+        .field-group label {
+            position: absolute; top: -9px; left: 12px;
+            background-color: var(--bg-dark); padding: 0 6px;
+            font-size: 10px; font-weight: 700; color: var(--bg-light); z-index: 1;
+        }
+        .field-group input, .field-group select {
+            width: 100%; background: var(--field-bg);
+            border: 1px solid #555; border-radius: 10px;
+            padding: 14px; color: white; font-size: 15px; outline: none;
+            transition: border-color 0.3s; font-family: 'Montserrat', sans-serif;
+            appearance: none;
+        }
+        .field-group input:focus, .field-group select:focus { border-color: var(--accent-green); }
+        .field-group select option { background: #2a2a2a; }
+
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .field-row .field-group { margin-bottom: 0; }
+
+        /* ── Карточка настроек ── */
+        .settings-card {
+            background: var(--card-bg); border: 1px solid #444;
+            border-radius: 16px; padding: 20px; margin-bottom: 20px;
+        }
+        .settings-card-title {
+            font-size: 13px; font-weight: 700; color: var(--accent-green);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 18px;
+        }
+
+        /* ── Пакеты ── */
+        .packages-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+        .package-row {
+            background: var(--card-bg);
+            border: 1px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: border-color 0.2s;
+            animation: fadeIn 0.25s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pkg-checkbox {
+            width: 22px; height: 22px; flex-shrink: 0;
+            border: 2px solid #555; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; background: transparent;
+        }
+        .pkg-checkbox.checked {
+            border-color: var(--accent-green);
+            background: var(--accent-green);
+        }
+        .pkg-checkbox .material-symbols-outlined { font-size: 15px; color: #000; display: none; }
+        .pkg-checkbox.checked .material-symbols-outlined { display: block; }
+
+        .pkg-info { flex: 1; }
+        .pkg-name { font-size: 14px; font-weight: 700; color: #fff; }
+        .pkg-duration { font-size: 11px; color: #666; margin-top: 2px; }
+
+        .pkg-price-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        .pkg-price {
+            font-size: 16px; font-weight: 700; color: var(--accent-green);
+        }
+        .pkg-price-input {
+            background: var(--field-bg); border: 1px solid #444;
+            border-radius: 8px; padding: 6px 10px;
+            color: white; font-size: 14px; font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            width: 100px; text-align: right; outline: none;
+        }
+        .pkg-price-input:focus { border-color: var(--accent-green); }
+        .pkg-unit { font-size: 10px; color: #555; text-align: right; }
+
+        /* Скидка бейдж */
+        .pkg-discount {
+            font-size: 10px; font-weight: 700; padding: 2px 7px;
+            border-radius: 20px; background: rgba(0,255,0,0.12);
+            color: var(--accent-green); border: 1px solid rgba(0,255,0,0.25);
+        }
+
+        /* ── Время ── */
+        .time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* ── Итог ── */
+        .summary-card {
+            background: rgba(0,255,0,0.05);
+            border: 1px solid rgba(0,255,0,0.2);
+            border-radius: 14px; padding: 16px; margin-bottom: 20px;
+        }
+        .summary-title { font-size: 11px; color: var(--accent-green); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-key { font-size: 12px; color: #888; }
+        .summary-val { font-size: 13px; font-weight: 700; color: #fff; }
+
+        /* ── Кнопка ── */
+        .save-btn {
+            width: 100%; background: transparent;
+            border: 1px solid var(--accent-green); color: var(--accent-green);
+            padding: 18px; border-radius: 12px;
+            font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; font-family: 'Montserrat', sans-serif;
+        }
+        .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .save-btn:not(:disabled):active { background: var(--accent-green); color: black; }
+
+        .error-box {
+            display: none; background: rgba(255, 69, 58, 0.12);
+            border: 1px solid var(--danger); color: var(--danger);
+            border-radius: 12px; padding: 14px 16px;
+            font-size: 13px; line-height: 1.6; white-space: pre-wrap; margin-top: 14px;
+        }
+        .error-box.visible { display: block; }
+        .success-box {
+            display: none; background: rgba(0, 255, 0, 0.08);
+            border: 1px solid var(--accent-green); color: var(--accent-green);
+            border-radius: 12px; padding: 14px 16px;
+            font-size: 13px; line-height: 1.6; margin-top: 14px;
+        }
+        .success-box.visible { display: block; }
+
+        .loading-spinner {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid rgba(0,255,0,0.3); border-top-color: var(--accent-green);
+            border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .skeleton {
+            background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+            background-size: 200% 100%; animation: shimmer 1.5s infinite;
+            border-radius: 8px; height: 14px;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .select-icon {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            color: #666; pointer-events: none;
+        }
+        .select-wrap { position: relative; }
+
+        .hint { font-size: 11px; color: #555; margin-top: -14px; margin-bottom: 20px; padding-left: 4px; }
+
+        /* Базовая цена hero */
+        .price-hero {
+            background: linear-gradient(135deg, rgba(0,255,0,0.08), transparent);
+            border: 1px solid rgba(0,255,0,0.3);
+            border-radius: 14px; padding: 20px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 16px;
+        }
+        .price-hero-icon { font-size: 36px; color: var(--accent-green); }
+        .price-hero-label { font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .price-hero-input {
+            background: transparent; border: none; border-bottom: 2px solid var(--accent-green);
+            color: var(--accent-green); font-size: 28px; font-weight: 700;
+            font-family: 'Montserrat', sans-serif; outline: none; width: 120px;
+        }
+        .price-hero-currency { font-size: 20px; color: var(--accent-green); font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<nav class="side-drawer" id="sideDrawer">
+    <div class="user-block">
+        <span class="user-name" id="drawer_name">Загрузка...</span>
+        <span class="user-phone" id="drawer_phone">...</span>
+    </div>
+    <div class="drawer-nav">
+        <a href="mainpage.html" class="drawer-link"><span class="material-symbols-outlined">home</span> Главная</a>
+        <a href="admin_dashboard.html" class="drawer-link"><span class="material-symbols-outlined">dashboard</span> Мой клуб</a>
+        <a href="admin_zones.html" class="drawer-link"><span class="material-symbols-outlined">computer</span> Зоны</a>
+        <a href="map.html" class="drawer-link"><span class="material-symbols-outlined">search</span> Карта клубов</a>
+        <a href="#" class="drawer-link logout" id="logoutLink"><span class="material-symbols-outlined">logout</span> Выйти</a>
+    </div>
+</nav>
+
+<div class="phone-container">
+    <div class="header">
+        <button class="burger-menu" id="burger">
+            <span class="burger-bar"></span>
+            <span class="burger-bar"></span>
+            <span class="burger-bar"></span>
+        </button>
+        <h1>Прайсинг</h1>
+        <button style="background:none;border:none;color:#fff;cursor:pointer;" onclick="history.back()">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+    </div>
+
+    <!-- Зона -->
+    <p class="section-title">Выберите зону</p>
+    <div class="field-group select-wrap" style="margin-bottom:20px;">
+        <label>Зона</label>
+        <select id="zoneSelect">
+            <option value="">Загрузка зон...</option>
+        </select>
+        <span class="material-symbols-outlined select-icon">expand_more</span>
+    </div>
+
+    <!-- Базовая цена -->
+    <p class="section-title">Базовая цена</p>
+    <div class="price-hero">
+        <span class="material-symbols-outlined price-hero-icon">payments</span>
+        <div>
+            <div class="price-hero-label">Цена за 1 час</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <input type="number" id="basePrice" class="price-hero-input" value="500" min="0" placeholder="500">
+                <span class="price-hero-currency">₸</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Время работы -->
+    <p class="section-title">Время работы</p>
+    <div class="settings-card">
+        <div class="time-row">
+            <div class="field-group" style="margin-bottom:0;">
+                <label>Начало</label>
+                <input type="time" id="startTime" value="10:00">
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+                <label>Конец</label>
+                <input type="time" id="endTime" value="23:00">
+            </div>
+        </div>
+    </div>
+
+    <!-- Пакеты -->
+    <p class="section-title">Пакеты (выберите и скорректируйте)</p>
+    <div id="packagesList" class="packages-list"></div>
+
+    <!-- Итог -->
+    <div class="summary-card" id="summaryCard" style="display:none;">
+        <div class="summary-title">Итого к созданию</div>
+        <div id="summaryRows"></div>
+    </div>
+
+    <button class="save-btn" id="saveBtn">Создать прайсинг</button>
+    <div class="error-box" id="errorBox"></div>
+    <div class="success-box" id="successBox"></div>
+</div>
+
+<script>
+    // ── AUTH ──
+    (function() { if (!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawId = urlParams.get('club_id') || localStorage.getItem('owner_club_id');
+    const CLUB_ID = rawId ? parseInt(rawId, 10) : null;
+
+    const _API = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+    const _api = axios.create({ baseURL: _API, headers: { "ngrok-skip-browser-warning": "69420" } });
+
+    _api.interceptors.request.use(cfg => {
+        const t = localStorage.getItem('access_token');
+        if (t) cfg.headers.Authorization = `Bearer ${t}`;
+        return cfg;
+    });
+    _api.interceptors.response.use(r => r, async err => {
+        if (err.response?.status === 401 && !err.config._retry) {
+            err.config._retry = true;
+            const rt = localStorage.getItem('refresh_token');
+            if (rt) {
+                try {
+                    const r = await axios.post(`${_API}/auth/refresh`, {}, {
+                        headers: { "Authorization": `Bearer ${rt}`, "ngrok-skip-browser-warning": "69420" }
+                    });
+                    localStorage.setItem('access_token', r.data.access_token);
+                    err.config.headers.Authorization = `Bearer ${r.data.access_token}`;
+                    return _api(err.config);
+                } catch { localStorage.clear(); window.location.href = 'check.html'; }
+            } else { localStorage.clear(); window.location.href = 'check.html'; }
+        }
+        return Promise.reject(err);
+    });
+
+    // ── Бургер ──
+    const burger = document.getElementById('burger');
+    const drawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('overlay');
+    burger.addEventListener('click', () => { burger.classList.toggle('open'); drawer.classList.toggle('open'); overlay.classList.toggle('active'); });
+    overlay.addEventListener('click', () => { burger.classList.remove('open'); drawer.classList.remove('open'); overlay.classList.remove('active'); });
+    document.getElementById('logoutLink').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); window.location.href = 'check.html'; });
+
+    // ── Конфиг пакетов ──
+    // duration в минутах, discount — скидка в % (0 = нет)
+    const PACKAGE_TEMPLATES = [
+        { hours: 1,  label: '1 час',    duration: 60,  discount: 0  },
+        { hours: 2,  label: '2 часа',   duration: 120, discount: 0  },
+        { hours: 3,  label: '3 часа',   duration: 180, discount: 5  },
+        { hours: 5,  label: '5 часов',  duration: 300, discount: 10 },
+        { hours: 8,  label: '8 часов',  duration: 480, discount: 15 },
+        { hours: 12, label: '12 часов', duration: 720, discount: 20 },
+    ];
+
+    // Состояние: выбранные пакеты + цены
+    let packageState = {};
+
+    function getBasePrice() {
+        return parseFloat(document.getElementById('basePrice').value) || 0;
+    }
+
+    function calcPackagePrice(tpl, basePrice) {
+        const raw = basePrice * tpl.hours;
+        if (tpl.discount > 0) return Math.round(raw * (1 - tpl.discount / 100));
+        return Math.round(raw);
+    }
+
+    function renderPackages() {
+        const basePrice = getBasePrice();
+        const list = document.getElementById('packagesList');
+        list.innerHTML = '';
+
+        PACKAGE_TEMPLATES.forEach(tpl => {
+            const key = tpl.hours;
+            if (!(key in packageState)) {
+                packageState[key] = {
+                    checked: key <= 3, // первые 3 пакета включены по умолчанию
+                    price: calcPackagePrice(tpl, basePrice)
+                };
+            }
+
+            const state = packageState[key];
+            const row = document.createElement('div');
+            row.className = 'package-row';
+            row.style.opacity = state.checked ? '1' : '0.45';
+
+            const discountBadge = tpl.discount > 0
+                ? `<span class="pkg-discount">−${tpl.discount}%</span>`
+                : '';
+
+            row.innerHTML = `
+                <div class="pkg-checkbox ${state.checked ? 'checked' : ''}" data-key="${key}">
+                    <span class="material-symbols-outlined">check</span>
+                </div>
+                <div class="pkg-info">
+                    <div class="pkg-name">${tpl.label} ${discountBadge}</div>
+                    <div class="pkg-duration">${tpl.duration} мин · ${tpl.discount > 0 ? 'скидка ' + tpl.discount + '%' : 'стандартная цена'}</div>
+                </div>
+                <div class="pkg-price-wrap">
+                    <input
+                        class="pkg-price-input"
+                        type="number"
+                        min="0"
+                        value="${state.price}"
+                        data-key="${key}"
+                        ${state.checked ? '' : 'disabled'}
+                    >
+                    <div class="pkg-unit">₸ / пакет</div>
+                </div>
+            `;
+
+            // Чекбокс
+            row.querySelector('.pkg-checkbox').addEventListener('click', function() {
+                const k = parseInt(this.dataset.key);
+                packageState[k].checked = !packageState[k].checked;
+                renderPackages();
+                updateSummary();
+            });
+
+            // Ручное изменение цены
+            row.querySelector('.pkg-price-input').addEventListener('input', function() {
+                const k = parseInt(this.dataset.key);
+                packageState[k].price = parseFloat(this.value) || 0;
+                updateSummary();
+            });
+
+            list.appendChild(row);
+        });
+
+        updateSummary();
+    }
+
+    function updateSummary() {
+        const selected = PACKAGE_TEMPLATES.filter(t => packageState[t.hours]?.checked);
+        const summaryCard = document.getElementById('summaryCard');
+        const summaryRows = document.getElementById('summaryRows');
+
+        if (selected.length === 0) {
+            summaryCard.style.display = 'none';
+            return;
+        }
+
+        summaryCard.style.display = 'block';
+        summaryRows.innerHTML = selected.map(t => `
+            <div class="summary-row">
+                <span class="summary-key">${t.label}</span>
+                <span class="summary-val">${packageState[t.hours].price} ₸</span>
+            </div>
+        `).join('') + `
+            <div class="summary-row" style="margin-top:4px;">
+                <span class="summary-key" style="color:#fff;font-weight:700;">Итого пакетов</span>
+                <span class="summary-val" style="color:var(--accent-green);">${selected.length}</span>
+            </div>
+        `;
+    }
+
+    // Пересчёт при изменении базовой цены
+    document.getElementById('basePrice').addEventListener('input', () => {
+        const basePrice = getBasePrice();
+        PACKAGE_TEMPLATES.forEach(tpl => {
+            if (packageState[tpl.hours]) {
+                packageState[tpl.hours].price = calcPackagePrice(tpl, basePrice);
+            }
+        });
+        renderPackages();
+    });
+
+    // ── UI helpers ──
+    function showError(msg) {
+        const box = document.getElementById('errorBox');
+        box.textContent = msg;
+        box.classList.toggle('visible', !!msg);
+        document.getElementById('successBox').classList.remove('visible');
+    }
+    function showSuccess(msg) {
+        const box = document.getElementById('successBox');
+        box.textContent = msg;
+        box.classList.add('visible');
+        document.getElementById('errorBox').classList.remove('visible');
+    }
+
+    // ── Сохранение ──
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+        const zoneId = parseInt(document.getElementById('zoneSelect').value);
+        if (!zoneId) { showError("Выберите зону!"); return; }
+
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        if (!startTime || !endTime) { showError("Укажите время работы!"); return; }
+
+        const selected = PACKAGE_TEMPLATES.filter(t => packageState[t.hours]?.checked);
+        if (selected.length === 0) { showError("Выберите хотя бы один пакет!"); return; }
+
+        // Формируем payload для каждого пакета
+        const payloads = selected.map(tpl => ({
+            name: `${tpl.label}`,
+            start_time: `${startTime}:00`,
+            end_time: `${endTime}:00`,
+            duration: tpl.duration,
+            price: packageState[tpl.hours].price,
+            is_package: tpl.hours > 1,  // 1 час = почасовой, остальное = пакет
+            zone_id: zoneId
+        }));
+
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span>Создание...';
+        showError('');
+
+        const results = { ok: 0, fail: 0, errors: [] };
+
+        // Отправляем каждый пакет отдельно
+        for (const payload of payloads) {
+            try {
+                await _api.post('/pricing/', payload, { params: { club_id: CLUB_ID } });
+                results.ok++;
+            } catch (err) {
+                results.fail++;
+                const detail = err.response?.data?.detail;
+                results.errors.push(`• ${payload.name}: ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`);
+            }
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Создать прайсинг';
+
+        if (results.fail === 0) {
+            showSuccess(`✅ Создано ${results.ok} пакет(ов) успешно!`);
+        } else if (results.ok > 0) {
+            showSuccess(`✅ Создано: ${results.ok}`);
+            showError(`❌ Ошибки (${results.fail}):\n${results.errors.join('\n')}`);
+        } else {
+            showError(`❌ Все запросы провалились:\n${results.errors.join('\n')}`);
+        }
+    });
+
+    // ── Инит ──
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const userRes = await _api.get('/users/me');
+            document.getElementById('drawer_name').textContent = userRes.data.full_name || "Пользователь";
+            document.getElementById('drawer_phone').textContent = userRes.data.phone_number || "";
+        } catch {}
+
+        // Загружаем зоны
+        const sel = document.getElementById('zoneSelect');
+        if (!CLUB_ID || isNaN(CLUB_ID)) {
+            sel.innerHTML = '<option value="">Клуб не найден</option>';
+            showError("Не удалось определить клуб. Откройте страницу с ?club_id=ВАШ_ID");
+        } else {
+            try {
+                const zonesRes = await _api.get('/zones/', { params: { club_id: CLUB_ID } });
+                const zones = zonesRes.data;
+                if (zones.length === 0) {
+                    sel.innerHTML = '<option value="">Нет зон — сначала создайте зоны</option>';
+                } else {
+                    sel.innerHTML = zones.map(z =>
+                        `<option value="${z.id}">${z.name} (ID: ${z.id})</option>`
+                    ).join('');
+                }
+            } catch (err) {
+                sel.innerHTML = '<option value="">Ошибка загрузки зон</option>';
+                showError(`Ошибка загрузки зон: ${err.response?.status || err.message}`);
+            }
+        }
+
+        renderPackages();
+    });
+</script>
+</body>
+</html>

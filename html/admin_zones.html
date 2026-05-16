@@ -445,9 +445,11 @@
 
         try {
             const res = await _api.post('/zones/', zones, { params: { club_id: CLUB_ID } });
-            showSuccess(`✅ ${zones.length} зон(ы) успешно созданы!`);
-            console.log("Ответ:", res.data);
-            // Можно перейти на следующий шаг, например на список клубов
+         showSuccess(`✅ ${zones.length} зон(ы) успешно созданы!`);
+            setTimeout(() => {
+                window.location.href = `admin_pricing.html?club_id=${CLUB_ID}`;
+            }, 1500);
+                        // Можно перейти на следующий шаг, например на список клубов
             // setTimeout(() => { window.location.href = 'mainpage.html'; }, 1500);
         } catch (err) {
             const status = err.response?.status;
