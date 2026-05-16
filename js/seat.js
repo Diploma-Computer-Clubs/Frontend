@@ -1,4 +1,4 @@
-const API_URL = 'https://subopposite-nonheretical-brynn.ngrok-free.dev';
+const API_URL = 'http://138.16.224.101:8000';
 const params = new URLSearchParams(window.location.search);
 const clubId = params.get('club_id');
 if (!clubId) { window.location.href = 'map.html'; }
