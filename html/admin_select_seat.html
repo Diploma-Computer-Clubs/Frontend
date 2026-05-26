@@ -270,6 +270,7 @@
         .pc-tooltip.visible {
             opacity: 1;
             transform: translateY(0) scale(1);
+            pointer-events: auto;
         }
         .pc-tooltip-header {
             display: flex;
@@ -317,6 +318,42 @@
             font-weight: 700;
             color: #fff;
             letter-spacing: 0.3px;
+        }
+
+        /* ── CHECK-IN BUTTON IN TOOLTIP ── */
+        .pc-tooltip-checkin-btn {
+            margin-top: 8px;
+            width: 100%;
+            padding: 8px 10px;
+            background: rgba(76, 175, 80, 0.15);
+            border: 1px solid rgba(76, 175, 80, 0.4);
+            border-radius: 8px;
+            color: #4CAF50;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+        }
+        .pc-tooltip-checkin-btn:hover {
+            background: rgba(76, 175, 80, 0.28);
+            border-color: rgba(76, 175, 80, 0.7);
+        }
+        .pc-tooltip-checkin-btn:active { transform: scale(0.97); }
+        .pc-tooltip-checkin-btn.checked-in {
+            background: rgba(76, 175, 80, 0.12);
+            border-color: rgba(76, 175, 80, 0.35);
+            cursor: default;
+            opacity: 0.7;
+        }
+        .pc-tooltip-checkin-btn.loading {
+            opacity: 0.6;
+            cursor: default;
+            pointer-events: none;
         }
 
         /* ── PC CONTEXT MENU ── */
@@ -472,6 +509,10 @@
         <span class="material-symbols-outlined pc-tooltip-time-icon">schedule</span>
         <span class="pc-tooltip-time-text" id="tooltipTime"></span>
     </div>
+    <button class="pc-tooltip-checkin-btn" id="tooltipCheckinBtn" onclick="checkInFromTooltip(event)">
+        <span class="material-symbols-outlined" style="font-size:15px">how_to_reg</span>
+        Отметить приход
+    </button>
 </div>
 
 <!-- PC Context Menu -->
@@ -755,11 +796,29 @@ function formatTime(isoStr) {
 
 const tooltip = document.getElementById ? null : null; // init later
 
+let tooltipBookingId        = null;
+let tooltipBookingCheckedIn = false;
+let tooltipHideTimer        = null;
+
 function showPcTooltip(el, bookings) {
+    clearTimeout(tooltipHideTimer);
     const tt = document.getElementById('pcTooltip');
     const b = bookings[0];
+    tooltipBookingId        = b.id;
+    tooltipBookingCheckedIn = !!b.is_checked_in;
+
     document.getElementById('tooltipName').textContent = b.full_name;
     document.getElementById('tooltipTime').textContent = `${formatTime(b.start_time)} – ${formatTime(b.end_time)}`;
+
+    const btn = document.getElementById('tooltipCheckinBtn');
+    btn.classList.remove('loading', 'checked-in');
+    if (tooltipBookingCheckedIn) {
+        btn.style.display = 'none';
+    } else {
+        btn.style.display = 'flex';
+        btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">how_to_reg</span> Отметить приход`;
+    }
+
     tt.classList.add('visible');
     movePcTooltip(el);
 }
@@ -778,7 +837,28 @@ function movePcTooltip(el) {
 }
 
 function hidePcTooltip() {
-    document.getElementById('pcTooltip').classList.remove('visible');
+    tooltipHideTimer = setTimeout(() => {
+        document.getElementById('pcTooltip').classList.remove('visible');
+    }, 120);
+}
+
+async function checkInFromTooltip(e) {
+    e.stopPropagation();
+    if (!tooltipBookingId || tooltipBookingCheckedIn) return;
+    const btn = document.getElementById('tooltipCheckinBtn');
+    btn.classList.add('loading');
+    btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">hourglass_empty</span> Отмечаем...`;
+    try {
+        await api.patch(`/bookings/check-in`, { booking_id: tooltipBookingId, is_checked_in: true }, { params: { club_id: clubId } });
+        tooltipBookingCheckedIn = true;
+        btn.classList.remove('loading');
+        btn.style.display = 'none';
+        showToast('Приход отмечен', 'success');
+    } catch (err) {
+        btn.classList.remove('loading');
+        btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">how_to_reg</span> Отметить приход`;
+        showToast(err.response?.data?.detail || 'Ошибка check-in');
+    }
 }
 
 function renderMap() {
@@ -821,7 +901,12 @@ function renderMap() {
                 el.style.background = '#1a1a1a'; el.style.borderColor = '#2a2a2a'; el.style.color = '#333';
                 if (comp.bookings && comp.bookings.length > 0) {
                     el.addEventListener('mouseenter', () => showPcTooltip(el, comp.bookings));
-                    el.addEventListener('mouseleave', hidePcTooltip);
+                    el.addEventListener('mouseleave', () => {
+                        tooltipHideTimer = setTimeout(() => {
+                            const tt = document.getElementById('pcTooltip');
+                            if (!tt.matches(':hover')) hidePcTooltip();
+                        }, 80);
+                    });
                     el.addEventListener('mousemove', () => movePcTooltip(el));
                 }
                 attachPcHold(el, comp);
@@ -975,8 +1060,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     initCalendar();
     document.getElementById('timeLabel').innerText = `${startTime} – ${endTime}`;
     timeConfirmed = true;
+
+    // Тултип не скрывается при наведении на него самого
+    const tt = document.getElementById('pcTooltip');
+    tt.addEventListener('mouseenter', () => clearTimeout(tooltipHideTimer));
+    tt.addEventListener('mouseleave', hidePcTooltip);
+
     connectWS();
 });
 </script>
 </body>
-</html>
+</html> 
