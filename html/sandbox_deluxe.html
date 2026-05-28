@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Underlie — Панель клуба</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<style>
+:root {
+  --bg: #333333;
+  --surface: #2d2d2d;
+  --card: #2a2a2a;
+  --field: #1e1e1e;
+  --border: #444;
+  --text: #fff;
+  --muted: #888;
+  --light: #cccccc;
+  --green: #00ff00;
+  --green-dim: rgba(0,255,0,0.08);
+  --danger: #ff453a;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Montserrat',sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);z-index:200;flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--text);display:flex;align-items:center;}
+.back-btn:hover{color:var(--green);}
+.topbar h1{font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+.club-badge{font-size:10px;color:var(--green);font-weight:700;background:var(--green-dim);border:1px solid rgba(0,255,0,0.2);padding:3px 10px;border-radius:20px;}
+
+.tabs-bar{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;}
+.tabs-bar::-webkit-scrollbar{height:2px;}
+.tabs-bar::-webkit-scrollbar-thumb{background:var(--border);}
+.tab-btn{flex:none;padding:12px 16px;background:none;border:none;color:var(--muted);font-size:11px;font-weight:700;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.8px;cursor:pointer;border-bottom:2px solid transparent;transition:0.2s;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.tab-btn .material-symbols-outlined{font-size:16px;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green);}
+
+.tab-panel{display:none;flex:1;overflow-y:auto;}
+.tab-panel.active{display:flex;flex-direction:column;}
+
+.panel-content{width:100%;max-width:600px;margin:0 auto;padding:20px;padding-bottom:60px;}
+
+.section-title{color:var(--light);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;opacity:0.7;margin-bottom:14px;margin-top:24px;}
+.section-title:first-child{margin-top:0;}
+
+.field-group{position:relative;margin-bottom:20px;}
+.field-group label{position:absolute;top:-9px;left:12px;background:var(--bg);padding:0 6px;font-size:10px;font-weight:700;color:var(--light);z-index:1;}
+.field-group input,.field-group textarea,.field-group select{width:100%;background:var(--field);border:1px solid #555;border-radius:10px;padding:13px;color:white;font-size:14px;outline:none;font-family:'Montserrat',sans-serif;transition:border-color 0.2s;}
+.field-group input:focus,.field-group textarea:focus,.field-group select:focus{border-color:var(--green);}
+.field-group textarea{resize:vertical;min-height:80px;}
+.field-group select{appearance:none;cursor:pointer;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.field-row .field-group{margin-bottom:0;}
+
+.zone-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;position:relative;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.zone-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.zone-number{font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;}
+.zone-name-label{font-size:14px;font-weight:700;color:var(--green);}
+.zone-id-label{font-size:11px;color:#555;margin-top:2px;}
+.zone-actions{display:flex;gap:8px;}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.5px;border:1px solid;transition:0.2s;white-space:nowrap;}
+.btn-green{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+.btn-green:hover{background:rgba(0,255,0,0.15);}
+.btn-green:active{background:var(--green);color:#000;}
+.btn-ghost{background:transparent;border-color:var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:#666;color:var(--text);}
+.btn-danger{background:rgba(255,69,58,0.08);border-color:rgba(255,69,58,0.3);color:var(--danger);}
+.btn-danger:hover{background:rgba(255,69,58,0.15);border-color:var(--danger);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+.save-btn{width:100%;background:transparent;border:1px solid var(--green);color:var(--green);padding:16px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;transition:0.3s;text-transform:uppercase;font-family:'Montserrat',sans-serif;margin-top:10px;}
+.save-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.save-btn:not(:disabled):active{background:var(--green);color:#000;}
+
+.add-zone-btn{width:100%;background:transparent;border:1.5px dashed #555;color:#888;padding:14px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;transition:0.3s;text-transform:uppercase;font-family:'Montserrat',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;}
+.add-zone-btn:hover{border-color:var(--green);color:var(--green);}
+
+.icon-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 8px;cursor:pointer;color:var(--muted);display:flex;align-items:center;transition:0.2s;}
+.icon-btn:hover{border-color:#666;color:var(--text);}
+.icon-btn.danger{color:var(--danger);border-color:rgba(255,69,58,0.3);}
+.icon-btn.danger:hover{background:rgba(255,69,58,0.1);border-color:var(--danger);}
+.icon-btn .material-symbols-outlined{font-size:18px;}
+
+.zone-info{display:flex;flex-direction:column;gap:7px;}
+.zone-info-row{display:flex;justify-content:space-between;align-items:center;}
+.zone-info-key{font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.zone-info-val{font-size:13px;color:#ccc;}
+
+.zone-edit-form{display:none;flex-direction:column;gap:12px;}
+.save-zone-btn{width:100%;background:transparent;border:1px solid var(--green);color:var(--green);padding:12px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;transition:0.2s;text-transform:uppercase;margin-top:4px;}
+.save-zone-btn:disabled{opacity:0.4;}
+.save-zone-btn:not(:disabled):active{background:var(--green);color:#000;}
+.cancel-zone-btn{width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);padding:11px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;margin-top:4px;}
+
+.zones-count{font-size:11px;color:#555;font-weight:700;text-align:right;margin-bottom:12px;}
+
+.package-row{background:var(--card);border:1px solid #3a3a3a;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:0.2s;margin-bottom:10px;}
+.pkg-checkbox{width:22px;height:22px;flex-shrink:0;border:2px solid #555;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:0.2s;}
+.pkg-checkbox.checked{border-color:var(--green);background:var(--green);}
+.pkg-checkbox .material-symbols-outlined{font-size:14px;color:#000;display:none;}
+.pkg-checkbox.checked .material-symbols-outlined{display:block;}
+.pkg-info{flex:1;}
+.pkg-name{font-size:13px;font-weight:700;}
+.pkg-duration{font-size:10px;color:#555;margin-top:2px;}
+.pkg-discount{font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;background:var(--green-dim);color:var(--green);border:1px solid rgba(0,255,0,0.2);}
+.pkg-price-input{background:var(--field);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:white;font-size:13px;font-weight:700;font-family:'Montserrat',sans-serif;width:90px;text-align:right;outline:none;}
+.pkg-price-input:focus{border-color:var(--green);}
+.pkg-unit{font-size:9px;color:#555;text-align:right;margin-top:3px;}
+
+.price-hero{background:linear-gradient(135deg,var(--green-dim),transparent);border:1px solid rgba(0,255,0,0.3);border-radius:14px;padding:18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;}
+.price-hero-icon{font-size:32px;color:var(--green);}
+.price-hero-label{font-size:10px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.price-hero-input{background:transparent;border:none;border-bottom:2px solid var(--green);color:var(--green);font-size:26px;font-weight:700;font-family:'Montserrat',sans-serif;outline:none;width:110px;}
+.price-currency{font-size:18px;color:var(--green);font-weight:700;}
+
+.select-wrap{position:relative;}
+.select-wrap::after{content:"";position:absolute;right:14px;top:50%;width:7px;height:7px;border-right:2px solid #888;border-bottom:2px solid #888;transform:translateY(-70%) rotate(45deg);pointer-events:none;}
+
+.summary-card{background:var(--green-dim);border:1px solid rgba(0,255,0,0.2);border-radius:12px;padding:14px;margin-bottom:16px;}
+.summary-title{font-size:10px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.summary-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.summary-row:last-child{border-bottom:none;}
+.summary-key{font-size:11px;color:#888;}
+.summary-val{font-size:12px;font-weight:700;}
+
+.staff-item{background:var(--card);border:1px solid #3a3a3a;border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;animation:fadeIn 0.2s ease;}
+.staff-info{display:flex;flex-direction:column;gap:4px;}
+.staff-name{font-size:14px;font-weight:700;}
+.staff-role{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;width:fit-content;}
+.staff-role.admin{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,255,0,0.2);}
+.staff-role.staff{background:rgba(255,255,255,0.05);color:#888;border:1px solid #3a3a3a;}
+.staff-phone{font-size:11px;color:#555;}
+
+.sandbox-layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 104px);}
+.sandbox-panel{width:180px;min-width:180px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;padding:12px 10px;gap:10px;flex-shrink:0;}
+.sandbox-panel::-webkit-scrollbar{width:3px;}
+.sandbox-panel::-webkit-scrollbar-thumb{background:var(--border);}
+.p-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+.p-divider{height:1px;background:var(--border);}
+.stats-row{display:flex;gap:6px;}
+.stat-pill{flex:1;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 4px;text-align:center;}
+.stat-val{font-size:18px;font-weight:700;color:var(--green);}
+.stat-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;}
+.zone-chips{display:flex;flex-direction:column;gap:4px;}
+.zone-chip{display:flex;align-items:center;gap:6px;padding:7px 8px;border-radius:8px;background:var(--card);border:1.5px solid transparent;cursor:pointer;transition:0.2s;}
+.zone-chip:hover{border-color:#555;}
+.zone-chip.sel{border-color:var(--green);background:var(--green-dim);}
+.z-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.z-info{flex:1;min-width:0;}
+.z-name{font-size:10px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.z-count{font-size:9px;color:var(--muted);}
+.cols-row{display:flex;align-items:center;gap:6px;}
+.cols-row label{font-size:9px;color:var(--muted);white-space:nowrap;}
+.cols-input{width:42px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 6px;font-size:11px;font-family:'Montserrat',sans-serif;text-align:center;}
+.cols-input:focus{outline:none;border-color:var(--green);}
+.cols-input:disabled{opacity:0.4;}
+.add-pc-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:10px;border-radius:8px;border:1.5px dashed var(--green);background:var(--green-dim);color:var(--green);font-size:10px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;text-transform:uppercase;transition:0.2s;}
+.add-pc-btn.placing{border-style:solid;background:var(--green);color:#000;animation:glow 1.2s ease-in-out infinite;}
+.add-pc-btn:disabled{opacity:0.3;cursor:not-allowed;border-style:dashed;background:transparent;color:var(--muted);animation:none;}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(0,255,0,0.4)}50%{box-shadow:0 0 0 6px rgba(0,255,0,0)}}
+.hint-box{background:rgba(255,200,0,0.06);border:1px solid rgba(255,200,0,0.2);color:#ffc800;border-radius:7px;padding:7px 8px;font-size:9px;line-height:1.6;display:none;}
+.hint-box.show{display:block;}
+.tips{font-size:9px;color:var(--muted);line-height:1.8;padding:0 2px;}
+
+.canvas-wrap{flex:1;position:relative;overflow:hidden;background:var(--bg);cursor:grab;}
+.canvas-wrap.panning{cursor:grabbing;}
+.canvas-wrap::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,#3a3a3a 1px,transparent 1px);background-size:28px 28px;pointer-events:none;opacity:0.4;}
+.canvas{position:absolute;transform-origin:0 0;}
+
+.zone-block{position:absolute;background:rgba(28,28,28,0.97);border:2px solid;border-radius:11px;padding:8px;cursor:grab;user-select:none;box-shadow:0 4px 20px rgba(0,0,0,0.5);transition:box-shadow 0.2s;}
+.zone-block:active{cursor:grabbing;}
+.zone-block.dragging{box-shadow:0 14px 44px rgba(0,0,0,0.8);z-index:999;}
+.zb-head{display:flex;align-items:center;gap:5px;margin-bottom:6px;pointer-events:none;}
+.zb-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.zb-name{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;}
+.seat-grid{display:grid;gap:3px;}
+.seat{width:32px;height:32px;border-radius:5px;border:1.5px solid;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;position:relative;transition:0.1s;flex-shrink:0;}
+.seat.occupied{cursor:default;}
+.seat.empty{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.06);color:#2a2a2a;cursor:default;}
+.seat.placeable{cursor:crosshair;color:#444;}
+.seat.placeable:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);}
+.seat-x{position:absolute;inset:0;background:rgba(220,40,40,0.88);border-radius:4px;display:none;align-items:center;justify-content:center;font-size:13px;color:#fff;cursor:pointer;}
+.seat.occupied:hover .seat-x{display:flex;}
+.add-row-btn{width:100%;margin-top:4px;padding:4px;border-radius:4px;border:1px dashed rgba(255,255,255,0.08);background:transparent;color:rgba(255,255,255,0.18);font-size:8px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;text-transform:uppercase;transition:0.2s;}
+.add-row-btn:hover{border-color:rgba(255,255,255,0.25);color:rgba(255,255,255,0.4);}
+.zoom-ctrl{position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:4px;z-index:100;}
+.zoom-btn{width:30px;height:30px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.2s;}
+.zoom-btn:hover{background:var(--card);}
+
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:none;justify-content:center;align-items:center;z-index:3000;padding:20px;}
+.modal-overlay.active{display:flex;}
+.modal-card{background:#262626;width:100%;max-width:300px;padding:28px;border-radius:24px;text-align:center;border:1px solid rgba(255,255,255,0.05);animation:modalIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275);}
+@keyframes modalIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+.modal-icon{font-size:44px;color:var(--danger);margin-bottom:12px;}
+.modal-card h2{font-size:17px;margin-bottom:8px;}
+.modal-card p{font-size:12px;color:#888;line-height:1.5;margin-bottom:20px;}
+.modal-actions{display:flex;flex-direction:column;gap:8px;}
+.m-btn{padding:14px;border-radius:10px;border:none;font-weight:700;font-size:13px;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.m-confirm{background:var(--danger);color:white;}
+.m-cancel{background:transparent;color:#888;}
+
+.error-box{display:none;background:rgba(255,69,58,0.1);border:1px solid var(--danger);color:var(--danger);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.6;white-space:pre-wrap;margin-top:12px;}
+.error-box.visible{display:block;}
+.success-box{display:none;background:var(--green-dim);border:1px solid var(--green);color:var(--green);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.6;margin-top:12px;}
+.success-box.visible{display:block;}
+
+.skeleton{background:linear-gradient(90deg,#2a2a2a 25%,#333 50%,#2a2a2a 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:7px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.empty-state{text-align:center;padding:40px 20px;color:#555;}
+.empty-state .material-symbols-outlined{font-size:44px;margin-bottom:10px;display:block;}
+.empty-state p{font-size:13px;}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(70px);background:#111;border:1px solid var(--border);color:var(--text);padding:9px 16px;border-radius:9px;font-size:11px;font-weight:600;z-index:9999;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;box-shadow:0 8px 28px rgba(0,0,0,0.6);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.green{border-color:var(--green);color:var(--green);}
+.toast.red{border-color:var(--danger);color:var(--danger);}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:9998;}
+.loading-overlay.hidden{display:none;}
+.spinner{width:28px;height:28px;border:2px solid #444;border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:11px;color:var(--muted);}
+
+.spinner-inline{display:inline-block;width:12px;height:12px;border:2px solid rgba(0,255,0,0.3);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;margin-right:6px;vertical-align:middle;}
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-card">
+    <div class="material-symbols-outlined modal-icon">delete_forever</div>
+    <h2>Удалить зону?</h2>
+    <p id="deleteModalText">Зона будет удалена навсегда.</p>
+    <div class="modal-actions">
+      <button class="m-btn m-confirm" id="confirmDeleteBtn">Да, удалить</button>
+      <button class="m-btn m-cancel" id="cancelDeleteBtn">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-txt" id="loadingTxt">Загрузка...</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="back-btn" onclick="history.back()"><span class="material-symbols-outlined">arrow_back</span></button>
+    <h1>Панель клуба</h1>
+  </div>
+  <div id="clubBadge" class="club-badge" style="display:none;"></div>
+</div>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" data-tab="zones-list">
+    <span class="material-symbols-outlined">view_list</span>Зоны
+  </button>
+  <button class="tab-btn" data-tab="zones-add">
+    <span class="material-symbols-outlined">add_circle</span>Добавить
+  </button>
+  <button class="tab-btn" data-tab="sandbox">
+    <span class="material-symbols-outlined">computer</span>Места
+  </button>
+  <button class="tab-btn" data-tab="pricing">
+    <span class="material-symbols-outlined">payments</span>Прайсинг
+  </button>
+  <button class="tab-btn" data-tab="staff">
+    <span class="material-symbols-outlined">group</span>Стафф
+  </button>
+</div>
+
+<!-- TAB: ZONES LIST -->
+<div class="tab-panel active" id="tab-zones-list">
+  <div class="panel-content">
+    <p class="section-title">Все зоны</p>
+    <div class="zones-count" id="zonesListCount"></div>
+    <div id="zonesListContainer">
+      <div style="background:var(--card);border-radius:14px;padding:18px;margin-bottom:12px;">
+        <div class="skeleton" style="height:16px;width:40%;margin-bottom:10px;"></div>
+        <div class="skeleton" style="height:12px;width:70%;margin-bottom:6px;"></div>
+        <div class="skeleton" style="height:12px;width:50%;"></div>
+      </div>
+      <div style="background:var(--card);border-radius:14px;padding:18px;margin-bottom:12px;">
+        <div class="skeleton" style="height:16px;width:35%;margin-bottom:10px;"></div>
+        <div class="skeleton" style="height:12px;width:60%;"></div>
+      </div>
+    </div>
+    <div class="error-box" id="zonesListError"></div>
+  </div>
+</div>
+
+<!-- TAB: ADD ZONES -->
+<div class="tab-panel" id="tab-zones-add">
+  <div class="panel-content">
+    <p class="section-title">Добавьте зоны</p>
+    <div id="clubInfoBadge" style="display:none;font-size:11px;color:var(--green);font-weight:700;margin-bottom:12px;padding:7px 12px;background:var(--green-dim);border-radius:8px;border:1px solid rgba(0,255,0,0.2);"></div>
+    <div class="zones-count" id="zonesAddCount">0 зон</div>
+    <div id="zonesAddContainer"></div>
+    <button class="add-zone-btn" id="addZoneBtn">
+      <span class="material-symbols-outlined">add</span>Добавить зону
+    </button>
+    <button class="save-btn" id="saveZonesBtn">Сохранить зоны</button>
+    <div class="error-box" id="zonesAddError"></div>
+    <div class="success-box" id="zonesAddSuccess"></div>
+  </div>
+</div>
+
+<!-- TAB: SANDBOX -->
+<div class="tab-panel" id="tab-sandbox">
+  <div class="sandbox-layout">
+    <div class="sandbox-panel">
+      <span class="p-label">Статистика</span>
+      <div class="stats-row">
+        <div class="stat-pill"><div class="stat-val" id="statPc">0</div><div class="stat-lbl">ПК</div></div>
+        <div class="stat-pill"><div class="stat-val" id="statZones">0</div><div class="stat-lbl">Зон</div></div>
+      </div>
+      <div class="p-divider"></div>
+      <span class="p-label">Зоны</span>
+      <div class="zone-chips" id="sandboxChips"></div>
+      <div class="p-divider"></div>
+      <span class="p-label">Выбранная</span>
+      <div class="cols-row">
+        <label>Столбцов:</label>
+        <input class="cols-input" type="number" id="colsInput" value="6" min="1" max="20" disabled>
+      </div>
+      <button class="add-pc-btn" id="addPcBtn" disabled>
+        <span>＋</span><span id="addLabel">Добавить ПК</span>
+      </button>
+      <div class="hint-box" id="hint">
+        Кликни пустой слот → ПК<br>✕ на ПК → удалить<br>Тяни блок → переставить
+      </div>
+      <div class="p-divider"></div>
+      <div class="tips">🖱 Колёсико — масштаб<br>🖐 Тяни фон — прокрутка</div>
+      <button class="btn btn-green" id="sandboxSaveBtn" style="margin-top:auto;">💾 Сохранить</button>
+    </div>
+    <div class="canvas-wrap" id="wrap">
+      <div class="canvas" id="canvas"></div>
+      <div class="zoom-ctrl">
+        <button class="zoom-btn" id="zoomIn">+</button>
+        <button class="zoom-btn" id="zoomOut">−</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: PRICING -->
+<div class="tab-panel" id="tab-pricing">
+  <div class="panel-content">
+    <p class="section-title">Зона</p>
+    <div class="field-group select-wrap" style="margin-bottom:20px;">
+      <label>Выберите зону</label>
+      <select id="pricingZoneSelect"><option value="">Загрузка...</option></select>
+    </div>
+
+    <p class="section-title">Базовая цена</p>
+    <div class="price-hero">
+      <span class="material-symbols-outlined price-hero-icon">payments</span>
+      <div>
+        <div class="price-hero-label">Цена за 1 час</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="basePrice" class="price-hero-input" value="500" min="0">
+          <span class="price-currency">₸</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-title">Время работы</p>
+    <div class="field-row" style="margin-bottom:20px;">
+      <div class="field-group" style="margin-bottom:0;"><label>Начало</label><input type="time" id="startTime" value="10:00"></div>
+      <div class="field-group" style="margin-bottom:0;"><label>Конец</label><input type="time" id="endTime" value="23:00"></div>
+    </div>
+
+    <p class="section-title">Пакеты</p>
+    <div id="packagesList"></div>
+
+    <div class="summary-card" id="summaryCard" style="display:none;">
+      <div class="summary-title">Итого</div>
+      <div id="summaryRows"></div>
+    </div>
+
+    <button class="save-btn" id="savePricingBtn">Создать прайсинг</button>
+    <div class="error-box" id="pricingError"></div>
+    <div class="success-box" id="pricingSuccess"></div>
+  </div>
+</div>
+
+<!-- TAB: STAFF -->
+<div class="tab-panel" id="tab-staff">
+  <div class="panel-content">
+    <p class="section-title">Сотрудники</p>
+    <div id="staffList">
+      <div class="empty-state"><span class="spinner-inline"></span> Загрузка...</div>
+    </div>
+    <p class="section-title">Добавить сотрудника</p>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px;">
+      <div class="field-group"><label>Номер телефона</label><input type="tel" id="staffPhone" placeholder="+7 700 000 00 00"></div>
+      <div class="field-group" style="margin-bottom:0;">
+        <label>Роль</label>
+        <select id="staffRole">
+          <option value="staff">Staff — сотрудник</option>
+          <option value="admin">Admin — администратор</option>
+        </select>
+      </div>
+    </div>
+    <button class="save-btn" id="addStaffBtn">Добавить сотрудника</button>
+    <div class="error-box" id="staffError"></div>
+    <div class="success-box" id="staffSuccess"></div>
+  </div>
+</div>
+
+<script>
+// ── AUTH ──
+(function(){ if(!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
+
+const urlP = new URLSearchParams(location.search);
+const rawId = urlP.get('club_id') || localStorage.getItem('owner_club_id');
+let CLUB_ID = rawId ? parseInt(rawId,10) : null;
+
+const _BASE = 'http://138.16.224.101:8000/';
+const _api = axios.create({ baseURL: _BASE, headers: { "ngrok-skip-browser-warning": "69420" } });
+_api.interceptors.request.use(cfg => {
+  const t = localStorage.getItem('access_token');
+  if(t) cfg.headers.Authorization = `Bearer ${t}`;
+  return cfg;
+});
+_api.interceptors.response.use(r=>r, async err=>{
+  if(err.response?.status===401 && !err.config._retry){
+    err.config._retry=true;
+    const rt=localStorage.getItem('refresh_token');
+    if(rt){
+      try{
+        const r=await axios.post(`${_BASE}/auth/refresh`,{},{headers:{Authorization:`Bearer ${rt}`,"ngrok-skip-browser-warning":"69420"}});
+        localStorage.setItem('access_token',r.data.access_token);
+        err.config.headers.Authorization=`Bearer ${r.data.access_token}`;
+        return _api(err.config);
+      }catch{ localStorage.clear(); location.href='check.html'; }
+    } else { localStorage.clear(); location.href='check.html'; }
+  }
+  return Promise.reject(err);
+});
+
+// ── TOAST ──
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`toast ${type} show`;
+  setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ── HELPERS ──
+// FIX: showMsg всегда принимает ID error-box'а как базу, независимо от типа
+function showError(errBoxId, msg){
+  const errEl = document.getElementById(errBoxId);
+  const succId = errBoxId.replace('Error','Success');
+  const succEl = document.getElementById(succId);
+  if(errEl){ errEl.textContent = msg; errEl.classList.toggle('visible', !!msg); }
+  if(succEl) succEl.classList.remove('visible');
+}
+function showSuccess(errBoxId, msg){
+  const succId = errBoxId.replace('Error','Success');
+  const succEl = document.getElementById(succId);
+  const errEl  = document.getElementById(errBoxId);
+  if(succEl){ succEl.textContent = msg; succEl.classList.toggle('visible', !!msg); }
+  if(errEl) errEl.classList.remove('visible');
+}
+// Обратная совместимость для старых вызовов showMsg(id, msg, type)
+function showMsg(id, msg, type='error'){
+  if(type==='success') showSuccess(id, msg);
+  else showError(id, msg);
+}
+
+function pluralZone(n){ return n===1?'зона':n>=2&&n<=4?'зоны':'зон'; }
+
+// ── TABS ──
+const tabBtns=document.querySelectorAll('.tab-btn');
+const tabPanels=document.querySelectorAll('.tab-panel');
+let sandboxInitialized=false;
+
+tabBtns.forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const id=btn.dataset.tab;
+    tabBtns.forEach(b=>b.classList.remove('active'));
+    tabPanels.forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+id).classList.add('active');
+    if(id==='sandbox' && !sandboxInitialized){ initSandbox(); sandboxInitialized=true; }
+    if(id==='zones-list'){ loadZonesList(); }
+    if(id==='pricing'){ loadPricingZones(); }
+    if(id==='staff'){ loadStaff(); }
+  });
+});
+
+// ── TAB 1: ZONES LIST ──
+let pendingDeleteId=null;
+
+async function loadZonesList(){
+  if(!CLUB_ID){ showError('zonesListError','Клуб не найден'); return; }
+  const container=document.getElementById('zonesListContainer');
+  container.innerHTML=`<div style="background:var(--card);border-radius:14px;padding:18px;margin-bottom:12px;"><div class="skeleton" style="height:16px;width:40%;margin-bottom:10px;"></div><div class="skeleton" style="height:12px;width:60%;"></div></div>`;
+  try{
+    const res=await _api.get('/zones/',{params:{club_id:CLUB_ID}});
+    renderZonesList(res.data);
+  }catch(e){
+    container.innerHTML='';
+    showError('zonesListError',`Ошибка загрузки: ${e.response?.status||e.message}`);
+  }
+}
+
+function renderZonesList(zones){
+  const container=document.getElementById('zonesListContainer');
+  const count=zones.length;
+  document.getElementById('zonesListCount').textContent=`${count} ${pluralZone(count)}`;
+  if(!count){
+    container.innerHTML=`<div class="empty-state"><span class="material-symbols-outlined">computer</span><p>Зон пока нет.<br>Перейдите на вкладку «Добавить».</p></div>`;
+    return;
+  }
+  container.innerHTML='';
+  zones.forEach(zone=>{
+    const card=document.createElement('div');
+    card.className='zone-card'; card.dataset.zoneId=zone.id;
+    card.innerHTML=`
+      <div class="zone-card-header">
+        <div><div class="zone-name-label">${zone.name}</div><div class="zone-id-label">ID: ${zone.id} · ${zone.cost} ₸/час</div></div>
+        <div class="zone-actions">
+          <button class="icon-btn" onclick="toggleZoneEdit(${zone.id})" title="Ред."><span class="material-symbols-outlined">edit</span></button>
+          <button class="icon-btn danger" onclick="openDeleteModal(${zone.id},'${zone.name}')" title="Удалить"><span class="material-symbols-outlined">delete</span></button>
+        </div>
+      </div>
+      <div class="zone-info" id="zi_${zone.id}">
+        <div class="zone-info-row"><span class="zone-info-key">CPU</span><span class="zone-info-val">${zone.cpu}</span></div>
+        <div class="zone-info-row"><span class="zone-info-key">GPU</span><span class="zone-info-val">${zone.gpu}</span></div>
+        <div class="zone-info-row"><span class="zone-info-key">RAM</span><span class="zone-info-val">${zone.ram}</span></div>
+        <div class="zone-info-row"><span class="zone-info-key">SSD</span><span class="zone-info-val">${zone.ssd}</span></div>
+        <div class="zone-info-row"><span class="zone-info-key">Монитор</span><span class="zone-info-val">${zone.monitor}</span></div>
+        <div class="zone-info-row"><span class="zone-info-key">Позиция</span><span class="zone-info-val">X: ${zone.x}, Y: ${zone.y}</span></div>
+      </div>
+      <div class="zone-edit-form" id="ze_${zone.id}">
+        <div class="field-group"><label>Название</label><input type="text" data-f="name" value="${zone.name}"></div>
+        <div class="field-group"><label>Стоимость (₸/час)</label><input type="number" data-f="cost" value="${zone.cost}"></div>
+        <div class="field-group"><label>CPU</label><input type="text" data-f="cpu" value="${zone.cpu}"></div>
+        <div class="field-group"><label>GPU</label><input type="text" data-f="gpu" value="${zone.gpu}"></div>
+        <div class="field-group"><label>RAM</label><input type="text" data-f="ram" value="${zone.ram}"></div>
+        <div class="field-group"><label>SSD</label><input type="text" data-f="ssd" value="${zone.ssd}"></div>
+        <div class="field-group"><label>Монитор</label><input type="text" data-f="monitor" value="${zone.monitor}"></div>
+        <div class="field-row">
+          <div class="field-group"><label>X</label><input type="number" data-f="x" value="${zone.x}"></div>
+          <div class="field-group"><label>Y</label><input type="number" data-f="y" value="${zone.y}"></div>
+        </div>
+        <button class="save-zone-btn" id="szb_${zone.id}" onclick="saveZoneEdit(${zone.id})">Сохранить</button>
+        <button class="cancel-zone-btn" onclick="toggleZoneEdit(${zone.id})">Отмена</button>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function toggleZoneEdit(id){
+  const info=document.getElementById(`zi_${id}`);
+  const edit=document.getElementById(`ze_${id}`);
+  const isEdit=edit.style.display==='flex';
+  info.style.display=isEdit?'flex':'none';
+  edit.style.display=isEdit?'none':'flex';
+}
+
+async function saveZoneEdit(zoneId){
+  const card=document.querySelector(`.zone-card[data-zone-id="${zoneId}"]`);
+  const btn=document.getElementById(`szb_${zoneId}`);
+  const get=f=>card.querySelector(`[data-f="${f}"]`)?.value.trim();
+  const payload=[{id:zoneId,name:get('name'),cost:Number(get('cost'))||0,cpu:get('cpu')||'string',gpu:get('gpu')||'string',ram:get('ram')||'string',ssd:get('ssd')||'string',monitor:get('monitor')||'string',x:Number(get('x'))||0,y:Number(get('y'))||0}];
+  btn.disabled=true; btn.textContent='Сохранение...';
+  try{
+    await _api.patch(`/zones/${zoneId}`,payload,{params:{club_id:CLUB_ID}});
+    card.querySelector('.zone-name-label').textContent=payload[0].name;
+    card.querySelector('.zone-id-label').textContent=`ID: ${zoneId} · ${payload[0].cost} ₸/час`;
+    const vals=document.getElementById(`zi_${zoneId}`).querySelectorAll('.zone-info-val');
+    ['cpu','gpu','ram','ssd','monitor'].forEach((f,i)=>vals[i].textContent=payload[0][f]);
+    vals[5].textContent=`X: ${payload[0].x}, Y: ${payload[0].y}`;
+    toggleZoneEdit(zoneId);
+    showError('zonesListError','');
+    toast('✅ Зона обновлена','green');
+  }catch(e){
+    const d=e.response?.data?.detail;
+    showError('zonesListError',`❌ Ошибка ${e.response?.status}: ${typeof d==='string'?d:JSON.stringify(d)}`);
+  }finally{ btn.disabled=false; btn.textContent='Сохранить'; }
+}
+
+function openDeleteModal(id,name){
+  pendingDeleteId=id;
+  document.getElementById('deleteModalText').textContent=`Зона «${name}» будет удалена навсегда.`;
+  document.getElementById('deleteModal').classList.add('active');
+}
+document.getElementById('cancelDeleteBtn').addEventListener('click',()=>{
+  document.getElementById('deleteModal').classList.remove('active'); pendingDeleteId=null;
+});
+document.getElementById('confirmDeleteBtn').addEventListener('click',async()=>{
+  if(!pendingDeleteId) return;
+  const btn=document.getElementById('confirmDeleteBtn');
+  btn.disabled=true; btn.textContent='Удаление...';
+  try{
+    await _api.delete(`/zones/${pendingDeleteId}`,{params:{club_id:CLUB_ID}});
+    document.getElementById('deleteModal').classList.remove('active');
+    const card=document.querySelector(`.zone-card[data-zone-id="${pendingDeleteId}"]`);
+    if(card){ card.style.opacity='0'; card.style.transform='translateX(20px)'; card.style.transition='0.2s'; setTimeout(()=>{ card.remove(); updateZonesListCount(); },200); }
+    pendingDeleteId=null; toast('Зона удалена');
+  }catch(e){ showError('zonesListError',`❌ Ошибка удаления: ${e.response?.status}`); }
+  finally{ btn.disabled=false; btn.textContent='Да, удалить'; document.getElementById('deleteModal').classList.remove('active'); }
+});
+
+function updateZonesListCount(){
+  const n=document.querySelectorAll('#zonesListContainer .zone-card').length;
+  document.getElementById('zonesListCount').textContent=`${n} ${pluralZone(n)}`;
+}
+
+// ── TAB 2: ADD ZONES ──
+let zoneCounter=0;
+
+function addZoneCard(){
+  zoneCounter++;
+  const id=zoneCounter;
+  const container=document.getElementById('zonesAddContainer');
+  const card=document.createElement('div');
+  card.className='zone-card'; card.dataset.zoneId=id;
+  card.innerHTML=`
+    <div class="zone-card-header">
+      <span class="zone-number">Зона #${id}</span>
+      <button class="icon-btn danger" onclick="removeZoneCard(${id})"><span class="material-symbols-outlined">delete</span></button>
+    </div>
+    <div class="field-group"><label>Название</label><input type="text" placeholder="Standard / VIP..." data-f="name"></div>
+    <div class="field-group"><label>Стоимость (в час)</label><input type="number" placeholder="0" min="0" data-f="cost"></div>
+    <div class="field-group"><label>CPU</label><input type="text" placeholder="Intel Core i7-12700K" data-f="cpu"></div>
+    <div class="field-group"><label>GPU</label><input type="text" placeholder="RTX 4070" data-f="gpu"></div>
+    <div class="field-group"><label>RAM</label><input type="text" placeholder="32GB DDR5" data-f="ram"></div>
+    <div class="field-group"><label>SSD</label><input type="text" placeholder="1TB NVMe" data-f="ssd"></div>
+    <div class="field-group"><label>Монитор</label><input type="text" placeholder='27" 165Hz IPS' data-f="monitor"></div>
+    <div class="field-row">
+      <div class="field-group"><label>X</label><input type="number" placeholder="0" data-f="x"></div>
+      <div class="field-group"><label>Y</label><input type="number" placeholder="0" data-f="y"></div>
+    </div>`;
+  container.appendChild(card);
+  updateZonesAddCount();
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function removeZoneCard(id){
+  const card=document.querySelector(`#zonesAddContainer .zone-card[data-zone-id="${id}"]`);
+  if(card){ card.style.opacity='0'; card.style.transition='0.2s'; setTimeout(()=>{ card.remove(); updateZonesAddCount(); },200); }
+}
+
+function updateZonesAddCount(){
+  const n=document.querySelectorAll('#zonesAddContainer .zone-card').length;
+  document.getElementById('zonesAddCount').textContent=`${n} ${pluralZone(n)}`;
+}
+
+document.getElementById('addZoneBtn').addEventListener('click',addZoneCard);
+
+document.getElementById('saveZonesBtn').addEventListener('click',async()=>{
+  const cards=document.querySelectorAll('#zonesAddContainer .zone-card');
+  if(!cards.length){ showError('zonesAddError','Добавьте хотя бы одну зону!'); return; }
+  const zones=[]; let valid=true;
+  cards.forEach((card,i)=>{
+    const get=f=>card.querySelector(`[data-f="${f}"]`)?.value.trim()||'';
+    const name=get('name');
+    if(!name){ valid=false; showError('zonesAddError',`Зона #${i+1}: укажите название`); return; }
+    zones.push({name,cost:Number(get('cost'))||0,cpu:get('cpu')||'string',gpu:get('gpu')||'string',ram:get('ram')||'string',ssd:get('ssd')||'string',monitor:get('monitor')||'string',x:Number(get('x'))||0,y:Number(get('y'))||0,club_id:CLUB_ID});
+  });
+  if(!valid) return;
+  const btn=document.getElementById('saveZonesBtn');
+  btn.disabled=true; btn.textContent='Сохранение...';
+  try{
+    await _api.post('/zones/',zones,{params:{club_id:CLUB_ID}});
+    document.getElementById('zonesAddContainer').innerHTML=''; zoneCounter=0; updateZonesAddCount();
+    sandboxInitialized=false;
+  }catch(e){
+    const d=e.response?.data?.detail;
+    let msg=e.response?.status===403?'❌ 403: нет прав (нужна роль owner).':Array.isArray(d)?`❌ Validation:\n`+d.map(x=>`• ${x.loc?.join('.')} — ${x.msg}`).join('\n'):typeof d==='string'?`❌ ${e.response?.status}: ${d}`:`❌ Ошибка: ${JSON.stringify(e.response?.data)}`;
+    showError('zonesAddError',msg);
+  }finally{ btn.disabled=false; btn.textContent='Сохранить зоны'; }
+});
+
+// ── TAB 3: SANDBOX ──
+const COLORS=['#00e5ff','#ff6b35','#a78bfa','#fbbf24','#34d399','#f472b6','#60a5fa','#4ade80','#fb923c','#e879f9','#38bdf8','#facc15'];
+let sbZones=[],sbActiveId=null,sbPlacing=false;
+let scale=1,px=20,py=20,panning=false,ps={},po={};
+
+const wrap=document.getElementById('wrap');
+const canvas=document.getElementById('canvas');
+
+function applyT(){ canvas.style.transform=`translate(${px}px,${py}px) scale(${scale})`; }
+
+wrap.addEventListener('mousedown',e=>{ const t=e.target; if(t===wrap||t===canvas){ panning=true; ps={x:e.clientX,y:e.clientY}; po={x:px,y:py}; wrap.classList.add('panning'); } });
+window.addEventListener('mousemove',e=>{ if(!panning) return; px=po.x+(e.clientX-ps.x); py=po.y+(e.clientY-ps.y); applyT(); });
+window.addEventListener('mouseup',()=>{ panning=false; wrap.classList.remove('panning'); });
+wrap.addEventListener('wheel',e=>{ e.preventDefault(); scale=Math.min(2.5,Math.max(0.25,scale+(e.deltaY>0?-0.09:0.09))); applyT(); },{passive:false});
+document.getElementById('zoomIn').onclick=()=>{ scale=Math.min(2.5,scale+0.15); applyT(); };
+document.getElementById('zoomOut').onclick=()=>{ scale=Math.max(0.25,scale-0.15); applyT(); };
+
+async function initSandbox(){
+  if(!CLUB_ID){ toast('Клуб не найден','red'); return; }
+  try{
+    const zonesRes=await _api.get('/zones/',{params:{club_id:CLUB_ID}});
+    const zonesData=zonesRes.data;
+    if(!zonesData.length){ toast('Зон нет. Сначала создайте зоны.','red'); return; }
+    let bx=30,by=30;
+    sbZones=zonesData.map((z,i)=>{
+      const color=COLORS[i%COLORS.length];
+      const obj={id:z.id,name:z.name,color,bx,by,cols:6,computers:[],visible:true};
+      bx+=260; if(bx>1000){bx=30;by+=200;}
+      return obj;
+    });
+    for(let i=0;i<sbZones.length;i++){
+      const zone=sbZones[i];
+      try{
+        const res=await _api.get('/computers/',{params:{zone_id:zone.id}});
+        zone.computers=res.data.map(pc=>({id:pc.id,number:pc.number,x:pc.x,y:pc.y,isNew:false,zone_id:zone.id}));
+        zone.computers.sort((a,b)=>a.number-b.number);
+        const maxX=Math.max(0,...zone.computers.map(p=>p.x));
+        if(maxX>0) zone.cols=maxX+1;
+      }catch{}
+    }
+    applyT(); sbRenderAll();
+  }catch(e){ toast(`Ошибка загрузки зон: ${e.message}`,'red'); }
+}
+
+function sbRenderAll(){
+  canvas.innerHTML='';
+  sbZones.forEach(z=>{ if(z.visible!==false) sbRenderBlock(z); });
+  sbUpdateStats(); sbRenderPanel();
+}
+
+function sbUpdateStats(){
+  document.getElementById('statPc').textContent=sbZones.reduce((s,z)=>s+z.computers.length,0);
+  document.getElementById('statZones').textContent=sbZones.filter(z=>z.visible!==false).length;
+}
+
+function sbRenderBlock(zone){
+  const cols=zone.cols||6;
+  const extraRows=zone._extra||0;
+  const filledRows=Math.ceil((zone.computers.length+1)/cols);
+  const rows=Math.max(filledRows,1)+extraRows;
+  const total=rows*cols;
+  const block=document.createElement('div');
+  block.className='zone-block'; block.id=`blk-${zone.id}`;
+  block.style.left=(zone.bx||40)+'px'; block.style.top=(zone.by||40)+'px';
+  block.style.borderColor=zone.color; block.style.boxShadow=`0 0 0 1px ${zone.color}18,0 4px 20px rgba(0,0,0,0.5)`;
+  const head=document.createElement('div'); head.className='zb-head';
+  head.innerHTML=`<div class="zb-dot" style="background:${zone.color};box-shadow:0 0 4px ${zone.color};"></div><div class="zb-name" style="color:${zone.color};">${zone.name}</div>`;
+  block.appendChild(head);
+  const grid=document.createElement('div'); grid.className='seat-grid'; grid.style.gridTemplateColumns=`repeat(${cols},32px)`;
+  const occ=new Map(); zone.computers.forEach((pc,i)=>occ.set(i,pc));
+  for(let i=0;i<total;i++){
+    const seat=document.createElement('div'); seat.className='seat';
+    if(occ.has(i)){
+      const pc=occ.get(i); seat.classList.add('occupied');
+      seat.style.background=zone.color; seat.style.borderColor=zone.color;
+      seat.style.color=isDark(zone.color)?'#fff':'#000';
+      seat.innerHTML=`<span>${pc.number}</span><div class="seat-x">✕</div>`;
+      seat.querySelector('.seat-x').addEventListener('click',e=>{ e.stopPropagation(); sbRemovePC(zone.id,i); });
+    } else {
+      seat.classList.add('empty');
+      if(sbPlacing&&zone.id===sbActiveId){ seat.classList.add('placeable'); seat.textContent='+'; seat.addEventListener('click',e=>{e.stopPropagation();sbAddPC(zone.id,i);}); }
+    }
+    grid.appendChild(seat);
+  }
+  block.appendChild(grid);
+  if(zone.id===sbActiveId){
+    const ar=document.createElement('button'); ar.className='add-row-btn'; ar.textContent='+ добавить ряд';
+    ar.addEventListener('click',e=>{e.stopPropagation();zone._extra=(zone._extra||0)+1;sbRenderAll();});
+    block.appendChild(ar);
+  }
+  canvas.appendChild(block); sbMakeDraggable(block,zone);
+}
+
+function isDark(hex){ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return(0.299*r+0.587*g+0.114*b)<145; }
+
+function sbMakeDraggable(block,zone){
+  let d=false,sx,sy,ox,oy;
+  block.addEventListener('mousedown',e=>{ if(e.target.classList.contains('seat-x')||e.target.classList.contains('placeable')||e.target.classList.contains('add-row-btn')||e.target.tagName==='SPAN') return; d=true;sx=e.clientX;sy=e.clientY;ox=zone.bx||0;oy=zone.by||0;block.classList.add('dragging');e.stopPropagation(); });
+  window.addEventListener('mousemove',e=>{ if(!d)return;zone.bx=ox+(e.clientX-sx)/scale;zone.by=oy+(e.clientY-sy)/scale;block.style.left=zone.bx+'px';block.style.top=zone.by+'px'; });
+  window.addEventListener('mouseup',()=>{ if(d){d=false;block.classList.remove('dragging');} });
+}
+
+function sbAddPC(zoneId,slotIdx){
+  const z=sbZones.find(z=>z.id===zoneId); if(!z) return;
+  const num=z.computers.length?Math.max(...z.computers.map(p=>p.number))+1:1;
+  const cols=z.cols||6;
+  z.computers.splice(slotIdx,0,{number:num,x:slotIdx%cols,y:Math.floor(slotIdx/cols),isNew:true,zone_id:zoneId});
+  z.computers.forEach((p,i)=>{p.number=i+1;p.x=i%cols;p.y=Math.floor(i/cols);});
+  sbRenderAll(); toast(`ПК #${num} добавлен в «${z.name}»`,'green');
+}
+
+function sbRemovePC(zoneId,slotIdx){
+  const z=sbZones.find(z=>z.id===zoneId); if(!z) return;
+  z.computers.splice(slotIdx,1);
+  const cols=z.cols||6;
+  z.computers.forEach((p,i)=>{p.number=i+1;p.x=i%cols;p.y=Math.floor(i/cols);});
+  sbRenderAll();
+}
+
+function sbRenderPanel(){
+  const container=document.getElementById('sandboxChips'); container.innerHTML='';
+  if(!sbZones.length){ container.innerHTML='<div style="color:var(--muted);font-size:10px;">Нет зон</div>'; return; }
+  sbZones.forEach(z=>{
+    const chip=document.createElement('div'); chip.className='zone-chip'+(z.id===sbActiveId?' sel':'');
+    chip.innerHTML=`<div class="z-dot" style="background:${z.color};"></div><div class="z-info"><div class="z-name">${z.name}</div><div class="z-count">${z.computers.length} ПК</div></div>`;
+    chip.addEventListener('click',()=>sbSelectZone(z.id));
+    container.appendChild(chip);
+  });
+}
+
+function sbSelectZone(id){
+  sbActiveId=id; sbPlacing=false;
+  const z=sbZones.find(z=>z.id===id);
+  const ci=document.getElementById('colsInput');
+  if(z){ci.value=z.cols||6; ci.disabled=false;}
+  sbSetPlacing(false); sbRenderAll();
+}
+
+function sbSetPlacing(on){
+  sbPlacing=on;
+  const btn=document.getElementById('addPcBtn');
+  const hint=document.getElementById('hint');
+  if(on){ btn.className='add-pc-btn placing'; document.getElementById('addLabel').textContent='Отмена'; hint.classList.add('show'); }
+  else { btn.className='add-pc-btn'; document.getElementById('addLabel').textContent='Добавить ПК'; hint.classList.remove('show'); btn.disabled=!sbActiveId; }
+  sbRenderAll();
+}
+
+document.getElementById('addPcBtn').addEventListener('click',()=>{ if(!sbActiveId){toast('Выберите зону','red');return;} sbSetPlacing(!sbPlacing); });
+document.getElementById('colsInput').addEventListener('change',e=>{ if(!sbActiveId) return; const z=sbZones.find(z=>z.id===sbActiveId); if(!z) return; z.cols=Math.max(1,parseInt(e.target.value)||6); sbRenderAll(); });
+
+document.getElementById('sandboxSaveBtn').addEventListener('click',async()=>{
+  const btn=document.getElementById('sandboxSaveBtn');
+  const newPcs=[];
+  sbZones.forEach(z=>z.computers.filter(p=>p.isNew).forEach(pc=>newPcs.push({number:pc.number,specification:'string',zone_id:z.id,x:pc.x,y:pc.y})));
+  if(!newPcs.length){toast('Нет новых ПК для сохранения');return;}
+  btn.disabled=true;
+  try{
+    await _api.post('/computers/',newPcs,{params:{club_id:CLUB_ID}});
+    sbZones.forEach(z=>z.computers.forEach(p=>p.isNew=false));
+    toast(`✅ ${newPcs.length} ПК сохранено!`,'green');
+  }catch(e){ const d=e.response?.data?.detail; toast(`❌ ${typeof d==='string'?d:'Ошибка '+(e.response?.status||'?')}`,'red'); }
+  finally{btn.disabled=false;}
+});
+
+// ── TAB 4: PRICING ──
+const PKG_TEMPLATES=[
+  {hours:1, label:'1 час',    duration:60,  discount:0},
+  {hours:2, label:'2 часа',   duration:120, discount:0},
+  {hours:3, label:'3 часа',   duration:180, discount:5},
+  {hours:5, label:'5 часов',  duration:300, discount:10},
+  {hours:8, label:'8 часов',  duration:480, discount:15},
+  {hours:12,label:'12 часов', duration:720, discount:20},
+];
+let pkgState={};
+
+async function loadPricingZones(){
+  // Сбрасываем pkgState при каждой загрузке вкладки,
+  // чтобы цены пересчитывались от текущего basePrice
+  pkgState={};
+  const sel=document.getElementById('pricingZoneSelect');
+  if(!CLUB_ID){ sel.innerHTML='<option>Клуб не найден</option>'; return; }
+  try{
+    const res=await _api.get('/zones/',{params:{club_id:CLUB_ID}});
+    if(!res.data.length){ sel.innerHTML='<option value="">Нет зон</option>'; return; }
+    sel.innerHTML=res.data.map(z=>`<option value="${z.id}">${z.name} (ID: ${z.id})</option>`).join('');
+  }catch(e){ sel.innerHTML='<option value="">Ошибка загрузки</option>'; }
+  renderPackages();
+}
+
+function getBasePrice(){ return parseFloat(document.getElementById('basePrice').value)||0; }
+function calcPkgPrice(tpl,bp){ const raw=bp*tpl.hours; return tpl.discount>0?Math.round(raw*(1-tpl.discount/100)):Math.round(raw); }
+
+function renderPackages(){
+  const bp=getBasePrice();
+  const list=document.getElementById('packagesList'); list.innerHTML='';
+  PKG_TEMPLATES.forEach(tpl=>{
+    const k=tpl.hours;
+    if(!(k in pkgState)) pkgState[k]={checked:k<=3,price:calcPkgPrice(tpl,bp)};
+    const s=pkgState[k];
+    const row=document.createElement('div'); row.className='package-row'; row.style.opacity=s.checked?'1':'0.45';
+    row.innerHTML=`
+      <div class="pkg-checkbox ${s.checked?'checked':''}" data-k="${k}"><span class="material-symbols-outlined">check</span></div>
+      <div class="pkg-info">
+        <div class="pkg-name">${tpl.label} ${tpl.discount>0?`<span class="pkg-discount">−${tpl.discount}%</span>`:''}</div>
+        <div class="pkg-duration">${tpl.duration} мин · ${tpl.discount>0?'скидка '+tpl.discount+'%':'станд. цена'}</div>
+      </div>
+      <div>
+        <input class="pkg-price-input" type="number" min="0" value="${s.price}" data-k="${k}" ${s.checked?'':'disabled'}>
+        <div class="pkg-unit">₸ / пакет</div>
+      </div>`;
+    row.querySelector('.pkg-checkbox').addEventListener('click',function(){
+      const k2=parseInt(this.dataset.k);
+      pkgState[k2].checked=!pkgState[k2].checked;
+      renderPackages(); updateSummary();
+    });
+    row.querySelector('.pkg-price-input').addEventListener('input',function(){
+      const k2=parseInt(this.dataset.k);
+      pkgState[k2].price=parseFloat(this.value)||0;
+      updateSummary();
+    });
+    list.appendChild(row);
+  });
+  updateSummary();
+}
+
+function updateSummary(){
+  const sel=PKG_TEMPLATES.filter(t=>pkgState[t.hours]?.checked);
+  const card=document.getElementById('summaryCard');
+  if(!sel.length){card.style.display='none';return;}
+  card.style.display='block';
+  document.getElementById('summaryRows').innerHTML=
+    sel.map(t=>`<div class="summary-row"><span class="summary-key">${t.label}</span><span class="summary-val">${pkgState[t.hours].price} ₸</span></div>`).join('')+
+    `<div class="summary-row"><span class="summary-key" style="color:#fff;font-weight:700;">Итого пакетов</span><span class="summary-val" style="color:var(--green);">${sel.length}</span></div>`;
+}
+
+document.getElementById('basePrice').addEventListener('input',()=>{
+  const bp=getBasePrice();
+  PKG_TEMPLATES.forEach(t=>{ if(pkgState[t.hours]) pkgState[t.hours].price=calcPkgPrice(t,bp); });
+  renderPackages();
+});
+
+document.getElementById('savePricingBtn').addEventListener('click',async()=>{
+  const zoneId=parseInt(document.getElementById('pricingZoneSelect').value);
+  if(!zoneId){ showError('pricingError','Выберите зону!'); return; }
+  const st=document.getElementById('startTime').value;
+  const et=document.getElementById('endTime').value;
+  if(!st||!et){ showError('pricingError','Укажите время работы!'); return; }
+  const sel=PKG_TEMPLATES.filter(t=>pkgState[t.hours]?.checked);
+  if(!sel.length){ showError('pricingError','Выберите хотя бы один пакет!'); return; }
+
+  const payloads=sel.map(tpl=>({
+    name: tpl.label,
+    start_time: `${st}:00`,
+    end_time: `${et}:00`,
+    duration: tpl.duration,
+    price: pkgState[tpl.hours].price,
+    is_package: tpl.hours>1,
+    zone_id: zoneId
+  }));
+
+  const btn=document.getElementById('savePricingBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner-inline"></span>Создание...';
+
+  // Скрываем старые сообщения
+  document.getElementById('pricingError').classList.remove('visible');
+  document.getElementById('pricingSuccess').classList.remove('visible');
+
+  const results={ok:0,fail:0,errors:[]};
+  for(const p of payloads){
+    try{
+      await _api.post('/pricing/',p,{params:{club_id:CLUB_ID}});
+      results.ok++;
+    }catch(e){
+      results.fail++;
+      const d=e.response?.data?.detail;
+      results.errors.push(`• ${p.name}: ${typeof d==='string'?d:JSON.stringify(d)}`);
+    }
+  }
+
+  btn.disabled=false;
+  btn.textContent='Создать прайсинг';
+
+  // FIX: показываем результат напрямую, без вызова showMsg чтобы не было конфликта
+  if(results.fail===0){
+    const s=document.getElementById('pricingSuccess');
+    s.textContent=`✅ Создано ${results.ok} пакет(ов)!`;
+    s.classList.add('visible');
+  } else if(results.ok>0){
+    const s=document.getElementById('pricingSuccess');
+    s.textContent=`✅ Создано: ${results.ok}`;
+    s.classList.add('visible');
+    const e=document.getElementById('pricingError');
+    e.textContent=`❌ Ошибки (${results.fail}):\n${results.errors.join('\n')}`;
+    e.classList.add('visible');
+  } else {
+    const e=document.getElementById('pricingError');
+    e.textContent=`❌ Все запросы провалились:\n${results.errors.join('\n')}`;
+    e.classList.add('visible');
+  }
+});
+
+// ── TAB 5: STAFF ──
+async function loadStaff(){
+  const list=document.getElementById('staffList');
+  list.innerHTML='<div class="empty-state"><span class="spinner-inline"></span> Загрузка...</div>';
+  if(!CLUB_ID){ list.innerHTML='<div class="empty-state" style="color:var(--danger);">Клуб не найден</div>'; return; }
+  try{
+    const res=await _api.get(`/clubs/${CLUB_ID}/staff`);
+    const data=Array.isArray(res.data)?res.data:(res.data?[res.data]:[]);
+    if(!data.length){ list.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">group</span><p>Сотрудников пока нет</p></div>'; return; }
+    list.innerHTML='';
+    data.forEach(s=>{
+      const item=document.createElement('div'); item.className='staff-item'; item.dataset.id=s.id;
+      item.innerHTML=`
+        <div class="staff-info">
+          <div class="staff-name">${s.full_name||s.name||'Без имени'}</div>
+          <span class="staff-role ${s.staff_role==='admin'?'admin':'staff'}">${s.staff_role||'staff'}</span>
+          <div class="staff-phone">${s.phone_number||''}</div>
+        </div>
+        <button class="icon-btn danger" onclick="deleteStaff(${s.id},this)"><span class="material-symbols-outlined">person_remove</span></button>`;
+      list.appendChild(item);
+    });
+  }catch(e){ list.innerHTML=`<div class="empty-state" style="color:var(--danger);">Ошибка: ${e.response?.status||e.message}</div>`; }
+}
+
+async function deleteStaff(id,btn){
+  btn.disabled=true;
+  try{
+    await _api.delete(`/clubs/${CLUB_ID}/staff`,{params:{staff_id:id}});
+    const item=document.querySelector(`.staff-item[data-id="${id}"]`);
+    if(item){item.style.opacity='0';item.style.transition='0.2s';setTimeout(()=>{item.remove();if(!document.querySelector('.staff-item'))document.getElementById('staffList').innerHTML='<div class="empty-state"><span class="material-symbols-outlined">group</span><p>Сотрудников пока нет</p></div>';},200);}
+    toast('Сотрудник удалён');
+  }catch(e){ showError('staffError',`❌ Ошибка: ${e.response?.status||e.message}`); btn.disabled=false; }
+}
+
+document.getElementById('addStaffBtn').addEventListener('click',async()=>{
+  const phone=document.getElementById('staffPhone').value.trim();
+  const role=document.getElementById('staffRole').value;
+  if(!phone){ showError('staffError','Введите номер телефона'); return; }
+  const btn=document.getElementById('addStaffBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner-inline"></span>Добавление...';
+  showError('staffError','');
+  try{
+    await _api.post(`/clubs/${CLUB_ID}/staff`,{phone_number:phone,staff_role:role});
+    document.getElementById('staffPhone').value='';
+    showSuccess('staffError','✅ Сотрудник добавлен!');
+    await loadStaff();
+  }catch(e){
+    const d=e.response?.data?.detail;
+    showError('staffError',`❌ ${e.response?.status}: ${typeof d==='string'?d:JSON.stringify(d)}`);
+  }finally{ btn.disabled=false; btn.textContent='Добавить сотрудника'; }
+});
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded',async()=>{
+  if(!CLUB_ID||isNaN(CLUB_ID)){
+    try{
+      const ur=await _api.get('/users/me');
+      const ids=ur.data.club_ids;
+      if(ids&&ids.length){ CLUB_ID=ids[0]; localStorage.setItem('owner_club_id',CLUB_ID); }
+    }catch{}
+  }
+  if(CLUB_ID){
+    try{
+      const cr=await _api.get(`/clubs/${CLUB_ID}`);
+      const badge=document.getElementById('clubBadge');
+      badge.textContent=cr.data.name; badge.style.display='';
+    }catch{}
+  }
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  loadZonesList();
+  loadPricingZones();
+});
+</script>
+</body>
+</html>

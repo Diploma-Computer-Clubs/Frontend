@@ -51,7 +51,7 @@
         .drawer-link.logout { color: #ff6b6b; border-top: 1px solid rgba(255,255,255,0.07); }
         .drawer-link.logout span { color: #ff6b6b; }
 
-        .phone-container { width: 100%; max-width: 430px; display: flex; flex-direction: column; padding: 20px; padding-bottom: 40px; }
+        .phone-container { width: 100%; max-width: 430px; display: flex; flex-direction: column; padding: 20px; padding-bottom: 60px; }
 
         .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 30px; }
         .header h1 { font-size: 20px; font-weight: 700; text-transform: uppercase; }
@@ -61,7 +61,9 @@
             text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.7;
             margin-bottom: 14px; margin-top: 28px;
         }
+        .section-title:first-child { margin-top: 0; }
 
+        /* ── Club card ── */
         .club-card {
             background: var(--card-bg); border: 1px solid #444;
             border-radius: 18px; padding: 20px; position: relative; overflow: hidden;
@@ -71,8 +73,8 @@
             background: var(--accent-green);
         }
         .club-name { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
-        .club-meta { font-size: 13px; color: #888; display: flex; flex-direction: column; gap: 4px; }
-        .club-meta-row { display: flex; align-items: center; gap: 6px; }
+        .club-meta { font-size: 13px; color: #888; display: flex; flex-direction: column; gap: 5px; }
+        .club-meta-row { display: flex; align-items: center; gap: 7px; }
         .club-meta-row .material-symbols-outlined { font-size: 16px; color: #666; }
         .club-id-badge {
             display: inline-block; background: rgba(0,255,0,0.08);
@@ -81,201 +83,299 @@
             border-radius: 20px; margin-top: 10px;
         }
 
-        .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        /* ── Stats ── */
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .stat-card {
             background: var(--card-bg); border: 1px solid #444;
-            border-radius: 14px; padding: 18px 16px;
-            display: flex; flex-direction: column; gap: 6px;
+            border-radius: 14px; padding: 16px 12px;
+            display: flex; flex-direction: column; gap: 5px;
         }
-        .stat-label { font-size: 11px; color: #666; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-value { font-size: 28px; font-weight: 700; color: var(--accent-green); }
-        .stat-sub { font-size: 11px; color: #555; }
+        .stat-label { font-size: 10px; color: #666; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 26px; font-weight: 700; color: var(--accent-green); }
+        .stat-sub { font-size: 10px; color: #555; }
 
-        .action-btn {
-            display: flex; align-items: center; justify-content: space-between;
-            background: var(--card-bg); border: 1px solid #444;
-            border-radius: 14px; padding: 18px 20px;
-            color: var(--text-main); text-decoration: none;
-            font-size: 14px; font-weight: 700;
-            margin-bottom: 10px; cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-            width: 100%;
+        /* ── Main action cards ── */
+        .main-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+        .main-action-card {
+            background: var(--card-bg);
+            border: 1px solid #3a3a3a;
+            border-radius: 18px;
+            padding: 22px 18px;
+            text-decoration: none;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.15s;
+            position: relative;
+            overflow: hidden;
         }
-        .action-btn:active { background: #333; }
-        .action-btn.green { border-color: rgba(0,255,0,0.3); }
-        .action-btn.green:hover { border-color: var(--accent-green); }
-        .action-btn-left { display: flex; align-items: center; gap: 14px; }
-        .action-btn-left .material-symbols-outlined { color: #888; font-size: 22px; }
-        .action-btn.green .action-btn-left .material-symbols-outlined { color: var(--accent-green); }
-        .action-btn .material-symbols-outlined.arrow { color: #555; font-size: 20px; }
+        .main-action-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .main-action-card.green { border-color: rgba(0,255,0,0.25); }
+        .main-action-card.green::before { background: linear-gradient(135deg, rgba(0,255,0,0.06), transparent); }
+        .main-action-card.green:hover { border-color: var(--accent-green); }
+        .main-action-card.green:hover::before { opacity: 1; }
+        .main-action-card:active { transform: scale(0.97); }
 
+        .mac-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .mac-icon.green { background: rgba(0,255,0,0.1); }
+        .mac-icon.neutral { background: rgba(255,255,255,0.06); }
+        .mac-icon .material-symbols-outlined { font-size: 24px; }
+        .mac-icon.green .material-symbols-outlined { color: var(--accent-green); }
+        .mac-icon.neutral .material-symbols-outlined { color: #888; }
+
+        .mac-title { font-size: 14px; font-weight: 700; line-height: 1.3; }
+        .mac-desc { font-size: 11px; color: #666; line-height: 1.4; }
+
+        .mac-arrow {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 11px; font-weight: 700;
+            margin-top: auto;
+        }
+        .mac-arrow.green { color: var(--accent-green); }
+        .mac-arrow.neutral { color: #555; }
+        .mac-arrow .material-symbols-outlined { font-size: 16px; }
+
+        /* ── Skeleton ── */
         .skeleton {
             background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
             background-size: 200% 100%; animation: shimmer 1.5s infinite;
-            border-radius: 8px; height: 20px;
+            border-radius: 8px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         .error-box {
-            display: none; background: rgba(255,69,58,0.12);
+            display: none; background: rgba(255,69,58,0.1);
             border: 1px solid var(--danger); color: var(--danger);
             border-radius: 12px; padding: 14px 16px;
             font-size: 13px; line-height: 1.6; margin-top: 14px;
         }
         .error-box.visible { display: block; }
 
-        /* ── Модалка стафф (снизу) ── */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-            display: none; justify-content: center; align-items: flex-end;
-            z-index: 2000;
+        /* ── Welcome banner ── */
+        .welcome-banner {
+            background: linear-gradient(135deg, rgba(0,255,0,0.1), rgba(0,255,0,0.04));
+            border: 1px solid rgba(0,255,0,0.3);
+            border-radius: 16px; padding: 18px 20px;
+            margin-bottom: 24px;
+            display: none;
+            animation: slideIn 0.5s ease;
         }
-        .modal-overlay.active { display: flex; }
-        .modal-sheet {
-            background: #1e1e1e; width: 100%; max-width: 430px;
-            border-radius: 28px 28px 0 0; padding: 28px 24px 44px;
-            animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            max-height: 88vh; overflow-y: auto;
-        }
-        @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .sheet-handle {
-            width: 40px; height: 4px; background: #444;
-            border-radius: 2px; margin: 0 auto 24px;
-        }
-        .sheet-title {
-            font-size: 18px; font-weight: 700; margin-bottom: 18px;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .sheet-title .material-symbols-outlined { color: var(--accent-green); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+        .welcome-banner.visible { display: block; }
+        .welcome-title { font-size: 15px; font-weight: 700; color: var(--accent-green); margin-bottom: 5px; }
+        .welcome-text { font-size: 12px; color: #aaa; line-height: 1.5; }
 
-        .staff-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-
-        .staff-item {
-            background: #2a2a2a; border: 1px solid #3a3a3a;
-            border-radius: 12px; padding: 14px 16px;
-            display: flex; align-items: center; justify-content: space-between;
-            animation: fadeIn 0.2s ease;
-        }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
-
-        .staff-info { display: flex; flex-direction: column; gap: 4px; }
-        .staff-name { font-size: 14px; font-weight: 700; color: #fff; }
-        .staff-role-badge {
-            font-size: 10px; font-weight: 700; padding: 2px 8px;
-            border-radius: 20px; display: inline-block; width: fit-content;
-        }
-        .staff-role-badge.admin { background: rgba(0,255,0,0.1); color: var(--accent-green); border: 1px solid rgba(0,255,0,0.2); }
-        .staff-role-badge.staff { background: rgba(255,255,255,0.05); color: #888; border: 1px solid #3a3a3a; }
-        .staff-phone-label { font-size: 11px; color: #555; }
-
-        .staff-del-btn {
-            background: none; border: 1px solid rgba(255,69,58,0.3);
-            border-radius: 8px; padding: 7px 8px; cursor: pointer;
-            color: var(--danger); display: flex; align-items: center; transition: 0.2s; flex-shrink: 0;
-        }
-        .staff-del-btn:hover { background: rgba(255,69,58,0.1); border-color: var(--danger); }
-        .staff-del-btn .material-symbols-outlined { font-size: 18px; }
-
-        /* Форма добавления стафф */
-        .add-staff-box {
-            background: #262626; border: 1px solid #3a3a3a;
-            border-radius: 14px; padding: 18px; margin-bottom: 14px;
-        }
-        .add-staff-title {
-            font-size: 11px; font-weight: 700; color: #666;
-            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;
-        }
-
-        .s-field { position: relative; margin-bottom: 14px; }
-        .s-field:last-of-type { margin-bottom: 0; }
-        .s-field label {
-            position: absolute; top: -9px; left: 12px;
-            background: #262626; padding: 0 6px;
-            font-size: 10px; font-weight: 700; color: var(--bg-light); z-index: 1;
-        }
-        .s-field input, .s-field select {
-            width: 100%; background: #1e1e1e;
-            border: 1px solid #555; border-radius: 10px;
-            padding: 13px; color: white; font-size: 14px; outline: none;
-            font-family: 'Montserrat', sans-serif; transition: border-color 0.2s;
-            appearance: none;
-        }
-        .s-field input:focus, .s-field select:focus { border-color: var(--accent-green); }
-        .s-field select option { background: #1e1e1e; }
-
-        .staff-err {
-            font-size: 12px; color: var(--danger);
-            margin-top: 10px; display: none; line-height: 1.5;
-        }
-        .staff-err.visible { display: block; }
-
-        .add-btn {
-            width: 100%; background: transparent;
-            border: 1px solid var(--accent-green); color: var(--accent-green);
-            padding: 15px; border-radius: 10px; font-size: 13px; font-weight: 700;
-            cursor: pointer; font-family: 'Montserrat', sans-serif; transition: 0.2s;
-            text-transform: uppercase; margin-bottom: 10px;
-        }
-        .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .add-btn:not(:disabled):active { background: var(--accent-green); color: #000; }
-
-        .close-btn {
-            width: 100%; background: transparent; border: 1px solid #444;
-            color: #888; padding: 14px; border-radius: 10px;
-            font-size: 13px; font-weight: 700; cursor: pointer;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        .empty-state { text-align: center; padding: 20px; color: #555; font-size: 13px; }
-
-        .loading-spinner {
+        /* ── Loading spinner ── */
+        .spinner-inline {
             display: inline-block; width: 12px; height: 12px;
             border: 2px solid rgba(0,255,0,0.3); border-top-color: var(--accent-green);
             border-radius: 50%; animation: spin 0.7s linear infinite;
             margin-right: 6px; vertical-align: middle;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ══════════════════════════════════════
+           ── EXPORT / REPORT SECTION ──
+        ══════════════════════════════════════ */
+        .export-card {
+            background: var(--card-bg);
+            border: 1px solid #3a3a3a;
+            border-radius: 18px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .export-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #1a7a1a, var(--accent-green), #1a7a1a);
+            background-size: 200% 100%;
+            animation: gradientShift 3s linear infinite;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .export-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .export-icon {
+            width: 42px; height: 42px;
+            background: rgba(0,255,0,0.1);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .export-icon .material-symbols-outlined { font-size: 22px; color: var(--accent-green); }
+        .export-header-text {}
+        .export-title { font-size: 14px; font-weight: 700; }
+        .export-subtitle { font-size: 11px; color: #666; margin-top: 2px; }
+
+        /* Date range picker */
+        .date-range-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .date-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .date-field label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+        }
+        .date-field input[type="date"] {
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            outline: none;
+            width: 100%;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            color-scheme: dark;
+        }
+        .date-field input[type="date"]:focus {
+            border-color: var(--accent-green);
+        }
+        .date-field input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(0.5);
+            cursor: pointer;
+        }
+
+        /* Quick range presets */
+        .quick-ranges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .quick-btn {
+            background: #222;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 5px 10px;
+            color: #888;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .quick-btn:hover, .quick-btn.active {
+            background: rgba(0,255,0,0.08);
+            border-color: rgba(0,255,0,0.3);
+            color: var(--accent-green);
+        }
+
+        /* Export button */
+        .export-btn {
+            width: 100%;
+            background: rgba(0,255,0,0.1);
+            border: 1px solid rgba(0,255,0,0.3);
+            border-radius: 12px;
+            padding: 14px 20px;
+            color: var(--accent-green);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .export-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,255,0,0.06);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .export-btn:hover { border-color: var(--accent-green); }
+        .export-btn:hover::before { opacity: 1; }
+        .export-btn:active { transform: scale(0.98); }
+        .export-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .export-btn .material-symbols-outlined { font-size: 20px; }
+
+        /* Export status messages */
+        .export-status {
+            display: none;
+            margin-top: 12px;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.5;
+            align-items: center;
+            gap: 8px;
+        }
+        .export-status.visible { display: flex; }
+        .export-status.success {
+            background: rgba(0,255,0,0.07);
+            border: 1px solid rgba(0,255,0,0.2);
+            color: #00cc00;
+        }
+        .export-status.error {
+            background: rgba(255,69,58,0.08);
+            border: 1px solid rgba(255,69,58,0.3);
+            color: var(--danger);
+        }
+        .export-status .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
+
+        /* Spinner for export button */
+        .export-spinner {
+            display: none;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(0,255,0,0.3);
+            border-top-color: var(--accent-green);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+        .export-spinner.visible { display: block; }
     </style>
 </head>
 <body>
-
-<!-- ── Модалка стафф ── -->
-<div class="modal-overlay" id="staffModal">
-    <div class="modal-sheet">
-        <div class="sheet-handle"></div>
-        <div class="sheet-title">
-            <span class="material-symbols-outlined">group</span>
-            Управление стаффом
-        </div>
-
-        <div class="staff-list" id="staffList">
-            <div class="empty-state"><span class="loading-spinner"></span> Загрузка...</div>
-        </div>
-
-        <div class="add-staff-box">
-            <div class="add-staff-title">Добавить сотрудника</div>
-            <div class="s-field">
-                <label>Номер телефона</label>
-                <input type="tel" id="staffPhone" placeholder="+7 700 000 00 00">
-            </div>
-            <div class="s-field" style="margin-top:16px;">
-                <label>Роль</label>
-                <select id="staffRole">
-                    <option value="staff">Staff — сотрудник</option>
-                    <option value="admin">Admin — администратор</option>
-                </select>
-            </div>
-            <div class="staff-err" id="staffErr"></div>
-        </div>
-
-        <button class="add-btn" id="addStaffBtn">Добавить сотрудника</button>
-        <button class="close-btn" id="closeStaffBtn">Закрыть</button>
-    </div>
-</div>
 
 <div class="overlay" id="overlay"></div>
 
@@ -304,9 +404,15 @@
         <div style="width:25px;"></div>
     </div>
 
+    <!-- Welcome banner -->
+    <div class="welcome-banner" id="welcomeBanner">
+        <div class="welcome-title">🎉 Клуб успешно создан!</div>
+        <div class="welcome-text">Теперь настройте зоны, добавьте компьютерные места и установите прайсинг — всё в разделе «Управление клубом».</div>
+    </div>
+
     <p class="section-title" style="margin-top:0;">Информация</p>
     <div class="club-card" id="clubCard">
-        <div class="skeleton" style="width:60%;height:24px;margin-bottom:10px;"></div>
+        <div class="skeleton" style="width:60%;height:22px;margin-bottom:10px;"></div>
         <div class="skeleton" style="width:80%;height:14px;margin-bottom:6px;"></div>
         <div class="skeleton" style="width:50%;height:14px;"></div>
     </div>
@@ -316,7 +422,12 @@
         <div class="stat-card">
             <span class="stat-label">Зоны</span>
             <span class="stat-value" id="zonesCount">—</span>
-            <span class="stat-sub">компьютеров</span>
+            <span class="stat-sub">типов</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">ПК</span>
+            <span class="stat-value" id="pcCount">—</span>
+            <span class="stat-sub">мест</span>
         </div>
         <div class="stat-card">
             <span class="stat-label">Рейтинг</span>
@@ -327,59 +438,84 @@
 
     <p class="section-title">Управление</p>
 
-    <!-- 1 — зелёная -->
-    <a class="action-btn green" id="btnEditZones">
-        <div class="action-btn-left">
-            <span class="material-symbols-outlined">edit</span>
-            Редактировать зоны
-        </div>
-        <span class="material-symbols-outlined arrow">chevron_right</span>
-    </a>
+    <div class="main-actions">
+        <a class="main-action-card green" id="btnManage" href="#">
+            <div class="mac-icon green">
+                <span class="material-symbols-outlined">dashboard_customize</span>
+            </div>
+            <div>
+                <div class="mac-title">Управление клубом</div>
+                <div class="mac-desc">Зоны, места, прайсинг, стафф</div>
+            </div>
+            <div class="mac-arrow green">
+                Открыть <span class="material-symbols-outlined">arrow_forward</span>
+            </div>
+        </a>
 
-    <!-- 2 — зелёная -->
-    <a class="action-btn green" id="btnAddZones">
-        <div class="action-btn-left">
-            <span class="material-symbols-outlined">add_circle</span>
-            Добавить зоны
-        </div>
-        <span class="material-symbols-outlined arrow">chevron_right</span>
-    </a>
+        <a class="main-action-card" id="btnInfoEdit" href="#">
+            <div class="mac-icon neutral">
+                <span class="material-symbols-outlined">store</span>
+            </div>
+            <div>
+                <div class="mac-title">Инфо о клубе</div>
+                <div class="mac-desc">Название, адрес, фото</div>
+            </div>
+            <div class="mac-arrow neutral">
+                Изменить <span class="material-symbols-outlined">arrow_forward</span>
+            </div>
+        </a>
+    </div>
 
-    <!-- 3 — зелёная -->
-    <a class="action-btn green" id="btnPricing">
-        <div class="action-btn-left">
-            <span class="material-symbols-outlined">payments</span>
-            Прайсинг
-        </div>
-        <span class="material-symbols-outlined arrow">chevron_right</span>
-    </a>
+    <!-- ══════════════════════════════════════
+         НОВЫЙ БЛОК: Выгрузка отчёта
+    ══════════════════════════════════════ -->
+    <p class="section-title">Отчёты</p>
 
-    <!-- 4 — серая -->
-    <a class="action-btn" id="btnEditClub">
-        <div class="action-btn-left">
-            <span class="material-symbols-outlined">computer</span>
-            Компьютерные места
+    <div class="export-card">
+        <div class="export-header">
+            <div class="export-icon">
+                <span class="material-symbols-outlined">table_view</span>
+            </div>
+            <div class="export-header-text">
+                <div class="export-title">Выгрузка статистики</div>
+                <div class="export-subtitle">Экспорт в Excel (.xlsx)</div>
+            </div>
         </div>
-        <span class="material-symbols-outlined arrow">chevron_right</span>
-    </a>
 
-    <!-- 5 — серая -->
-    <a class="action-btn" id="btnInfoEdit">
-        <div class="action-btn-left">
-            <span class="material-symbols-outlined">store</span>
-            Редактировать инфо о клубе
+        <!-- Quick presets -->
+        <div class="quick-ranges">
+            <button class="quick-btn" data-range="today">Сегодня</button>
+            <button class="quick-btn" data-range="week">Неделя</button>
+            <button class="quick-btn" data-range="month">Месяц</button>
+            <button class="quick-btn" data-range="quarter">Квартал</button>
         </div>
-        <span class="material-symbols-outlined arrow">chevron_right</span>
-    </a>
 
-    <!-- 6 — серая, открывает модалку -->
-    <button class="action-btn" id="btnStaff">
-        <div class="action-btn-left">
-            <span class="material-symbols-outlined">group</span>
-            Управление стаффом
+        <!-- Date pickers -->
+        <div class="date-range-row">
+            <div class="date-field">
+                <label>С даты</label>
+                <input type="date" id="exportStartDate">
+            </div>
+            <div class="date-field">
+                <label>По дату</label>
+                <input type="date" id="exportEndDate">
+            </div>
         </div>
-        <span class="material-symbols-outlined arrow">chevron_right</span>
-    </button>
+
+        <!-- Export button -->
+        <button class="export-btn" id="exportBtn">
+            <div class="export-spinner" id="exportSpinner"></div>
+            <span class="material-symbols-outlined" id="exportBtnIcon">download</span>
+            <span id="exportBtnText">Скачать отчёт</span>
+        </button>
+
+        <!-- Status message -->
+        <div class="export-status" id="exportStatus">
+            <span class="material-symbols-outlined" id="exportStatusIcon">check_circle</span>
+            <span id="exportStatusText"></span>
+        </div>
+    </div>
+    <!-- ══ END EXPORT BLOCK ══ -->
 
     <div class="error-box" id="errorBox"></div>
 </div>
@@ -446,115 +582,188 @@
         document.getElementById('clubRating').textContent = club.rating ?? '—';
     }
 
-    // ── СТАФФ ──
-    let CLUB_ID_GLOBAL = null;
+    // ════════════════════════════════════════
+    // EXPORT / REPORT LOGIC
+    // ════════════════════════════════════════
 
-    function showStaffErr(msg) {
-        const el = document.getElementById('staffErr');
-        el.textContent = msg;
-        el.classList.toggle('visible', !!msg);
+    function formatDate(date) {
+        // Returns YYYY-MM-DD
+        return date.toISOString().split('T')[0];
     }
 
-    async function loadStaff() {
-        const list = document.getElementById('staffList');
-        list.innerHTML = '<div class="empty-state"><span class="loading-spinner"></span> Загрузка...</div>';
-        try {
-            const res = await _api.get(`/clubs/${CLUB_ID_GLOBAL}/staff`);
-            const data = res.data;
-            const staff = Array.isArray(data) ? data : (data ? [data] : []);
+    function setDateRange(start, end) {
+        document.getElementById('exportStartDate').value = formatDate(start);
+        document.getElementById('exportEndDate').value = formatDate(end);
+        // Clear active states
+        document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    }
 
-            if (staff.length === 0) {
-                list.innerHTML = '<div class="empty-state">Сотрудников пока нет</div>';
-                return;
+    // Quick range presets
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            switch (btn.dataset.range) {
+                case 'today':
+                    setDateRange(today, today);
+                    break;
+                case 'week': {
+                    const weekAgo = new Date(today);
+                    weekAgo.setDate(today.getDate() - 6);
+                    setDateRange(weekAgo, today);
+                    break;
+                }
+                case 'month': {
+                    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                    setDateRange(monthStart, today);
+                    break;
+                }
+                case 'quarter': {
+                    const qStart = new Date(today);
+                    qStart.setMonth(today.getMonth() - 2);
+                    qStart.setDate(1);
+                    setDateRange(qStart, today);
+                    break;
+                }
+            }
+            // Re-add active after setDateRange clears
+            btn.classList.add('active');
+        });
+    });
+
+    // Set default dates (current month)
+    (function initDates() {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        document.getElementById('exportStartDate').value = formatDate(monthStart);
+        document.getElementById('exportEndDate').value = formatDate(now);
+        // Mark "month" as active by default
+        document.querySelector('[data-range="month"]').classList.add('active');
+    })();
+
+    // Clear active preset when user manually changes dates
+    ['exportStartDate', 'exportEndDate'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+            document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+        });
+    });
+
+    function setExportStatus(type, text) {
+        const el = document.getElementById('exportStatus');
+        const icon = document.getElementById('exportStatusIcon');
+        const textEl = document.getElementById('exportStatusText');
+
+        el.className = 'export-status';
+        if (!type) return;
+
+        el.classList.add('visible', type);
+        icon.textContent = type === 'success' ? 'check_circle' : 'error';
+        textEl.textContent = text;
+    }
+
+    function setExportLoading(loading) {
+        const btn = document.getElementById('exportBtn');
+        const spinner = document.getElementById('exportSpinner');
+        const icon = document.getElementById('exportBtnIcon');
+        const text = document.getElementById('exportBtnText');
+
+        btn.disabled = loading;
+        spinner.classList.toggle('visible', loading);
+        icon.style.display = loading ? 'none' : '';
+        text.textContent = loading ? 'Формируем отчёт...' : 'Скачать отчёт';
+    }
+
+    async function exportReport() {
+        const startDate = document.getElementById('exportStartDate').value;
+        const endDate = document.getElementById('exportEndDate').value;
+
+        if (!startDate || !endDate) {
+            setExportStatus('error', 'Укажите начальную и конечную дату.');
+            return;
+        }
+        if (startDate > endDate) {
+            setExportStatus('error', 'Дата начала не может быть позже даты окончания.');
+            return;
+        }
+
+        const CLUB_ID = localStorage.getItem('owner_club_id');
+        if (!CLUB_ID) {
+            setExportStatus('error', 'ID клуба не найден. Обновите страницу.');
+            return;
+        }
+
+        setExportLoading(true);
+        setExportStatus(null, '');
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`${_API}clubs/${CLUB_ID}/statistics/export`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'ngrok-skip-browser-warning': '69420'
+                },
+                body: JSON.stringify({ start_date: startDate, end_date: endDate })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.detail || `Ошибка ${response.status}`);
             }
 
-            list.innerHTML = staff.map(s => `
-                <div class="staff-item" data-id="${s.id}">
-                    <div class="staff-info">
-                        <div class="staff-name">${s.full_name || s.name || 'Без имени'}</div>
-                        <span class="staff-role-badge ${s.staff_role === 'admin' ? 'admin' : 'staff'}">${s.staff_role || 'staff'}</span>
-                        <div class="staff-phone-label">${s.phone_number || ''}</div>
-                    </div>
-                    <button class="staff-del-btn" onclick="deleteStaff(${s.id}, this)">
-                        <span class="material-symbols-outlined">person_remove</span>
-                    </button>
-                </div>
-            `).join('');
-        } catch (err) {
-            list.innerHTML = `<div class="empty-state" style="color:var(--danger);">Ошибка: ${err.response?.status || err.message}</div>`;
-        }
-    }
-
-    async function deleteStaff(staffId, btn) {
-        btn.disabled = true;
-        try {
-            await _api.delete(`/clubs/${CLUB_ID_GLOBAL}/staff`, { params: { staff_id: staffId } });
-            const item = document.querySelector(`.staff-item[data-id="${staffId}"]`);
-            if (item) {
-                item.style.transition = 'opacity 0.2s, transform 0.2s';
-                item.style.opacity = '0';
-                item.style.transform = 'translateX(20px)';
-                setTimeout(() => {
-                    item.remove();
-                    if (!document.querySelector('.staff-item')) {
-                        document.getElementById('staffList').innerHTML = '<div class="empty-state">Сотрудников пока нет</div>';
-                    }
-                }, 200);
+            // Determine filename from Content-Disposition or generate one
+            const disposition = response.headers.get('Content-Disposition');
+            let filename = `report_${startDate}_${endDate}.xlsx`;
+            if (disposition) {
+                const match = disposition.match(/filename[^;=\n]*=(['""]?)([^'""\n]*)\1/);
+                if (match?.[2]) filename = match[2];
             }
+
+            // Download the file
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+
+            setExportStatus('success', `Отчёт за ${startDate} — ${endDate} успешно скачан.`);
         } catch (err) {
-            showStaffErr(`Ошибка удаления: ${err.response?.status || err.message}`);
-            btn.disabled = false;
-        }
-    }
-
-    document.getElementById('addStaffBtn').addEventListener('click', async () => {
-        const phone = document.getElementById('staffPhone').value.trim();
-        const role = document.getElementById('staffRole').value;
-        if (!phone) { showStaffErr("Введите номер телефона"); return; }
-
-        const btn = document.getElementById('addStaffBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spinner"></span>Добавление...';
-        showStaffErr('');
-
-        try {
-            await _api.post(`/clubs/${CLUB_ID_GLOBAL}/staff`, { phone_number: phone, staff_role: role });
-            document.getElementById('staffPhone').value = '';
-            await loadStaff();
-        } catch (err) {
-            const detail = err.response?.data?.detail;
-            showStaffErr(`Ошибка ${err.response?.status}: ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`);
+            console.error(err);
+            setExportStatus('error', `Не удалось выгрузить отчёт: ${err.message}`);
         } finally {
-            btn.disabled = false;
-            btn.textContent = 'Добавить сотрудника';
+            setExportLoading(false);
         }
-    });
+    }
 
-    // Открыть/закрыть модалку
-    document.getElementById('btnStaff').addEventListener('click', () => {
-        document.getElementById('staffModal').classList.add('active');
-        showStaffErr('');
-        loadStaff();
-    });
-    document.getElementById('closeStaffBtn').addEventListener('click', () => {
-        document.getElementById('staffModal').classList.remove('active');
-    });
-    document.getElementById('staffModal').addEventListener('click', function(e) {
-        if (e.target === this) this.classList.remove('active');
-    });
+    document.getElementById('exportBtn').addEventListener('click', exportReport);
 
-    // ── ИНИТ ──
+    // ════════════════════════════════════════
+    // MAIN PAGE INIT
+    // ════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', async () => {
+        const urlP = new URLSearchParams(window.location.search);
+        if (urlP.get('new') === '1') {
+            document.getElementById('welcomeBanner').classList.add('visible');
+        }
+
         try {
             const userRes = await _api.get('/users/me');
             document.getElementById('drawer_name').textContent = userRes.data.full_name || "Пользователь";
             document.getElementById('drawer_phone').textContent = userRes.data.phone_number || "";
 
-            const urlParams = new URLSearchParams(window.location.search);
-            let CLUB_ID = parseInt(urlParams.get('club_id')) ||
-                  (userRes.data.club_ids?.[0]) ||
-                  parseInt(localStorage.getItem('owner_club_id')) ||
-                  null;
+            let CLUB_ID = parseInt(urlP.get('club_id')) ||
+                          userRes.data.club_ids?.[0] ||
+                          parseInt(localStorage.getItem('owner_club_id')) ||
+                          null;
 
             if (!CLUB_ID) {
                 try {
@@ -572,20 +781,31 @@
                 return;
             }
 
-            CLUB_ID_GLOBAL = CLUB_ID;
+            localStorage.setItem('owner_club_id', CLUB_ID);
 
-            // Ссылки
-            document.getElementById('btnEditZones').href = `admin_zones_edit.html?club_id=${CLUB_ID}`;
-            document.getElementById('btnAddZones').href  = `admin_zones.html?club_id=${CLUB_ID}`;
-            document.getElementById('btnPricing').href   = `admin_pricing.html?club_id=${CLUB_ID}`;
-            document.getElementById('btnEditClub').href  = `admin_sandbox.html?club_id=${CLUB_ID}`;
-            document.getElementById('btnInfoEdit').href  = `admin_info_edit.html?club_id=${CLUB_ID}`;
+            document.getElementById('btnManage').href = `sandbox_deluxe.html?club_id=${CLUB_ID}`;
+            document.getElementById('btnInfoEdit').href = `admin_info_edit.html?club_id=${CLUB_ID}`;
 
             const clubRes = await _api.get(`/clubs/${CLUB_ID}`);
             renderClubCard(clubRes.data);
 
-            const zonesRes = await _api.get('/zones/', { params: { club_id: CLUB_ID } });
-            document.getElementById('zonesCount').textContent = zonesRes.data.length ?? 0;
+            try {
+                const zonesRes = await _api.get('/zones/', { params: { club_id: CLUB_ID } });
+                const zones = zonesRes.data;
+                document.getElementById('zonesCount').textContent = zones.length;
+
+                let totalPc = 0;
+                await Promise.all(zones.map(async z => {
+                    try {
+                        const pcRes = await _api.get('/computers/', { params: { zone_id: z.id } });
+                        totalPc += pcRes.data.length;
+                    } catch {}
+                }));
+                document.getElementById('pcCount').textContent = totalPc;
+            } catch {
+                document.getElementById('zonesCount').textContent = '0';
+                document.getElementById('pcCount').textContent = '0';
+            }
 
         } catch (err) {
             console.error(err);
