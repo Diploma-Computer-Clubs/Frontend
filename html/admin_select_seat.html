@@ -337,7 +337,7 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
         }
         .pc-tooltip-checkin-btn:hover {
             background: rgba(76, 175, 80, 0.28);
@@ -345,10 +345,14 @@
         }
         .pc-tooltip-checkin-btn:active { transform: scale(0.97); }
         .pc-tooltip-checkin-btn.checked-in {
-            background: rgba(76, 175, 80, 0.12);
-            border-color: rgba(76, 175, 80, 0.35);
-            cursor: default;
-            opacity: 0.7;
+            background: rgba(255, 59, 59, 0.15);
+            border-color: rgba(255, 59, 59, 0.45);
+            color: #ff6b6b;
+        }
+        .pc-tooltip-checkin-btn.checked-in:hover {
+            background: rgba(255, 59, 59, 0.28);
+            border-color: rgba(255, 59, 59, 0.7);
+            color: #ff4d4d;
         }
         .pc-tooltip-checkin-btn.loading {
             opacity: 0.6;
@@ -770,7 +774,7 @@ async function fetchAvailabilityREST() {
     } catch (e) { console.error('Availability error:', e); }
 }
 
-function confirmTimeAndConnect() {
+function confirmTimeAndConnect(silent = false) {
     const [sh, sm] = startTime.split(':').map(Number);
     const [eh, em] = endTime.split(':').map(Number);
     if (eh * 60 + em <= sh * 60 + sm) { selectedEndDateStr = addDayISO(selectedDateStr); } 
@@ -782,7 +786,7 @@ function confirmTimeAndConnect() {
     localStorage.setItem('booking_end_date', selectedEndDateStr);
     timeConfirmed = true;
     connectWS();
-    showToast('Время обновлено', 'success');
+    if (!silent) showToast('Время обновлено', 'success');
 }
 
 function onTimeChanged() {
@@ -811,11 +815,13 @@ function showPcTooltip(el, bookings) {
     document.getElementById('tooltipTime').textContent = `${formatTime(b.start_time)} – ${formatTime(b.end_time)}`;
 
     const btn = document.getElementById('tooltipCheckinBtn');
-    btn.classList.remove('loading', 'checked-in');
+    btn.classList.remove('loading');
+    btn.style.display = 'flex';
     if (tooltipBookingCheckedIn) {
-        btn.style.display = 'none';
+        btn.classList.add('checked-in');
+        btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">cancel</span> Снять отметку`;
     } else {
-        btn.style.display = 'flex';
+        btn.classList.remove('checked-in');
         btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">how_to_reg</span> Отметить приход`;
     }
 
@@ -826,7 +832,7 @@ function showPcTooltip(el, bookings) {
 function movePcTooltip(el) {
     const tt = document.getElementById('pcTooltip');
     const rect = el.getBoundingClientRect();
-    const ttW = 200;
+    const ttW = 210;
     let left = rect.left + rect.width / 2 - ttW / 2;
     let top = rect.top - tt.offsetHeight - 10;
     if (top < 8) top = rect.bottom + 10;
@@ -844,19 +850,33 @@ function hidePcTooltip() {
 
 async function checkInFromTooltip(e) {
     e.stopPropagation();
-    if (!tooltipBookingId || tooltipBookingCheckedIn) return;
+    if (!tooltipBookingId) return;
+    const newValue = !tooltipBookingCheckedIn;
     const btn = document.getElementById('tooltipCheckinBtn');
     btn.classList.add('loading');
-    btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">hourglass_empty</span> Отмечаем...`;
+    btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">hourglass_empty</span> Сохраняем...`;
     try {
-        await api.patch(`/bookings/check-in`, { booking_id: tooltipBookingId, is_checked_in: true }, { params: { club_id: clubId } });
-        tooltipBookingCheckedIn = true;
+        await api.patch(`/bookings/check-in`, { booking_id: tooltipBookingId, is_checked_in: newValue }, { params: { club_id: clubId } });
+        tooltipBookingCheckedIn = newValue;
         btn.classList.remove('loading');
-        btn.style.display = 'none';
-        showToast('Приход отмечен', 'success');
+        if (newValue) {
+            btn.classList.add('checked-in');
+            btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">cancel</span> Снять отметку`;
+            showToast('Приход отмечен', 'success');
+        } else {
+            btn.classList.remove('checked-in');
+            btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">how_to_reg</span> Отметить приход`;
+            showToast('Отметка снята', 'success');
+        }
     } catch (err) {
         btn.classList.remove('loading');
-        btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">how_to_reg</span> Отметить приход`;
+        if (tooltipBookingCheckedIn) {
+            btn.classList.add('checked-in');
+            btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">cancel</span> Снять отметку`;
+        } else {
+            btn.classList.remove('checked-in');
+            btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px">how_to_reg</span> Отметить приход`;
+        }
         showToast(err.response?.data?.detail || 'Ошибка check-in');
     }
 }
@@ -1038,7 +1058,7 @@ function initCalendar() {
             document.querySelectorAll('.date-item').forEach(el => el.classList.remove('active'));
             item.classList.add('active');
             selectedDateStr = iso;
-            onTimeChanged();
+            confirmTimeAndConnect(true);
         };
 
         list.appendChild(item);
@@ -1053,8 +1073,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('pickerStart').value = startTime;
     document.getElementById('pickerEnd').value   = endTime;
-    document.getElementById('pickerStart').onchange = (e) => { startTime = e.target.value; onTimeChanged(); };
-    document.getElementById('pickerEnd').onchange = (e) => { endTime = e.target.value; onTimeChanged(); };
+    document.getElementById('pickerStart').onchange = (e) => { startTime = e.target.value; confirmTimeAndConnect(true); };
+    document.getElementById('pickerEnd').onchange = (e) => { endTime = e.target.value; confirmTimeAndConnect(true); };
 
     fetchClubInfo();
     initCalendar();
@@ -1070,4 +1090,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 </body>
-</html> 
+</html>
