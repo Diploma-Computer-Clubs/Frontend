@@ -34,6 +34,30 @@
         .header-right { display: flex; align-items: center; gap: 15px; }
         .logo-box img { height: 36px; width: auto; display: block; }
 
+        .reputation-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 12px;
+            margin-right: 10px;
+            transition: 0.3s;
+        }
+        .reputation-box:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: scale(1.05);
+        }
+        .reputation-box span.material-symbols-outlined {
+            color: #FFD700;
+            font-size: 20px;
+        }
+        .reputation-value {
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
         .burger-menu {
             background: none; border: none; display: flex;
             flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001;
@@ -130,6 +154,10 @@
         <span class="burger-bar"></span>
     </button>
     <div class="header-right">
+        <div class="reputation-box" id="reputationBox" style="display: none;">
+            <span class="material-symbols-outlined">star</span>
+            <span class="reputation-value" id="reputationValue">0</span>
+        </div>
         <div class="logo-box"><img src="../img/Frame 6.svg" alt="UNDERLIE"></div>
     </div>
 </header>
@@ -163,8 +191,18 @@
         }
         return Promise.reject(err);
     });
+    
     document.addEventListener('DOMContentLoaded', async () => {
-        try { await _api_b.get('/users/me'); } catch { window.location.href = 'check.html'; }
+        try { 
+            const userResponse = await _api_b.get('/users/me');
+            // Показываем репутацию
+            if (userResponse.data && userResponse.data.reputation !== undefined) {
+                document.getElementById('reputationValue').textContent = userResponse.data.reputation;
+                document.getElementById('reputationBox').style.display = 'flex';
+            }
+        } catch { 
+            window.location.href = 'check.html'; 
+        }
     });
 
     document.getElementById('logoutLink').addEventListener('click', function(e) {

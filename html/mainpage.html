@@ -13,167 +13,116 @@
             --menu-bg: #2d2d2d;
             --text-main: #ffffff;
             --text-dark: #000000;
+            --accent: #8b1a1a;
         }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+        body { background-color: var(--bg-light); overflow-x: hidden; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-light);
-            overflow-x: hidden;
-        }
-
-        /* --- ХЕДЕР --- */
+        /* HEADER */
         .main-header {
             background-color: var(--bg-dark);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; position: sticky; top: 0; z-index: 100;
         }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .logo-box img { height: 36px; width: auto; display: block; object-fit: contain; }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .lang-switch img, 
-        .logo-box img {
-            height: 36px;
-            width: auto;
-            display: block;
-            object-fit: contain;
-        }
-
-        .burger-menu {
-            background: none;
-            border: none;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            z-index: 1001;
-        }
-
-        .burger-bar {
-            width: 25px;
-            height: 2px;
-            background-color: #fff;
-            transition: 0.3s;
-        }
-
+        /* BURGER */
+        .burger-menu { background: none; border: none; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; }
+        .burger-bar { width: 25px; height: 2px; background-color: #fff; transition: 0.3s; }
         .burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
         .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
         .burger-menu.open .burger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        /* --- БОКОВОЕ МЕНЮ --- */
+        /* DRAWER */
         .side-drawer {
-            position: fixed;
-            top: 0; left: 0; width: 280px; height: 100vh;
-            background-color: var(--menu-bg);
-            z-index: 1000;
-            transform: translateX(-100%);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
+            background-color: var(--menu-bg); z-index: 1000;
+            transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+            display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.5);
         }
-
         .side-drawer.open { transform: translateX(0); }
-
-        .user-block {
-            padding: 60px 25px 30px;
-            background-color: #262626;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
+        .user-block { padding: 60px 25px 30px; background-color: #262626; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .user-name { font-weight: 700; font-size: 1.1rem; color: #fff; display: block; }
         .user-phone { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
-
-        .drawer-link {
-            display: flex;
-            align-items: center;
-            padding: 18px 25px;
-            color: #fff;
-            text-decoration: none;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.95rem;
-        }
-
-        .drawer-link span {
-            margin-right: 15px;
-            color: #888;
-            font-size: 22px;
-        }
-
+        .drawer-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; }
+        .drawer-link span { margin-right: 15px; color: #888; font-size: 22px; }
         .drawer-link:hover span { color: #fff; }
-
         .drawer-link.logout { color: #ff6b6b; border-top: 1px solid rgba(255,255,255,0.07); }
         .drawer-link.logout span { color: #ff6b6b; }
+        .drawer-link.login-link { color: #4CAF50; border-top: 1px solid rgba(255,255,255,0.07); }
+        .drawer-link.login-link span { color: #4CAF50; }
 
-        /* --- ШАГИ --- */
-        .hero-section {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            padding: 40px 20px;
-            text-align: center;
-        }
-
-        .step {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 10%;
-            gap: 40px;
-        }
-
+        /* STEPS */
+        .hero-section { background-color: var(--bg-dark); color: var(--text-main); padding: 40px 20px; text-align: center; }
+        .step { display: flex; align-items: center; justify-content: center; padding: 60px 10%; gap: 40px; }
         .step-content { flex: 1; max-width: 500px; }
         .step-image { flex: 1; display: flex; justify-content: center; }
-
-        .step-text {
-            font-size: 1.4rem;
-            font-weight: 700;
-            line-height: 1.3;
-        }
-
-        .step-image img {
-            max-width: 260px;
-            height: auto;
-            border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-        }
-
+        .step-text { font-size: 1.4rem; font-weight: 700; line-height: 1.3; }
+        .step-image img { max-width: 260px; height: auto; border-radius: 20px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
         .light { background-color: var(--bg-light); color: var(--text-dark); }
-        .dark { background-color: var(--bg-dark); color: var(--text-main); }
+        .dark  { background-color: var(--bg-dark);  color: var(--text-main); }
 
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            z-index: 999;
-        }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 999; }
         .overlay.active { display: block; }
 
+        /* CONTACT */
+        .contact-section { background: var(--bg-dark); padding: 80px 20px; }
+        .contact-wrapper { max-width: 900px; margin: 0 auto; display: flex; gap: 60px; align-items: flex-start; }
+        .contact-left { flex: 1; color: #fff; }
+        .contact-tag { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+        .contact-heading { font-size: 2.4rem; font-weight: 700; margin: 10px 0 14px; line-height: 1.1; }
+        .contact-sub { font-size: 0.9rem; color: #888; line-height: 1.6; margin-bottom: 30px; }
+        .contact-detail { display: flex; align-items: center; gap: 10px; color: #aaa; font-size: 0.88rem; margin-bottom: 12px; }
+        .contact-detail .material-symbols-outlined { font-size: 18px; color: var(--accent); }
+        .contact-form-block { flex: 1.2; display: flex; flex-direction: column; gap: 16px; }
+        .cf-field { display: flex; flex-direction: column; gap: 6px; }
+        .cf-field label { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #666; font-weight: 600; }
+        .cf-field input, .cf-field textarea {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px; padding: 13px 16px; color: #fff;
+            font-family: 'Montserrat', sans-serif; font-size: 0.9rem; outline: none;
+            transition: border-color 0.3s; resize: none;
+        }
+        .cf-field input:focus, .cf-field textarea:focus { border-color: var(--accent); }
+        .cf-field input::placeholder, .cf-field textarea::placeholder { color: #555; }
+        .cf-field input.input-error { border-color: #ff4d4d; }
+        .cf-field-error { font-size: 0.78rem; color: #ff4d4d; min-height: 16px; display: block; margin-top: 4px; }
+        .cf-send-btn {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: var(--accent); color: #fff; border: none; border-radius: 10px;
+            padding: 14px 28px; font-family: 'Montserrat', sans-serif; font-size: 0.9rem;
+            font-weight: 700; cursor: pointer; transition: background 0.3s, transform 0.2s; align-self: flex-start;
+        }
+        .cf-send-btn:hover { background: #a52020; transform: translateY(-1px); }
+        .cf-send-btn:disabled { background: #555; cursor: not-allowed; transform: none; }
+        .cf-send-btn .material-symbols-outlined { font-size: 18px; }
+        .cf-status { font-size: 0.85rem; min-height: 20px; }
+        .cf-status.success { color: #4CAF50; }
+        .cf-status.error   { color: #ff4d4d; }
+
+        /* FOOTER */
+        .site-footer { background: #1a1a1a; padding: 50px 20px 20px; color: #888; }
+        .footer-inner { max-width: 900px; margin: 0 auto; display: flex; gap: 50px; padding-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .footer-logo-col { flex: 1.5; }
+        .footer-logo { height: 30px; margin-bottom: 10px; filter: brightness(0.8); }
+        .footer-logo-col p { font-size: 0.8rem; color: #555; }
+        .footer-col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .footer-col h4 { color: #fff; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+        .footer-col a, .footer-col p { color: #666; font-size: 0.82rem; text-decoration: none; transition: color 0.2s; }
+        .footer-col a:hover { color: #aaa; }
+        .footer-copy { max-width: 900px; margin: 20px auto 0; font-size: 0.78rem; color: #444; text-align: center; }
+
         @media (max-width: 768px) {
-            .step {
-                flex-direction: column !important; 
-                padding: 40px 15px !important; 
-                text-align: center;
-                gap: 20px;
-            }
-            .step-content { width: 100%; order: 1; margin-bottom: 10px; }
+            .step { flex-direction: column !important; padding: 40px 15px !important; text-align: center; gap: 20px; }
+            .step-content { width: 100%; order: 1; }
             .step-image { width: 100%; order: 2; }
             .step-image img { max-width: 250px !important; width: 100%; }
             .step-text { font-size: 1.2rem; }
+            .contact-wrapper { flex-direction: column; gap: 40px; }
+            .contact-heading { font-size: 1.8rem; }
+            .cf-send-btn { align-self: stretch; justify-content: center; }
+            .footer-inner { flex-direction: column; gap: 30px; }
         }
     </style>
 </head>
@@ -183,44 +132,26 @@
 
 <nav class="side-drawer" id="sideDrawer">
     <div class="user-block">
-        <span class="user-name" id="drawer_name">Загрузка...</span>
-        <span class="user-phone" id="drawer_phone">...</span>
-    </div>  
+        <span class="user-name" id="drawer_name">Гость</span>
+        <span class="user-phone" id="drawer_phone">Войдите в аккаунт</span>
+    </div>
     <div class="drawer-nav">
-        <a href="profile.html" class="drawer-link">
-            <span class="material-symbols-outlined">account_circle</span> Профиль
-        </a>
-        <a href="map.html" class="drawer-link">
-            <span class="material-symbols-outlined">search</span> Карта клубов
-        </a>
-        <a href="admin_create_club.html" class="drawer-link" id="ownerLink" style="display: none;">
-            <span class="material-symbols-outlined">add_business</span> Создать свой клуб
-        </a>
-        <a href="admin_dashboard.html" class="drawer-link" id="dashboardLink" style="display: none;">
-            <span class="material-symbols-outlined">add_business</span> Мой клуб
-        </a>
-        <a href="booking.html" class="drawer-link">
-            <span class="material-symbols-outlined">diamond</span> Бронь
-        </a>
-        <a href="settings.html" class="drawer-link">
-            <span class="material-symbols-outlined">settings</span> Настройки
-        </a>
-        <a href="#" class="drawer-link logout" id="logoutLink">
-            <span class="material-symbols-outlined">logout</span> Выйти
-        </a>
-
-
+        <a href="profile.html" class="drawer-link" id="profileLink" style="display:none"><span class="material-symbols-outlined">account_circle</span> Профиль</a>
+        <a href="map.html"     class="drawer-link"><span class="material-symbols-outlined">search</span> Карта клубов</a>
+        <a href="admin_create_club.html" class="drawer-link" id="ownerLink"     style="display:none"><span class="material-symbols-outlined">add_business</span> Создать свой клуб</a>
+        <a href="admin_dashboard.html"   class="drawer-link" id="dashboardLink" style="display:none"><span class="material-symbols-outlined">add_business</span> Мой клуб</a>
+        <a href="booking.html"  class="drawer-link" id="bookingLink"  style="display:none"><span class="material-symbols-outlined">diamond</span> Бронь</a>
+        <a href="settings.html" class="drawer-link" id="settingsLink" style="display:none"><span class="material-symbols-outlined">settings</span> Настройки</a>
+        <a href="#" class="drawer-link logout"     id="logoutLink" style="display:none"><span class="material-symbols-outlined">logout</span> Выйти</a>
+        <a href="check.html" class="drawer-link login-link" id="loginLink"><span class="material-symbols-outlined">login</span> Войти</a>
     </div>
 </nav>
 
 <header class="main-header">
     <button class="burger-menu" id="burger">
-        <span class="burger-bar"></span>
-        <span class="burger-bar"></span>
-        <span class="burger-bar"></span>
+        <span class="burger-bar"></span><span class="burger-bar"></span><span class="burger-bar"></span>
     </button>
     <div class="header-right">
-        <!-- <div class="lang-switch"><img src="../img/flag_ru.png" alt="RU"></div> -->
         <div class="logo-box"><img src="../img/Frame 6.svg" alt="UNDERLIE"></div>
     </div>
 </header>
@@ -231,123 +162,217 @@
 </section>
 
 <section class="step light">
-    <div class="step-content">
-        <p class="step-text">Шаг 1: быстрая и простая регистрация</p>
-    </div>
+    <div class="step-content"><p class="step-text">Шаг 1: быстрая и простая регистрация</p></div>
     <div class="step-image"><img src="../img/registerpage.png" alt="Шаг 1"></div>
 </section>
-
 <section class="step dark">
     <div class="step-image"><img src="../img/clubsmap.png" alt="Шаг 2"></div>
-    <div class="step-content">
-        <p class="step-text">Шаг 2: Найди лучший клуб в своём городе на интерактивной карте.</p>
-    </div>
+    <div class="step-content"><p class="step-text">Шаг 2: Найди лучший клуб в своём городе на интерактивной карте.</p></div>
 </section>
-
 <section class="step light">
-    <div class="step-content">
-        <p class="step-text">Шаг 3: Узнай характеристики ПК и актуальный прайс.</p>
-    </div>
+    <div class="step-content"><p class="step-text">Шаг 3: Узнай характеристики ПК и актуальный прайс.</p></div>
     <div class="step-image"><img src="../img/aboutclubs.png" alt="Шаг 3"></div>
 </section>
-
 <section class="step dark">
     <div class="step-image"><img src="../img/bookingseat.png" alt="Шаг 4"></div>
-    <div class="step-content">
-        <p class="step-text">Шаг 4: Выбери конкретное место на схеме зала.</p>
-    </div>
+    <div class="step-content"><p class="step-text">Шаг 4: Выбери конкретное место на схеме зала.</p></div>
 </section>
-
 <section class="step light">
-    <div class="step-content">
-        <p class="step-text">Шаг 5: Отслеживай статус брони и продлевай время в один клик.</p>
-    </div>
+    <div class="step-content"><p class="step-text">Шаг 5: Отслеживай статус брони и продлевай время в один клик.</p></div>
     <div class="step-image"><img src="../img/currentbooking.png" alt="Шаг 5"></div>
 </section>
 
+<!-- CONTACT US -->
+<section class="contact-section">
+    <div class="contact-wrapper">
+        <div class="contact-left">
+            <span class="contact-tag">Для владельцев клубов</span>
+            <h2 class="contact-heading">Contact Us</h2>
+            <p class="contact-sub">Вы владелец компьютерного клуба? Оставьте свои данные — мы свяжемся с вами и расскажем, как разместить ваш клуб на платформе Underlie.</p>
+            <div class="contact-detail">
+                <span class="material-symbols-outlined">location_on</span>
+                <span>Astana, Kazakhstan</span>
+            </div>
+        </div>
+        <form id="contactForm" class="contact-form-block">
+            <div class="cf-field">
+                <label>Имя</label>
+                <input type="text" name="name" placeholder="Ваше имя" required />
+            </div>
+            <div class="cf-field">
+                <label>Номер телефона</label>
+                <input type="tel" name="phone" id="phoneInput" placeholder="8 XXX XXX XX XX" maxlength="15" required />
+                <span class="cf-field-error" id="phoneError"></span>
+            </div>
+            <div class="cf-field">
+                <label>Сообщение</label>
+                <textarea name="message" rows="4" placeholder="Расскажите о вашем клубе" required></textarea>
+            </div>
+            <button type="submit" class="cf-send-btn" id="cfSendBtn">
+                <span id="cfBtnText">Отправить</span>
+                <span class="material-symbols-outlined" id="cfBtnIcon">send</span>
+            </button>
+            <p class="cf-status" id="cfStatus"></p>
+        </form>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-logo-col">
+            <img src="../img/Frame 6.svg" alt="UNDERLIE" class="footer-logo" />
+            <p>Бронирование игровых клубов</p>
+        </div>
+        <div class="footer-col">
+            <h4>Навигация</h4>
+            <a href="map.html">Карта клубов</a>
+            <a href="booking.html">Мои бронирования</a>
+            <a href="profile.html">Профиль</a>
+        </div>
+        <div class="footer-col">
+            <h4>Контакты</h4>
+            <p>support@underlie.kz</p>
+            <p>Astana, Kazakhstan</p>
+        </div>
+    </div>
+    <div class="footer-copy">Copyright © 2026 Underlie</div>
+</footer>
+
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="../js/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
-    // ── AUTH GUARD ──
-    (function() { if (!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
+    // ── HELPERS ──
+    const $ = id => document.getElementById(id);
+    const show = id => $(id).style.display = 'flex';
+    const hide = id => $(id).style.display = 'none';
 
+    // ── AXIOS ──
     const _API = 'http://138.16.224.101:8000/';
-    const _api = axios.create({ baseURL: _API, headers: { "ngrok-skip-browser-warning": "69420" } });
-    _api.interceptors.request.use(cfg => { const t = localStorage.getItem('access_token'); if (t) cfg.headers.Authorization = `Bearer ${t}`; return cfg; });
+    const _api = axios.create({ baseURL: _API, headers: { 'ngrok-skip-browser-warning': '69420' } });
+
+    _api.interceptors.request.use(cfg => {
+        const t = localStorage.getItem('access_token');
+        if (t) cfg.headers.Authorization = `Bearer ${t}`;
+        return cfg;
+    });
+
     _api.interceptors.response.use(r => r, async err => {
         if (err.response?.status === 401 && !err.config._retry) {
             err.config._retry = true;
             const rt = localStorage.getItem('refresh_token');
             if (rt) {
                 try {
-                    const r = await axios.post(`${_API}/auth/refresh`, {}, { headers: { "Authorization": `Bearer ${rt}`, "ngrok-skip-browser-warning": "69420" } });
+                    const r = await axios.post(`${_API}/auth/refresh`, {}, { headers: { Authorization: `Bearer ${rt}`, 'ngrok-skip-browser-warning': '69420' } });
                     localStorage.setItem('access_token', r.data.access_token);
                     err.config.headers.Authorization = `Bearer ${r.data.access_token}`;
                     return _api(err.config);
-                } catch { localStorage.clear(); window.location.href = 'check.html'; }
-            } else { localStorage.clear(); window.location.href = 'check.html'; }
+                } catch { /* fall through */ }
+            }
+            localStorage.clear();
+            renderGuest();
         }
         return Promise.reject(err);
     });
-    // Тот самый блок, который делает всё красиво
-   document.addEventListener('DOMContentLoaded', async () => {
-        try { 
-            const res = await _api.get('/users/me'); 
-            const user = res.data;
-            
-            console.log("Данные юзера загружены:", user);
 
-            // если бэк отдаёт club_id прямо в профиле — сохраняем сразу
-            if (user.club_id) {
-                localStorage.setItem('owner_club_id', user.club_id);
-            }
+    // ── AUTH RENDER ──
+    function renderGuest() {
+        $('drawer_name').innerText  = 'Гость';
+        $('drawer_phone').innerText = 'Войдите в аккаунт';
+        show('loginLink'); hide('logoutLink');
+    }
 
-            if (user.club_ids?.length > 0) {
-             localStorage.setItem('owner_club_id', user.club_ids[0]);
-            }
+    function renderUser(user) {
+        if (user.club_id)           localStorage.setItem('owner_club_id', user.club_id);
+        if (user.club_ids?.length)  localStorage.setItem('owner_club_id', user.club_ids[0]);
 
-            // 1. Имя и Телефон (теперь поля правильные)
-            const dName = document.getElementById('drawer_name');
-            const dPhone = document.getElementById('drawer_phone');
-            
-            if (dName) dName.innerText = user.full_name || "Пользователь";
-            if (dPhone) dPhone.innerText = user.phone_number || ""; // Поменяли на phone_number
+        $('drawer_name').innerText  = user.full_name    || 'Пользователь';
+        $('drawer_phone').innerText = user.phone_number || '';
 
-            // 2. Кнопка создания клуба (теперь пускает админов)
-            const ownerLink = document.getElementById('ownerLink');
-            
-            // Проверяем роль: пускаем и admin, и owner на всякий случай
-            if (ownerLink && (user.role === 'admin' || user.role === 'owner')) {
-                ownerLink.style.display = 'flex';
-                console.log("Доступ в админку открыт для роли:", user.role);
-            }
+        ['profileLink', 'bookingLink', 'settingsLink', 'logoutLink'].forEach(show);
+        hide('loginLink');
 
-            const createLink = document.getElementById('createClubLink');
-            const dashLink = document.getElementById('dashboardLink');
-
-
-            if (user.role === 'admin' || user.role === 'owner') {
-                    if (createLink) createLink.style.display = 'flex';
-                    if (dashLink) dashLink.style.display = 'flex';
-            }
-
-        } catch (err) { 
-            console.error("Ошибка входа:", err);
-            // window.location.href = 'check.html'; 
+        if (user.role === 'admin' || user.role === 'owner') {
+            ['ownerLink', 'dashboardLink'].forEach(show);
         }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (!localStorage.getItem('access_token')) return renderGuest();
+        try { renderUser((await _api.get('/users/me')).data); }
+        catch { renderGuest(); }
     });
 
-    document.getElementById('logoutLink').addEventListener('click', function(e) {
+    $('logoutLink').addEventListener('click', e => {
         e.preventDefault();
         localStorage.clear();
-        window.location.href = 'check.html';
+        renderGuest();
+        ['sideDrawer', 'overlay', 'burger'].forEach(id => $(id).classList.remove('open', 'active'));
     });
 
+    // ── EMAILJS ──
+    emailjs.init('iYX2A8xmNlSg-_sb5');
 
+    const phoneInput = $('phoneInput');
 
+    phoneInput.addEventListener('focus', function() {
+        if (!this.value) this.value = '8 ';
+    });
 
+    phoneInput.addEventListener('input', function() {
+        let d = this.value.replace(/\D/g, '').replace(/^[78]/, '').slice(0, 10);
+        let f = '8';
+        if (d.length > 0) f += ' ' + d.slice(0, 3);
+        if (d.length > 3) f += ' ' + d.slice(3, 6);
+        if (d.length > 6) f += ' ' + d.slice(6, 8);
+        if (d.length > 8) f += ' ' + d.slice(8, 10);
+        this.value = f;
+        $('phoneError').textContent = '';
+        this.classList.remove('input-error');
+    });
 
-    
+    $('contactForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const raw = phoneInput.value.replace(/\D/g, '');
+        if (!/^8\d{10}$/.test(raw)) {
+            $('phoneError').textContent = 'Введите корректный номер: 8 XXX XXX XX XX';
+            phoneInput.classList.add('input-error');
+            phoneInput.focus();
+            return;
+        }
+
+        const btn = $('cfSendBtn'), btnText = $('cfBtnText'), btnIcon = $('cfBtnIcon'), status = $('cfStatus');
+        btn.disabled = true;
+        btnText.textContent = 'Отправка...';
+        btnIcon.textContent = 'hourglass_empty';
+        status.className = 'cf-status';
+
+        emailjs.send('service_cqv8bte', 'template_ar55hc5', {
+            name:    this.elements['name'].value,
+            message: this.elements['message'].value,
+            phone:   Number(raw)
+        }).then(() => {
+            status.textContent = '✓ Сообщение отправлено! Мы скоро свяжемся с вами.';
+            status.className = 'cf-status success';
+            btnText.textContent = 'Отправлено';
+            btnIcon.textContent = 'check_circle';
+            this.reset();
+            setTimeout(() => {
+                btn.disabled = false;
+                btnText.textContent = 'Отправить';
+                btnIcon.textContent = 'send';
+                status.textContent  = '';
+            }, 4000);
+        }).catch(err => {
+            status.textContent = `✕ Ошибка: ${err?.text || err?.message || JSON.stringify(err)}`;
+            status.className = 'cf-status error';
+            btn.disabled = false;
+            btnText.textContent = 'Отправить';
+            btnIcon.textContent = 'send';
+        });
+    });
 </script>
 </body>
 </html>
