@@ -36,7 +36,7 @@ top:-40px;
 left:-40px;
 right:-40px;
 bottom:-40px;
-background:url("/frontend/Frontend/img/bg.png") center/cover no-repeat;
+background: url("../img/bg.png") center/cover no-repeat;
 filter: blur(8px) brightness(0.2);
 z-index:-1;
 }
@@ -201,7 +201,6 @@ async function resendSMS() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "69420"
         },
         body: JSON.stringify({ phone_number: phone })
       }
@@ -276,12 +275,11 @@ verifyBtn.addEventListener("click", async () => {
   try {
 
     const res = await fetch(
-      "https://subopposite-nonheretical-brynn.ngrok-free.dev/users/verify",
+      "http://138.16.224.101:8000/users/verify",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "69420"
         },
         body: JSON.stringify({
           phone_number: phone,
@@ -292,8 +290,8 @@ verifyBtn.addEventListener("click", async () => {
 
     if (res.ok) {
 
-      /* Сохраняем код для страницы сброса пароля */
-      sessionStorage.setItem("resetCode", code);
+      const data = await res.json().catch(() => ({}));
+      sessionStorage.setItem("resetToken", data.reset_token || "");
       window.location.href = "forgot-3.html";
 
     } else {

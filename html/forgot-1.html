@@ -36,7 +36,7 @@ top:-40px;
 left:-40px;
 right:-40px;
 bottom:-40px;
-background:url("/frontend/Frontend/img/bg.png") center/cover no-repeat;
+background: url("../img/bg.png") center/cover no-repeat;
 filter: blur(8px) brightness(0.2);
 z-index:-1;
 }
@@ -162,11 +162,20 @@ form.addEventListener("submit", async (e) => {
 
   errorDiv.textContent = "";
 
-  const phone = form.phone.value.trim();
+  let phone = form.phone.value.trim().replace(/[\s\-\(\)]/g, "");
 
   if (!phone) {
     errorDiv.textContent = "Введите номер телефона";
     return;
+  }
+
+  // Нормализация к +7XXXXXXXXXX
+  if (phone.startsWith("8") && phone.length === 11) {
+    phone = "+7" + phone.slice(1);
+  } else if (phone.startsWith("7") && phone.length === 11) {
+    phone = "+" + phone;
+  } else if (!phone.startsWith("+7")) {
+    phone = "+7" + phone;
   }
 
   submitBtn.disabled = true;
@@ -176,31 +185,33 @@ form.addEventListener("submit", async (e) => {
 
     /* Шаг 1: проверяем существование пользователя */
     const findRes = await fetch(
-      `http://138.16.224.101:8000/users/find_user?phone_number=${encodeURIComponent(phone)}`,
+      `http://138.16.224.101:8000/users/search?phone_number=${encodeURIComponent(phone)}`,
       {
         method: "GET",
-        headers: { "ngrok-skip-browser-warning": "69420" }
       }
     );
 
     const findData = await findRes.json();
 
-    if (!findRes.ok) {
-      const message = findData.detail === "User not found"
-        ? "Пользователь не найден"
-        : findData.detail || "Ошибка";
-      errorDiv.textContent = message;
+    // Проверяем и HTTP статус, и тело ответа
+    const userNotFound = !findRes.ok || findData.detail === "User not found";
+    if (userNotFound) {
+      errorDiv.textContent = "Пользователь не найден";
+      return;
+    }
+
+    if (findData.message !== "User found") {
+      errorDiv.textContent = findData.detail || "Ошибка поиска";
       return;
     }
 
     /* Шаг 2: отправляем SMS */
     const smsRes = await fetch(
-      "https://subopposite-nonheretical-brynn.ngrok-free.dev/users/send-sms",
+      "http://138.16.224.101:8000/users/send-sms",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "69420"
         },
         body: JSON.stringify({ phone_number: phone })
       }
@@ -216,7 +227,7 @@ form.addEventListener("submit", async (e) => {
     sessionStorage.setItem("resetPhone", phone);
 
     /* Редирект на ввод кода */
-    window.location.href = "forgot-code.html";
+    window.location.href = "forgot-2.html";
 
   } catch (err) {
 

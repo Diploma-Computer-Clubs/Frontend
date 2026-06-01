@@ -437,7 +437,7 @@ function initCalendar() {
     const daysShort = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
     list.innerHTML = '';
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 3; i++) {
         const d = new Date();
         d.setDate(d.getDate() + i);
 

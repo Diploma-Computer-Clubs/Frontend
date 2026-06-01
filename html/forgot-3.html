@@ -36,7 +36,7 @@ top:-40px;
 left:-40px;
 right:-40px;
 bottom:-40px;
-background:url("/frontend/Frontend/img/bg.png") center/cover no-repeat;
+background: url("../img/bg.png") center/cover no-repeat;
 filter: blur(8px) brightness(0.2);
 z-index:-1;
 }
@@ -191,7 +191,6 @@ form.addEventListener("submit", async (e) => {
         headers: {
           "accept": "application/json",
           "Authorization": `Bearer ${resetToken}`,
-          "ngrok-skip-browser-warning": "69420"
         }
       }
     );
