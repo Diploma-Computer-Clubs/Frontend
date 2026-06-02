@@ -153,52 +153,88 @@
         /* ── MAP ── */
         .map-wrapper {
             flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
+            position: relative;
             overflow: auto;
             background: #0a0a0a;
+            -webkit-overflow-scrolling: touch;
+        }
+        .map-wrapper::before {
+            content: ''; position: sticky; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(139,26,26,0.4), transparent);
+            display: block; z-index: 5;
         }
 
-        .map-container {
-            position: relative;
-            width: 340px;
-            height: 460px;
-            background: #000;
-            border: 1px solid #222;
-            border-radius: 20px;
+        .floor-canvas {
+            position: relative; margin: 16px auto 24px;
+            background: #0a0a0a;
+            border: 1px solid #1e1e1e; border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.03);
+            min-width: 320px; min-height: 280px;
+        }
+        .floor-canvas.has-bg {
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+        }
+        .floor-canvas::after {
+            content: ''; position: absolute; inset: 0; border-radius: 16px;
+            background: rgba(0,0,0,0.55); pointer-events: none; z-index: 1;
+        }
+        .floor-canvas.has-bg .map-layer { z-index: 2; position: relative; }
+
+        .map-layer { position: absolute; inset: 0; }
+
+        .map-obj-wall { position: absolute; background: #fff; border-radius: 0; z-index: 2; pointer-events: none; }
+        .map-obj-facility {
+            position: absolute; border: 2px solid rgba(255,255,255,0.35); border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.5);
+            text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none; z-index: 3;
+        }
+        .map-obj-desk .desk-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.5); border-radius: 1px; }
+        .map-obj-desk .desk-lbl { font-size: 8px; color: rgba(255,255,255,0.4); margin-top: 3px; text-transform: lowercase; }
+
+        .zone-label {
+            position: absolute; display: flex; align-items: center; gap: 5px;
+            z-index: 10; pointer-events: none;
+        }
+        .zone-label-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .zone-label-text {
+            font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.75);
+            text-transform: lowercase; letter-spacing: 0.2px;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.9);
         }
 
         .pc {
-            position: absolute;
-            width: 36px; height: 36px;
-            background: #111;
-            border: 1px solid #333;
-            border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s, border-color 0.2s;
-            color: #666;
+            position: absolute; width: 28px; height: 28px; border-radius: 3px;
+            border: 2px solid; display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; cursor: pointer;
+            transition: transform 0.12s, box-shadow 0.12s, background 0.15s;
+            z-index: 20; box-sizing: border-box;
         }
-        .pc.selected { background: #8b1a1a; border-color: #ff4d4d; color: #fff; box-shadow: 0 0 12px rgba(139,26,26,0.6); }
-        .pc.busy { background: #141414 !important; border-color: #222 !important; color: #2a2a2a !important; cursor: default; }
-
-        .label { position: absolute; font-size: 11px; font-weight: 800; color: #222; text-transform: uppercase; letter-spacing: 1px; pointer-events: none; }
-
-        .static-obj {
-            position: absolute;
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #444;
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            display: flex; align-items: center; justify-content: center; text-align: center;
+        .pc:active { transform: scale(0.94); }
+        .pc.free { background: #f2f2f2; color: #111; }
+        .pc.busy { background: #161616; border-color: #2a2a2a !important; color: #333 !important; cursor: default; }
+        .pc.offline { background: #0d0d0d; border-color: #222 !important; opacity: 0.45; cursor: default; }
+        .pc.selected {
+            background: #8b1a1a !important; border-color: #ff4d4d !important;
+            color: #fff !important; box-shadow: 0 0 14px rgba(255,77,77,0.45);
         }
-        .reception { width: 100px; height: 40px; border-style: dashed; flex-direction: column; gap: 2px; }
-        .reception span { font-size: 16px; }
-        .wc { width: 40px; height: 35px; background: #0a0a0a; }
+        .pc.vip.free { background: #1a0a0a; border-color: #8b1a1a; color: #ff8a8a; }
+        .pc.vip.selected { background: #ff4d4d !important; color: #000 !important; }
+
+        .map-loading {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            color: #555; font-size: 12px; font-weight: 600; z-index: 50;
+        }
+
+        /* Легенда */
+        .map-legend {
+            display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; justify-content: center;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; color: #666; font-weight: 600; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 2px; border: 1px solid #444; }
+        .legend-dot.free { background: #f0f0f0; border-color: #ccc; }
+        .legend-dot.busy { background: #1a1a1a; }
+        .legend-dot.sel { background: #8b1a1a; border-color: #ff4d4d; }
 
         /* ── FOOTER ── */
         .footer {
@@ -468,6 +504,12 @@
             <span class="material-symbols-outlined" style="font-size:12px">location_on</span> —
         </span>
 
+        <div class="map-legend">
+            <div class="legend-item"><span class="legend-dot free"></span> свободно</div>
+            <div class="legend-item"><span class="legend-dot busy"></span> занято</div>
+            <div class="legend-item"><span class="legend-dot sel"></span> выбрано</div>
+        </div>
+
         <div class="time-bar">
             <div class="time-group">
                 <input type="time" id="pickerStart">
@@ -479,15 +521,12 @@
         </div>
     </div>
 
-    <div class="map-wrapper">
-        <div class="map-container" id="clubMap">
-            <div class="static-obj reception" style="top: 80px; left: 140px;">
-                <span class="material-symbols-outlined">person</span>
-                стойка<br>администратора
-            </div>
-            <div class="static-obj wc" style="top: 250px; right: 10px;">WC</div>
-            <div class="static-obj wc" style="top: 190px; right: 10px;">WC</div>
-            <div id="pcsLayer"></div>
+    <div class="map-wrapper" id="mapWrapper">
+        <div class="floor-canvas" id="floorCanvas">
+            <div class="map-layer" id="mapObjectsLayer"></div>
+            <div class="map-layer" id="zoneLabelsLayer"></div>
+            <div class="map-layer" id="pcsLayer"></div>
+            <div class="map-loading" id="mapLoading">Загрузка схемы…</div>
         </div>
     </div>
 
@@ -758,20 +797,34 @@ function connectWS() {
 }
 
 async function fetchAvailabilityREST() {
+    const loading = document.getElementById('mapLoading');
+    if (loading) loading.style.display = 'flex';
     const startISO = `${selectedDateStr}T${startTime}:00`;
     const endISO   = `${selectedEndDateStr}T${endTime}:00`;
     try {
-        const res = await api.get(`/clubs/${clubId}/availability`, { params: { start_time: startISO, end_time: endISO } });
-        availabilityData = res.data;
-        const freeIds = new Set(
-            availabilityData.flatMap(z => z.computers || [])
-                .filter(c => c.is_Active && c.bookings?.length === 0)
-                .map(c => c.id)
-        );
-        selected = selected.filter(s => freeIds.has(s.id));
-        updateUI();
-        renderMap();
-    } catch (e) { console.error('Availability error:', e); }
+        const [availRes, mapRes] = await Promise.all([
+            api.get(`/clubs/${clubId}/availability`, { params: { start_time: startISO, end_time: endISO } }),
+            api.get(`/map-objects/${clubId}/map-objects/`).catch(() => ({ data: [] })),
+        ]);
+        availabilityData = Array.isArray(availRes.data) ? availRes.data : [];
+        mapObjects = Array.isArray(mapRes.data) ? mapRes.data : [];
+    } catch (e) {
+        console.error('Availability error:', e);
+        availabilityData = [];
+        mapObjects = [];
+    }
+    const freeIds = new Set(
+        availabilityData.flatMap(z => z.computers || [])
+            .filter(c => c.is_Active && c.bookings?.length === 0)
+            .map(c => c.id)
+    );
+    selected = selected.filter(s => freeIds.has(s.id));
+    normalizeFloorCoords();
+    computeMapLayout();
+    updateUI();
+    renderMap();
+    scrollMapIntoView();
+    if (loading) loading.style.display = 'none';
 }
 
 function confirmTimeAndConnect(silent = false) {
@@ -881,92 +934,253 @@ async function checkInFromTooltip(e) {
     }
 }
 
-function renderMap() {
-    const layer = document.getElementById('pcsLayer');
-    layer.innerHTML = '';
-    document.querySelectorAll('.dynamic-label').forEach(el => el.remove());
-    const mapContainer = document.getElementById('clubMap');
-    const PC_SIZE = 36; const PC_GAP = 8; const ZONE_GAP = 30;
-    const START_X = 20; let currentY = 140;
+// ── Цвета зон ──
+const ZONE_COLORS = ['#6b8cff', '#ff6b6b', '#34d399', '#fbbf24', '#a78bfa', '#fb923c'];
+let zoneColorById = {};
+let zoneNameById  = {};
+let mapObjects    = [];
+let mapLayout     = { ox: 0, oy: 0, w: 600, h: 480 };
+const PC_SIZE_MAP = 28;
+const MAP_PAD     = 48;
 
+function apiImg(path) {
+    if (!path || path === 'string') return '';
+    return path.startsWith('http') ? path : `${API_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
+function zoneAccent(zoneId, zoneName) {
+    if (zoneColorById[zoneId]) return zoneColorById[zoneId];
+    const isVip = (zoneName || '').toLowerCase().includes('vip');
+    return isVip ? '#ff6b6b' : '#6b8cff';
+}
+
+function looksLikeGridCoords(items) {
+    if (!items.length) return false;
+    const mx = Math.max(...items.map(p => p.x ?? 0));
+    const my = Math.max(...items.map(p => p.y ?? 0));
+    return mx < 24 && my < 24;
+}
+
+function normalizeFloorCoords() {
+    availabilityData.forEach((zone, zi) => {
+        const pcs = zone.computers || [];
+        const zx = zone.x ?? 0;
+        const zy = zone.y ?? 0;
+        const zoneGrid = looksLikeGridCoords(pcs.map(p => ({ x: p.x, y: p.y })));
+        const zonePosUnset = (zx === 0 && zy === 0) || zoneGrid;
+
+        if (zonePosUnset && zi > 0) {
+            zone.x = 70 + zi * 160;
+            zone.y = 100;
+        } else if (zone.x == null) zone.x = zx;
+        if (zone.y == null) zone.y = zy;
+
+        if (zoneGrid && pcs.length) {
+            const step = PC_SIZE_MAP + 8;
+            const baseX = (zone.x || 0) + 8;
+            const baseY = (zone.y || 0) + 26;
+            pcs.forEach((pc, i) => {
+                const gx = pc.x ?? (i % 4);
+                const gy = pc.y ?? Math.floor(i / 4);
+                pc.x = baseX + gx * step;
+                pc.y = baseY + gy * step;
+            });
+        } else {
+            pcs.forEach(pc => {
+                pc.x = pc.x ?? 0;
+                pc.y = pc.y ?? 0;
+            });
+        }
+    });
+}
+
+function computeMapLayout() {
+    const pts = [];
     availabilityData.forEach(zone => {
-        if (!zone.computers || zone.computers.length === 0) return;
-        const lbl = document.createElement('div');
-        lbl.className = 'label dynamic-label';
-        lbl.style.top = (currentY - 18) + 'px';
-        lbl.style.left = START_X + 'px';
-        lbl.textContent = zone.name;
-        mapContainer.appendChild(lbl);
-        const isVip = zone.name.toLowerCase().includes('vip');
-        zone.computers.forEach((comp, idx) => {
-            const isOffline = !comp.is_Active;
-            const isFree = comp.is_Active && comp.bookings && comp.bookings.length === 0;
-            const isSelected = !!selected.find(s => s.id === comp.id);
+        if (zone.x != null && zone.y != null) pts.push({ x: zone.x, y: zone.y });
+        (zone.computers || []).forEach(pc => {
+            if (pc.x != null && pc.y != null) pts.push({ x: pc.x, y: pc.y, w: PC_SIZE_MAP, h: PC_SIZE_MAP });
+        });
+    });
+    mapObjects.forEach(obj => {
+        pts.push({ x: obj.x, y: obj.y, w: obj.width || 40, h: obj.height || 40 });
+    });
+    if (!pts.length) {
+        mapLayout = { ox: MAP_PAD, oy: MAP_PAD, w: 360, h: 400 };
+        return;
+    }
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    pts.forEach(p => {
+        const w = p.w || 0; const h = p.h || 0;
+        minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x + w); maxY = Math.max(maxY, p.y + h);
+    });
+    mapLayout = {
+        ox: MAP_PAD - minX, oy: MAP_PAD - minY,
+        w: Math.max(320, maxX - minX + MAP_PAD * 2),
+        h: Math.max(280, maxY - minY + MAP_PAD * 2),
+    };
+}
+
+function mapX(x) { return (x || 0) + mapLayout.ox; }
+function mapY(y) { return (y || 0) + mapLayout.oy; }
+
+function scrollMapIntoView() {
+    const wrap = document.getElementById('mapWrapper');
+    if (!wrap) return;
+    requestAnimationFrame(() => {
+        wrap.scrollLeft = Math.max(0, (wrap.scrollWidth - wrap.clientWidth) / 2);
+        wrap.scrollTop  = Math.max(0, (wrap.scrollHeight - wrap.clientHeight) / 4);
+    });
+}
+
+function renderMapObjects(layer) {
+    mapObjects.forEach(obj => {
+        if (obj.type === 'wall') {
             const el = document.createElement('div');
-            el.className = `pc ${isFree ? 'free' : 'busy'}`;
-            el.style.top = currentY + 'px';
-            el.style.left = (START_X + idx * (PC_SIZE + PC_GAP)) + 'px';
+            el.className = 'map-obj-wall';
+            el.style.left = mapX(obj.x) + 'px';
+            el.style.top  = mapY(obj.y) + 'px';
+            el.style.width  = (obj.width  || 80) + 'px';
+            el.style.height = (obj.height ||  5) + 'px';
+            if (obj.rotation) el.style.transform = `rotate(${obj.rotation}deg)`;
+            layer.appendChild(el);
+            return;
+        }
+        const el = document.createElement('div');
+        if (obj.type === 'admin_desk') {
+            el.className = 'map-obj-desk map-obj-facility';
+            el.style.left = mapX(obj.x) + 'px';
+            el.style.top  = mapY(obj.y) + 'px';
+            el.style.width = (obj.width || 90) + 'px';
+            el.style.flexDirection = 'column';
+            el.style.alignItems = 'flex-start';
+            el.style.justifyContent = 'flex-end';
+            el.style.border = 'none';
+            el.innerHTML = `<div class="desk-bar"></div><div class="desk-lbl">${obj.label || 'стойка'}</div>`;
+        } else {
+            el.className = 'map-obj-facility';
+            el.style.left   = mapX(obj.x) + 'px';
+            el.style.top    = mapY(obj.y) + 'px';
+            el.style.width  = (obj.width  || 48) + 'px';
+            el.style.height = (obj.height || 40) + 'px';
+            el.textContent = obj.label || (obj.type === 'toilet' ? 'WC' : '');
+        }
+        if (obj.rotation) el.style.transform = `rotate(${obj.rotation}deg)`;
+        layer.appendChild(el);
+    });
+}
+
+function renderMap() {
+    const canvas   = document.getElementById('floorCanvas');
+    const objLayer = document.getElementById('mapObjectsLayer');
+    const lblLayer = document.getElementById('zoneLabelsLayer');
+    const pcLayer  = document.getElementById('pcsLayer');
+    if (!canvas || !pcLayer) return;
+
+    canvas.style.width  = mapLayout.w + 'px';
+    canvas.style.height = mapLayout.h + 'px';
+    objLayer.innerHTML = '';
+    lblLayer.innerHTML = '';
+    pcLayer.innerHTML  = '';
+
+    renderMapObjects(objLayer);
+
+    availabilityData.forEach((zone, zi) => {
+        if (!zone.computers || !zone.computers.length) return;
+
+        const zName  = zone.name || zoneNameById[zone.id] || 'зона';
+        const accent = zoneAccent(zone.id, zName);
+        zoneColorById[zone.id] = accent;
+        const isVip  = zName.toLowerCase().includes('vip');
+
+        // Метка зоны
+        const lbl = document.createElement('div');
+        lbl.className = 'zone-label';
+        lbl.style.left = mapX(zone.x ?? 70 + zi * 140) + 'px';
+        lbl.style.top  = mapY(zone.y ?? 90) + 'px';
+        lbl.innerHTML  = `<span class="zone-label-dot" style="background:${accent}"></span><span class="zone-label-text">${zName}</span>`;
+        lblLayer.appendChild(lbl);
+
+        zone.computers.forEach(comp => {
+            const isOffline  = comp.is_Active === false || comp.is_active === false;
+            const isFree     = !isOffline && comp.bookings && comp.bookings.length === 0;
+            const isSelected = !!selected.find(s => s.id === comp.id);
+
+            const el = document.createElement('div');
+            el.className = `pc${isVip ? ' vip' : ''} ${isOffline ? 'offline' : isFree ? 'free' : 'busy'}${isSelected ? ' selected' : ''}`;
+            el.style.left        = mapX(comp.x) + 'px';
+            el.style.top         = mapY(comp.y) + 'px';
+            el.style.width       = PC_SIZE_MAP + 'px';
+            el.style.height      = PC_SIZE_MAP + 'px';
+            el.style.borderColor = accent;
 
             if (isOffline) {
-                // Неактивный комп — offline иконка
-                el.style.background = '#0d0d0d';
-                el.style.borderColor = '#1a1a1a';
-                el.style.cursor = 'default';
-                el.style.opacity = '0.5';
-                el.innerHTML = `<img src="../img/offline.png" style="width:20px;height:20px;object-fit:contain;opacity:0.6;" alt="offline">`;
+                el.innerHTML = `<img src="../img/offline.png" style="width:16px;height:16px;object-fit:contain;opacity:0.55" alt="">`;
                 el.title = `ПК №${comp.number} — не активен`;
-                attachPcHold(el, comp);
             } else if (!isFree) {
-                el.innerText = comp.number;
-                el.style.background = '#1a1a1a'; el.style.borderColor = '#2a2a2a'; el.style.color = '#333';
+                el.textContent = comp.number;
+                el.style.background   = '#161616';
+                el.style.borderColor  = '#2a2a2a';
+                el.style.color        = '#333';
                 if (comp.bookings && comp.bookings.length > 0) {
                     el.addEventListener('mouseenter', () => showPcTooltip(el, comp.bookings));
                     el.addEventListener('mouseleave', () => {
                         tooltipHideTimer = setTimeout(() => {
                             const tt = document.getElementById('pcTooltip');
-                            if (!tt.matches(':hover')) hidePcTooltip();
+                            if (tt && !tt.matches(':hover')) hidePcTooltip();
                         }, 80);
                     });
                     el.addEventListener('mousemove', () => movePcTooltip(el));
                 }
-                attachPcHold(el, comp);
             } else {
-                el.innerText = comp.number;
-                // Восстанавливаем визуал если комп уже был выбран
+                el.textContent = comp.number;
                 if (isSelected) {
                     el.classList.add('selected');
-                    el.style.background = '#8b1a1a';
-                    el.style.borderColor = '#ff4d4d';
-                    el.style.color = '#fff';
-                } else {
-                    el.style.background = isVip ? '#1a0a0a' : '#1a1a2e';
-                    el.style.borderColor = isVip ? '#8b1a1a' : '#4a4a8a';
-                    el.style.color = isVip ? '#ff6b6b' : '#aaaaff';
+                } else if (isVip) {
+                    el.style.background  = '#1a0a0a';
+                    el.style.borderColor = '#8b1a1a';
+                    el.style.color       = '#ff8a8a';
                 }
                 el.onclick = () => {
                     const i = selected.findIndex(s => s.id === comp.id);
                     if (i > -1) {
                         selected.splice(i, 1);
                         el.classList.remove('selected');
-                        el.style.background = isVip ? '#1a0a0a' : '#1a1a2e';
-                        el.style.borderColor = isVip ? '#8b1a1a' : '#4a4a8a';
-                        el.style.color = isVip ? '#ff6b6b' : '#aaaaff';
+                        if (isVip) {
+                            el.style.background  = '#1a0a0a';
+                            el.style.borderColor = '#8b1a1a';
+                            el.style.color       = '#ff8a8a';
+                        } else {
+                            el.style.background  = '';
+                            el.style.borderColor = accent;
+                            el.style.color       = '';
+                        }
                     } else {
-                        if (selected.length >= 5) { showToast("Максимум 5 мест"); return; }
+                        if (selected.length >= 5) { showToast('Максимум 5 мест'); return; }
                         selected.push({ id: comp.id, n: comp.number, zid: zone.id, isVip });
                         el.classList.add('selected');
-                        el.style.background = '#8b1a1a';
-                        el.style.borderColor = '#ff4d4d';
-                        el.style.color = '#fff';
+                        el.style.background  = '';
+                        el.style.borderColor = '';
+                        el.style.color       = '';
                     }
                     updateUI();
                 };
-                attachPcHold(el, comp);
             }
-            layer.appendChild(el);
+
+            // Всегда вешаем hold-меню (для включения/выключения и удаления брони)
+            attachPcHold(el, comp);
+            pcLayer.appendChild(el);
         });
-        currentY += PC_SIZE + ZONE_GAP;
     });
+
+    const hasPcs = pcLayer.querySelector('.pc');
+    if (!hasPcs) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#555;font-size:12px;font-weight:600;text-align:center;padding:20px;';
+        empty.textContent = 'Нет данных';
+        pcLayer.appendChild(empty);
+    }
 }
 
 async function updateUI() {
