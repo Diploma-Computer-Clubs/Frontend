@@ -155,11 +155,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 .z-info{flex:1;min-width:0;}
 .z-name{font-size:10px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .z-count{font-size:9px;color:var(--muted);}
-.cols-row{display:flex;align-items:center;gap:6px;}
-.cols-row label{font-size:9px;color:var(--muted);white-space:nowrap;}
-.cols-input{width:42px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 6px;font-size:11px;font-family:'Montserrat',sans-serif;text-align:center;}
-.cols-input:focus{outline:none;border-color:var(--green);}
-.cols-input:disabled{opacity:0.4;}
 .add-pc-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:10px;border-radius:8px;border:1.5px dashed var(--green);background:var(--green-dim);color:var(--green);font-size:10px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;text-transform:uppercase;transition:0.2s;}
 .add-pc-btn.placing{border-style:solid;background:var(--green);color:#000;animation:glow 1.2s ease-in-out infinite;}
 .add-pc-btn:disabled{opacity:0.3;cursor:not-allowed;border-style:dashed;background:transparent;color:var(--muted);animation:none;}
@@ -174,7 +169,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 
 .floor-chrome{position:absolute;left:0;right:0;top:28px;text-align:center;pointer-events:none;z-index:5;}
 .floor-chrome h2{font-size:22px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;}
-.floor-chrome p{font-size:11px;color:#888;margin-top:6px;letter-spacing:0.3px;}
 
 .zone-label{position:absolute;display:flex;align-items:center;gap:6px;padding:4px 8px;cursor:grab;user-select:none;z-index:75;touch-action:none;}
 .zone-label::before{content:'';position:absolute;inset:-12px;z-index:-1;}
@@ -264,6 +258,18 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 .loading-txt{font-size:11px;color:var(--muted);}
 
 .spinner-inline{display:inline-block;width:12px;height:12px;border:2px solid rgba(0,255,0,0.3);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;margin-right:6px;vertical-align:middle;}
+
+/* ── PRICING: existing packages ── */
+.pkg-existing{background:var(--card);border:1px solid #3a3a3a;border-radius:12px;padding:14px 16px;margin-bottom:10px;animation:fadeIn 0.2s ease;}
+.pkg-existing-header{display:flex;justify-content:space-between;align-items:center;}
+.pkg-existing-name{font-size:13px;font-weight:700;}
+.pkg-existing-meta{font-size:10px;color:#555;margin-top:3px;}
+.pkg-existing-price{font-size:18px;font-weight:700;color:var(--green);white-space:nowrap;}
+.pkg-edit-form{display:none;flex-direction:column;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.pkg-edit-form.open{display:flex;}
+.pkg-edit-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pkg-edit-row .field-group{margin-bottom:0;}
+.pricing-divider{height:1px;background:var(--border);margin:28px 0;}
 </style>
 </head>
 <body>
@@ -401,9 +407,26 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 <!-- TAB: PRICING -->
 <div class="tab-panel" id="tab-pricing">
   <div class="panel-content">
-    <p class="section-title">Зона</p>
+
+    <!-- EXISTING PACKAGES -->
+    <p class="section-title">Существующие пакеты</p>
+    <div class="field-group select-wrap" style="margin-bottom:14px;">
+      <label>Зона для просмотра</label>
+      <select id="pricingViewZoneSelect"><option value="">Загрузка...</option></select>
+    </div>
+    <div id="existingPackagesList">
+      <div class="empty-state" style="padding:20px 0;">
+        <span class="material-symbols-outlined">payments</span>
+        <p>Выберите зону для просмотра пакетов</p>
+      </div>
+    </div>
+
+    <div class="pricing-divider"></div>
+
+    <!-- CREATE NEW PACKAGES -->
+    <p class="section-title">Создать новые пакеты</p>
     <div class="field-group select-wrap" style="margin-bottom:20px;">
-      <label>Выберите зону</label>
+      <label>Зона для новых пакетов</label>
       <select id="pricingZoneSelect"><option value="">Загрузка...</option></select>
     </div>
 
@@ -425,7 +448,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
       <div class="field-group" style="margin-bottom:0;"><label>Конец</label><input type="time" id="endTime" value="23:00"></div>
     </div>
 
-    <p class="section-title">Пакеты</p>
+    <p class="section-title">Пакеты для создания</p>
     <div id="packagesList"></div>
 
     <div class="summary-card" id="summaryCard" style="display:none;">
@@ -433,7 +456,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
       <div id="summaryRows"></div>
     </div>
 
-    <button class="save-btn" id="savePricingBtn">Создать прайсинг</button>
+    <button class="save-btn" id="savePricingBtn">Создать пакеты</button>
     <div class="error-box" id="pricingError"></div>
     <div class="success-box" id="pricingSuccess"></div>
   </div>
@@ -502,7 +525,6 @@ function toast(msg,type=''){
 }
 
 // ── HELPERS ──
-// FIX: showMsg всегда принимает ID error-box'а как базу, независимо от типа
 function showError(errBoxId, msg){
   const errEl = document.getElementById(errBoxId);
   const succId = errBoxId.replace('Error','Success');
@@ -517,13 +539,9 @@ function showSuccess(errBoxId, msg){
   if(succEl){ succEl.textContent = msg; succEl.classList.toggle('visible', !!msg); }
   if(errEl) errEl.classList.remove('visible');
 }
-// Обратная совместимость для старых вызовов showMsg(id, msg, type)
-function showMsg(id, msg, type='error'){
-  if(type==='success') showSuccess(id, msg);
-  else showError(id, msg);
-}
 
 function pluralZone(n){ return n===1?'зона':n>=2&&n<=4?'зоны':'зон'; }
+function fmtTime(t){ return t?t.slice(0,5):'-'; }
 
 // ── TABS ──
 const tabBtns=document.querySelectorAll('.tab-btn');
@@ -723,6 +741,7 @@ document.getElementById('saveZonesBtn').addEventListener('click',async()=>{
     await _api.post('/zones/',zones,{params:{club_id:CLUB_ID}});
     document.getElementById('zonesAddContainer').innerHTML=''; zoneCounter=0; updateZonesAddCount();
     sandboxInitialized=false;
+    showSuccess('zonesAddError','✅ Зоны сохранены!');
   }catch(e){
     const d=e.response?.data?.detail;
     let msg=e.response?.status===403?'❌ 403: нет прав (нужна роль owner).':Array.isArray(d)?`❌ Validation:\n`+d.map(x=>`• ${x.loc?.join('.')} — ${x.msg}`).join('\n'):typeof d==='string'?`❌ ${e.response?.status}: ${d}`:`❌ Ошибка: ${JSON.stringify(e.response?.data)}`;
@@ -759,8 +778,7 @@ function sbScreenToCanvas(cx,cy){
   return{x:(cx-r.left-px)/scale,y:(cy-r.top-py)/scale};
 }
 function sbMapTypeDef(type){
-  const m={toilet:'WC',admin_desk:'стойка администратора',entrance:'вход',reception:'ресепшн',stairs:'лестница',storage:'склад',wall:''};
-  return MAP_OBJECT_TYPES.find(t=>t.type===type)||{type,label:m[type]||type,glyph:'□',w:56,h:40};
+  return MAP_OBJECT_TYPES.find(t=>t.type===type)||{type,label:type,glyph:'□',w:56,h:40};
 }
 
 function sbZoneHasStoredPos(z){
@@ -796,9 +814,7 @@ function sbNormalizePcCoords(zone){
   });
 }
 
-function sbFindPcZone(pc){
-  return sbZones.find(z=>z.computers.includes(pc));
-}
+function sbFindPcZone(pc){ return sbZones.find(z=>z.computers.includes(pc)); }
 
 function sbMarkPcDirty(pc){
   if(pc.isNew||!pc.id||!pc._orig) return;
@@ -806,9 +822,7 @@ function sbMarkPcDirty(pc){
   if(o.x!==pc.x||o.y!==pc.y||o.number!==pc.number||o.zone_id!==pc.zone_id) pc.dirty=true;
 }
 
-function sbAllPcs(){
-  return sbZones.flatMap(z=>z.computers);
-}
+function sbAllPcs(){ return sbZones.flatMap(z=>z.computers); }
 
 function sbNextPcNumber(){
   const all=sbAllPcs();
@@ -862,11 +876,11 @@ async function initSandbox(){
     if(!zonesData.length){ toast('Зон нет. Сначала создайте зоны.','red'); return; }
     sbZones=zonesData.map((z,i)=>{
       const hasPos=sbZoneHasStoredPos(z);
-      const px=hasPos?Math.round(z.x):0;
-      const py=hasPos?Math.round(z.y):0;
+      const bx=hasPos?Math.round(z.x):0;
+      const by=hasPos?Math.round(z.y):0;
       return{
         id:z.id,name:z.name,cost:z.cost??0,cpu:z.cpu,gpu:z.gpu,ram:z.ram,ssd:z.ssd,monitor:z.monitor,
-        color:COLORS[i%COLORS.length],bx:px,by:py,_origX:px,_origY:py,_hasStoredPos:hasPos,posDirty:false,
+        color:COLORS[i%COLORS.length],bx,by,_origX:bx,_origY:by,_hasStoredPos:hasPos,posDirty:false,
         computers:[],visible:true,
       };
     });
@@ -875,10 +889,7 @@ async function initSandbox(){
         const res=await _api.get('/computers/',{params:{zone_id:zone.id}});
         zone.computers=res.data.map(pc=>{
           const o={number:pc.number,x:pc.x??0,y:pc.y??0,zone_id:zone.id};
-          return{
-            id:pc.id,number:pc.number,specification:pc.specification||'string',
-            x:o.x,y:o.y,isNew:false,dirty:false,zone_id:zone.id,_orig:{...o},
-          };
+          return{id:pc.id,number:pc.number,specification:pc.specification||'string',x:o.x,y:o.y,isNew:false,dirty:false,zone_id:zone.id,_orig:{...o}};
         });
         zone.computers.sort((a,b)=>a.number-b.number);
       }catch{}
@@ -908,7 +919,7 @@ function sbCenterView(){
 function sbRenderFloorChrome(){
   const chrome=document.createElement('div');
   chrome.className='floor-chrome';
-  chrome.innerHTML=`<h2>${sbClubName||'План клуба'}</h2><p>ПК и подписи зон — на плане · x,y в API</p>`;
+  chrome.innerHTML=`<h2>${sbClubName||'План клуба'}</h2>`;
   canvas.appendChild(chrome);
 }
 
@@ -939,10 +950,7 @@ function sbBuildMapPalette(){
     btn.innerHTML=`<span class="map-glyph">${def.glyph}</span><span>${def.label}</span>`;
     btn.addEventListener('click',()=>{
       if(active){ sbMapPlacingDef=null; document.getElementById('mapHint').classList.remove('show'); }
-      else{
-        sbMapPlacingDef={...def,_pid:idx};
-        document.getElementById('mapHint').classList.add('show');
-      }
+      else{ sbMapPlacingDef={...def,_pid:idx}; document.getElementById('mapHint').classList.add('show'); }
       sbBuildMapPalette();
     });
     pal.appendChild(btn);
@@ -1010,25 +1018,8 @@ function sbStartMapDrag(el,obj,e){
   sbMapDragging=true; panning=false; wrap.classList.remove('panning');
   el.classList.add('dragging');
   try{ el.setPointerCapture(e.pointerId); }catch{}
-  const onMove=ev=>{
-    if(!d) return;
-    ev.preventDefault();
-    obj.x=ox+(ev.clientX-sx)/scale; obj.y=oy+(ev.clientY-sy)/scale;
-    el.style.left=obj.x+'px'; el.style.top=obj.y+'px';
-    if(!obj.isNew) obj.dirty=true;
-  };
-  const onUp=ev=>{
-    if(!d) return;
-    d=false; sbMapDragging=false;
-    el.classList.remove('dragging');
-    try{ el.releasePointerCapture(ev.pointerId); }catch{}
-    el.removeEventListener('pointermove',onMove);
-    el.removeEventListener('pointerup',onUp);
-    el.removeEventListener('pointercancel',onUp);
-    obj.x=Math.round(obj.x); obj.y=Math.round(obj.y);
-    el.style.left=obj.x+'px'; el.style.top=obj.y+'px';
-    sbUpdateMapActions();
-  };
+  const onMove=ev=>{ if(!d) return; ev.preventDefault(); obj.x=ox+(ev.clientX-sx)/scale; obj.y=oy+(ev.clientY-sy)/scale; el.style.left=obj.x+'px'; el.style.top=obj.y+'px'; if(!obj.isNew) obj.dirty=true; };
+  const onUp=ev=>{ if(!d) return; d=false; sbMapDragging=false; el.classList.remove('dragging'); try{ el.releasePointerCapture(ev.pointerId); }catch{} el.removeEventListener('pointermove',onMove); el.removeEventListener('pointerup',onUp); el.removeEventListener('pointercancel',onUp); obj.x=Math.round(obj.x); obj.y=Math.round(obj.y); el.style.left=obj.x+'px'; el.style.top=obj.y+'px'; sbUpdateMapActions(); };
   el.addEventListener('pointermove',onMove);
   el.addEventListener('pointerup',onUp);
   el.addEventListener('pointercancel',onUp);
@@ -1083,22 +1074,8 @@ function sbStartZoneLabelDrag(el,zone,e){
   sbPcDragging=true; panning=false; wrap.classList.remove('panning');
   el.classList.add('dragging');
   try{ el.setPointerCapture(e.pointerId); }catch{}
-  const onMove=ev=>{
-    if(!d) return;
-    ev.preventDefault();
-    zone.bx=ox+(ev.clientX-sx)/scale; zone.by=oy+(ev.clientY-sy)/scale;
-    el.style.left=zone.bx+'px'; el.style.top=zone.by+'px';
-  };
-  const onUp=ev=>{
-    if(!d) return;
-    d=false; sbPcDragging=false;
-    el.classList.remove('dragging');
-    try{ el.releasePointerCapture(ev.pointerId); }catch{}
-    el.removeEventListener('pointermove',onMove);
-    el.removeEventListener('pointerup',onUp);
-    el.removeEventListener('pointercancel',onUp);
-    sbMarkZonePosDirty(zone);
-  };
+  const onMove=ev=>{ if(!d) return; ev.preventDefault(); zone.bx=ox+(ev.clientX-sx)/scale; zone.by=oy+(ev.clientY-sy)/scale; el.style.left=zone.bx+'px'; el.style.top=zone.by+'px'; };
+  const onUp=ev=>{ if(!d) return; d=false; sbPcDragging=false; el.classList.remove('dragging'); try{ el.releasePointerCapture(ev.pointerId); }catch{} el.removeEventListener('pointermove',onMove); el.removeEventListener('pointerup',onUp); el.removeEventListener('pointercancel',onUp); sbMarkZonePosDirty(zone); };
   el.addEventListener('pointermove',onMove);
   el.addEventListener('pointerup',onUp);
   el.addEventListener('pointercancel',onUp);
@@ -1141,24 +1118,8 @@ function sbStartPcDrag(el,pc,e){
   sbPcDragging=true; panning=false; wrap.classList.remove('panning');
   el.classList.add('dragging');
   try{ el.setPointerCapture(e.pointerId); }catch{}
-  const onMove=ev=>{
-    if(!d) return;
-    ev.preventDefault();
-    pc.x=ox+(ev.clientX-sx)/scale; pc.y=oy+(ev.clientY-sy)/scale;
-    el.style.left=pc.x+'px'; el.style.top=pc.y+'px';
-    sbMarkPcDirty(pc);
-  };
-  const onUp=ev=>{
-    if(!d) return;
-    d=false; sbPcDragging=false;
-    el.classList.remove('dragging');
-    try{ el.releasePointerCapture(ev.pointerId); }catch{}
-    el.removeEventListener('pointermove',onMove);
-    el.removeEventListener('pointerup',onUp);
-    el.removeEventListener('pointercancel',onUp);
-    pc.x=Math.round(pc.x); pc.y=Math.round(pc.y);
-    el.style.left=pc.x+'px'; el.style.top=pc.y+'px';
-  };
+  const onMove=ev=>{ if(!d) return; ev.preventDefault(); pc.x=ox+(ev.clientX-sx)/scale; pc.y=oy+(ev.clientY-sy)/scale; el.style.left=pc.x+'px'; el.style.top=pc.y+'px'; sbMarkPcDirty(pc); };
+  const onUp=ev=>{ if(!d) return; d=false; sbPcDragging=false; el.classList.remove('dragging'); try{ el.releasePointerCapture(ev.pointerId); }catch{} el.removeEventListener('pointermove',onMove); el.removeEventListener('pointerup',onUp); el.removeEventListener('pointercancel',onUp); pc.x=Math.round(pc.x); pc.y=Math.round(pc.y); el.style.left=pc.x+'px'; el.style.top=pc.y+'px'; };
   el.addEventListener('pointermove',onMove);
   el.addEventListener('pointerup',onUp);
   el.addEventListener('pointercancel',onUp);
@@ -1216,10 +1177,7 @@ function sbUpdatePcActions(){
   const box=document.getElementById('pcActions');
   const sel=document.getElementById('pcZoneSelect');
   if(!box) return;
-  if(!sbSelectedPcRef){
-    box.style.display='none';
-    return;
-  }
+  if(!sbSelectedPcRef){ box.style.display='none'; return; }
   box.style.display='block';
   if(sel){
     sel.innerHTML=sbZones.map(z=>`<option value="${z.id}" ${z.id===sbSelectedPcRef.zone_id?'selected':''}>${z.name}</option>`).join('');
@@ -1252,13 +1210,8 @@ document.getElementById('addPcBtn').addEventListener('click',()=>{
   if(!sbActiveId){ toast('Выберите зону','red'); return; }
   sbSetPcPlacing(!sbPcPlacing);
 });
-document.getElementById('pcDeleteBtn')?.addEventListener('click',()=>{
-  if(sbSelectedPcRef) sbRemovePC(sbSelectedPcRef);
-});
-
-document.getElementById('mapDeleteBtn')?.addEventListener('click',()=>{
-  if(sbSelectedMapRef) sbDeleteMapObject(sbSelectedMapRef);
-});
+document.getElementById('pcDeleteBtn')?.addEventListener('click',()=>{ if(sbSelectedPcRef) sbRemovePC(sbSelectedPcRef); });
+document.getElementById('mapDeleteBtn')?.addEventListener('click',()=>{ if(sbSelectedMapRef) sbDeleteMapObject(sbSelectedMapRef); });
 document.getElementById('mapRotateBtn')?.addEventListener('click',()=>{
   const obj=sbSelectedMapRef;
   if(!obj) return;
@@ -1275,23 +1228,13 @@ document.getElementById('sandboxSaveBtn').addEventListener('click',async()=>{
   try{
     for(const z of sbZones.filter(z=>z.posDirty)){
       const x=Math.round(z.bx||0),y=Math.round(z.by||0);
-      await _api.patch(`/zones/${z.id}`,[{
-        id:z.id,name:z.name,cost:z.cost??0,
-        cpu:z.cpu||'string',gpu:z.gpu||'string',ram:z.ram||'string',ssd:z.ssd||'string',monitor:z.monitor||'string',
-        x,y,
-      }],{params:{club_id:CLUB_ID}});
+      await _api.patch(`/zones/${z.id}`,[{id:z.id,name:z.name,cost:z.cost??0,cpu:z.cpu||'string',gpu:z.gpu||'string',ram:z.ram||'string',ssd:z.ssd||'string',monitor:z.monitor||'string',x,y}],{params:{club_id:CLUB_ID}});
       z._origX=x; z._origY=y; z.posDirty=false; z._hasStoredPos=true;
       done.zones++;
     }
-    for(const id of [...sbPcDeletedIds]){
-      await _api.delete(`/computers/${id}`,{params:{club_id:CLUB_ID}});
-      done.del++;
-    }
+    for(const id of [...sbPcDeletedIds]){ await _api.delete(`/computers/${id}`,{params:{club_id:CLUB_ID}}); done.del++; }
     sbPcDeletedIds=[];
-    for(const id of [...sbMapDeletedIds]){
-      await _api.delete(`/map-objects/${id}`,{params:{club_id:CLUB_ID}});
-      done.del++;
-    }
+    for(const id of [...sbMapDeletedIds]){ await _api.delete(`/map-objects/${id}`,{params:{club_id:CLUB_ID}}); done.del++; }
     sbMapDeletedIds=[];
     const newPcs=[];
     sbZones.forEach(z=>z.computers.filter(p=>p.isNew).forEach(pc=>{
@@ -1300,9 +1243,7 @@ document.getElementById('sandboxSaveBtn').addEventListener('click',async()=>{
     if(newPcs.length){
       await _api.post('/computers/',newPcs,{params:{club_id:CLUB_ID}});
       done.pcs+=newPcs.length;
-      sbZones.forEach(z=>z.computers.forEach(p=>{
-        if(p.isNew){ p.isNew=false; p.dirty=false; p._orig={number:p.number,x:p.x,y:p.y,zone_id:p.zone_id}; }
-      }));
+      sbZones.forEach(z=>z.computers.forEach(p=>{ if(p.isNew){ p.isNew=false; p.dirty=false; p._orig={number:p.number,x:p.x,y:p.y,zone_id:p.zone_id}; } }));
     }
     for(const z of sbZones){
       for(const pc of z.computers.filter(p=>p.dirty&&!p.isNew&&p.id)){
@@ -1315,18 +1256,14 @@ document.getElementById('sandboxSaveBtn').addEventListener('click',async()=>{
       }
     }
     for(const obj of sbMapObjects.filter(o=>o.isNew)){
-      const res=await _api.post(`/map-objects/${CLUB_ID}/map-objects/`,{
-        type:obj.type,label:obj.label,x:obj.x,y:obj.y,width:obj.width,height:obj.height,rotation:obj.rotation||0,
-      });
+      const res=await _api.post(`/map-objects/${CLUB_ID}/map-objects/`,{type:obj.type,label:obj.label,x:obj.x,y:obj.y,width:obj.width,height:obj.height,rotation:obj.rotation||0});
       const created=res.data;
       obj.id=created.id; obj.club_id=created.club_id??CLUB_ID;
       obj.isNew=false; obj.dirty=false;
       done.map++;
     }
     for(const obj of sbMapObjects.filter(o=>o.dirty&&!o.isNew&&o.id)){
-      await _api.patch(`/map-objects/${obj.id}`,{
-        type:obj.type,label:obj.label,x:obj.x,y:obj.y,width:obj.width,height:obj.height,rotation:obj.rotation||0,
-      },{params:{club_id:CLUB_ID}});
+      await _api.patch(`/map-objects/${obj.id}`,{type:obj.type,label:obj.label,x:obj.x,y:obj.y,width:obj.width,height:obj.height,rotation:obj.rotation||0},{params:{club_id:CLUB_ID}});
       obj.dirty=false;
       done.map++;
     }
@@ -1358,19 +1295,140 @@ const PKG_TEMPLATES=[
 let pkgState={};
 
 async function loadPricingZones(){
-  // Сбрасываем pkgState при каждой загрузке вкладки,
-  // чтобы цены пересчитывались от текущего basePrice
   pkgState={};
   const sel=document.getElementById('pricingZoneSelect');
-  if(!CLUB_ID){ sel.innerHTML='<option>Клуб не найден</option>'; return; }
+  const vsel=document.getElementById('pricingViewZoneSelect');
+  if(!CLUB_ID){
+    sel.innerHTML='<option>Клуб не найден</option>';
+    vsel.innerHTML='<option>Клуб не найден</option>';
+    return;
+  }
   try{
     const res=await _api.get('/zones/',{params:{club_id:CLUB_ID}});
-    if(!res.data.length){ sel.innerHTML='<option value="">Нет зон</option>'; return; }
-    sel.innerHTML=res.data.map(z=>`<option value="${z.id}">${z.name} (ID: ${z.id})</option>`).join('');
-  }catch(e){ sel.innerHTML='<option value="">Ошибка загрузки</option>'; }
+    if(!res.data.length){
+      sel.innerHTML='<option value="">Нет зон</option>';
+      vsel.innerHTML='<option value="">Нет зон</option>';
+      return;
+    }
+    const opts=res.data.map(z=>`<option value="${z.id}">${z.name} (ID: ${z.id})</option>`).join('');
+    sel.innerHTML=opts;
+    vsel.innerHTML='<option value="">— выберите зону —</option>'+opts;
+  }catch(e){
+    sel.innerHTML='<option value="">Ошибка загрузки</option>';
+    vsel.innerHTML='<option value="">Ошибка загрузки</option>';
+  }
   renderPackages();
 }
 
+// ── EXISTING PACKAGES ──
+document.getElementById('pricingViewZoneSelect').addEventListener('change',function(){
+  const zid=parseInt(this.value);
+  if(!zid){
+    document.getElementById('existingPackagesList').innerHTML=`<div class="empty-state" style="padding:20px 0;"><span class="material-symbols-outlined">payments</span><p>Выберите зону для просмотра пакетов</p></div>`;
+    return;
+  }
+  loadExistingPackages(zid);
+});
+
+async function loadExistingPackages(zoneId){
+  const container=document.getElementById('existingPackagesList');
+  container.innerHTML=`<div class="empty-state" style="padding:16px 0;"><span class="spinner-inline"></span> Загрузка...</div>`;
+  try{
+    const res=await _api.get('/pricing/',{params:{club_id:CLUB_ID}});
+    const pkgs=(res.data||[]).filter(p=>p.zone_id===zoneId);
+    if(!pkgs.length){
+      container.innerHTML=`<div class="empty-state" style="padding:16px 0;"><span class="material-symbols-outlined">payments</span><p>Пакетов нет для этой зоны</p></div>`;
+      return;
+    }
+    container.innerHTML='';
+    pkgs.forEach(pkg=>container.appendChild(buildExistingPkgEl(pkg)));
+  }catch(e){
+    container.innerHTML=`<div class="empty-state" style="color:var(--danger);padding:16px 0;">Ошибка: ${e.response?.status||e.message}</div>`;
+  }
+}
+
+function buildExistingPkgEl(pkg){
+  const el=document.createElement('div');
+  el.className='pkg-existing';
+  el.dataset.id=pkg.id;
+  el.innerHTML=`
+    <div class="pkg-existing-header">
+      <div>
+        <div class="pkg-existing-name">${pkg.name}</div>
+        <div class="pkg-existing-meta">${pkg.duration} мин · ${fmtTime(pkg.start_time)} – ${fmtTime(pkg.end_time)} · ${pkg.is_package?'пакет':'разовый'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="pkg-existing-price">${pkg.price} ₸</div>
+        <button class="icon-btn" onclick="togglePkgEdit(${pkg.id})" title="Редактировать"><span class="material-symbols-outlined">edit</span></button>
+        <button class="icon-btn danger" onclick="deletePkg(${pkg.id},${pkg.zone_id})" title="Удалить"><span class="material-symbols-outlined">delete</span></button>
+      </div>
+    </div>
+    <div class="pkg-edit-form" id="pkgedit_${pkg.id}">
+      <div class="pkg-edit-row">
+        <div class="field-group"><label>Название</label><input type="text" data-f="name" value="${pkg.name}"></div>
+        <div class="field-group"><label>Цена (₸)</label><input type="number" data-f="price" value="${pkg.price}" min="0"></div>
+      </div>
+      <div class="pkg-edit-row">
+        <div class="field-group"><label>Начало</label><input type="time" data-f="start_time" value="${fmtTime(pkg.start_time)}"></div>
+        <div class="field-group"><label>Конец</label><input type="time" data-f="end_time" value="${fmtTime(pkg.end_time)}"></div>
+      </div>
+      <div class="pkg-edit-row">
+        <div class="field-group"><label>Длит. (мин)</label><input type="number" data-f="duration" value="${pkg.duration}" min="1"></div>
+        <div class="field-group">
+          <label>Тип</label>
+          <select data-f="is_package" style="width:100%;background:var(--field);border:1px solid #555;border-radius:10px;padding:13px;color:white;font-size:13px;font-family:'Montserrat',sans-serif;">
+            <option value="false" ${!pkg.is_package?'selected':''}>Разовый</option>
+            <option value="true" ${pkg.is_package?'selected':''}>Пакет</option>
+          </select>
+        </div>
+      </div>
+      <button class="save-zone-btn" id="pkgsavebtn_${pkg.id}" onclick="savePkgEdit(${pkg.id},${pkg.zone_id})">Сохранить изменения</button>
+      <button class="cancel-zone-btn" onclick="togglePkgEdit(${pkg.id})">Отмена</button>
+    </div>`;
+  return el;
+}
+
+function togglePkgEdit(id){
+  const f=document.getElementById(`pkgedit_${id}`);
+  if(f) f.classList.toggle('open');
+}
+
+async function savePkgEdit(pkgId,zoneId){
+  const form=document.getElementById(`pkgedit_${pkgId}`);
+  const btn=document.getElementById(`pkgsavebtn_${pkgId}`);
+  const get=f=>form.querySelector(`[data-f="${f}"]`)?.value.trim();
+  const payload={
+    name:get('name'),
+    start_time:`${get('start_time')}:00`,
+    end_time:`${get('end_time')}:00`,
+    duration:parseInt(get('duration'))||0,
+    price:parseFloat(get('price'))||0,
+    is_package:get('is_package')==='true',
+    zone_id:zoneId,
+  };
+  btn.disabled=true; btn.textContent='Сохранение...';
+  try{
+    await _api.patch(`/pricing/${pkgId}`,payload,{params:{club_id:CLUB_ID}});
+    toast('✅ Пакет обновлён','green');
+    loadExistingPackages(zoneId);
+  }catch(e){
+    const d=e.response?.data?.detail;
+    toast(`❌ ${typeof d==='string'?d:JSON.stringify(d)||e.message}`,'red');
+    btn.disabled=false; btn.textContent='Сохранить изменения';
+  }
+}
+
+async function deletePkg(pkgId,zoneId){
+  if(!confirm('Удалить пакет?')) return;
+  try{
+    await _api.delete(`/pricing/${pkgId}`,{params:{club_id:CLUB_ID}});
+    const el=document.querySelector(`.pkg-existing[data-id="${pkgId}"]`);
+    if(el){ el.style.opacity='0'; el.style.transition='0.2s'; setTimeout(()=>{ el.remove(); const c=document.getElementById('existingPackagesList'); if(!c.querySelector('.pkg-existing')) c.innerHTML=`<div class="empty-state" style="padding:16px 0;"><span class="material-symbols-outlined">payments</span><p>Пакетов нет</p></div>`; },200); }
+    toast('Пакет удалён');
+  }catch(e){ toast(`❌ Ошибка: ${e.response?.status||e.message}`,'red'); }
+}
+
+// ── CREATE PACKAGES ──
 function getBasePrice(){ return parseFloat(document.getElementById('basePrice').value)||0; }
 function calcPkgPrice(tpl,bp){ const raw=bp*tpl.hours; return tpl.discount>0?Math.round(raw*(1-tpl.discount/100)):Math.round(raw); }
 
@@ -1433,20 +1491,18 @@ document.getElementById('savePricingBtn').addEventListener('click',async()=>{
   if(!sel.length){ showError('pricingError','Выберите хотя бы один пакет!'); return; }
 
   const payloads=sel.map(tpl=>({
-    name: tpl.label,
-    start_time: `${st}:00`,
-    end_time: `${et}:00`,
-    duration: tpl.duration,
-    price: pkgState[tpl.hours].price,
-    is_package: tpl.hours>1,
-    zone_id: zoneId
+    name:tpl.label,
+    start_time:`${st}:00`,
+    end_time:`${et}:00`,
+    duration:tpl.duration,
+    price:pkgState[tpl.hours].price,
+    is_package:tpl.hours>1,
+    zone_id:zoneId,
   }));
 
   const btn=document.getElementById('savePricingBtn');
   btn.disabled=true;
   btn.innerHTML='<span class="spinner-inline"></span>Создание...';
-
-  // Скрываем старые сообщения
   document.getElementById('pricingError').classList.remove('visible');
   document.getElementById('pricingSuccess').classList.remove('visible');
 
@@ -1462,25 +1518,23 @@ document.getElementById('savePricingBtn').addEventListener('click',async()=>{
     }
   }
 
-  btn.disabled=false;
-  btn.textContent='Создать прайсинг';
+  btn.disabled=false; btn.textContent='Создать пакеты';
 
-  // FIX: показываем результат напрямую, без вызова showMsg чтобы не было конфликта
   if(results.fail===0){
     const s=document.getElementById('pricingSuccess');
     s.textContent=`✅ Создано ${results.ok} пакет(ов)!`;
     s.classList.add('visible');
+    // Обновить список если просматривается та же зона
+    const vsel=document.getElementById('pricingViewZoneSelect');
+    if(parseInt(vsel.value)===zoneId) loadExistingPackages(zoneId);
   } else if(results.ok>0){
-    const s=document.getElementById('pricingSuccess');
-    s.textContent=`✅ Создано: ${results.ok}`;
-    s.classList.add('visible');
-    const e=document.getElementById('pricingError');
-    e.textContent=`❌ Ошибки (${results.fail}):\n${results.errors.join('\n')}`;
-    e.classList.add('visible');
+    document.getElementById('pricingSuccess').textContent=`✅ Создано: ${results.ok}`;
+    document.getElementById('pricingSuccess').classList.add('visible');
+    document.getElementById('pricingError').textContent=`❌ Ошибки (${results.fail}):\n${results.errors.join('\n')}`;
+    document.getElementById('pricingError').classList.add('visible');
   } else {
-    const e=document.getElementById('pricingError');
-    e.textContent=`❌ Все запросы провалились:\n${results.errors.join('\n')}`;
-    e.classList.add('visible');
+    document.getElementById('pricingError').textContent=`❌ Все запросы провалились:\n${results.errors.join('\n')}`;
+    document.getElementById('pricingError').classList.add('visible');
   }
 });
 
@@ -1513,7 +1567,7 @@ async function deleteStaff(id,btn){
   try{
     await _api.delete(`/clubs/${CLUB_ID}/staff`,{params:{staff_id:id}});
     const item=document.querySelector(`.staff-item[data-id="${id}"]`);
-    if(item){item.style.opacity='0';item.style.transition='0.2s';setTimeout(()=>{item.remove();if(!document.querySelector('.staff-item'))document.getElementById('staffList').innerHTML='<div class="empty-state"><span class="material-symbols-outlined">group</span><p>Сотрудников пока нет</p></div>';},200);}
+    if(item){ item.style.opacity='0'; item.style.transition='0.2s'; setTimeout(()=>{ item.remove(); if(!document.querySelector('.staff-item')) document.getElementById('staffList').innerHTML='<div class="empty-state"><span class="material-symbols-outlined">group</span><p>Сотрудников пока нет</p></div>'; },200); }
     toast('Сотрудник удалён');
   }catch(e){ showError('staffError',`❌ Ошибка: ${e.response?.status||e.message}`); btn.disabled=false; }
 }
