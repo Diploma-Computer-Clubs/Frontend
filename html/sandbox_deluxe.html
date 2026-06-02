@@ -168,30 +168,65 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 .hint-box.show{display:block;}
 .tips{font-size:9px;color:var(--muted);line-height:1.8;padding:0 2px;}
 
-.canvas-wrap{flex:1;position:relative;overflow:hidden;background:var(--bg);cursor:grab;}
+.canvas-wrap{flex:1;position:relative;overflow:hidden;background:#080808;cursor:grab;}
 .canvas-wrap.panning{cursor:grabbing;}
-.canvas-wrap::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,#3a3a3a 1px,transparent 1px);background-size:28px 28px;pointer-events:none;opacity:0.4;}
-.canvas{position:absolute;transform-origin:0 0;}
+.canvas{position:absolute;transform-origin:0 0;min-width:1280px;min-height:820px;background:#0a0a0a;}
 
-.zone-block{position:absolute;background:rgba(28,28,28,0.97);border:2px solid;border-radius:11px;padding:8px;cursor:grab;user-select:none;box-shadow:0 4px 20px rgba(0,0,0,0.5);transition:box-shadow 0.2s;}
-.zone-block:active{cursor:grabbing;}
-.zone-block.dragging{box-shadow:0 14px 44px rgba(0,0,0,0.8);z-index:999;}
-.zb-head{display:flex;align-items:center;gap:5px;margin-bottom:6px;pointer-events:none;}
-.zb-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.zb-name{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;}
-.seat-grid{display:grid;gap:3px;}
-.seat{width:32px;height:32px;border-radius:5px;border:1.5px solid;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;position:relative;transition:0.1s;flex-shrink:0;}
-.seat.occupied{cursor:default;}
-.seat.empty{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.06);color:#2a2a2a;cursor:default;}
-.seat.placeable{cursor:crosshair;color:#444;}
-.seat.placeable:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);}
-.seat-x{position:absolute;inset:0;background:rgba(220,40,40,0.88);border-radius:4px;display:none;align-items:center;justify-content:center;font-size:13px;color:#fff;cursor:pointer;}
-.seat.occupied:hover .seat-x{display:flex;}
-.add-row-btn{width:100%;margin-top:4px;padding:4px;border-radius:4px;border:1px dashed rgba(255,255,255,0.08);background:transparent;color:rgba(255,255,255,0.18);font-size:8px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;text-transform:uppercase;transition:0.2s;}
-.add-row-btn:hover{border-color:rgba(255,255,255,0.25);color:rgba(255,255,255,0.4);}
-.zoom-ctrl{position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:4px;z-index:100;}
-.zoom-btn{width:30px;height:30px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.2s;}
-.zoom-btn:hover{background:var(--card);}
+.floor-chrome{position:absolute;left:0;right:0;top:28px;text-align:center;pointer-events:none;z-index:5;}
+.floor-chrome h2{font-size:22px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;}
+.floor-chrome p{font-size:11px;color:#888;margin-top:6px;letter-spacing:0.3px;}
+
+.zone-label{position:absolute;display:flex;align-items:center;gap:6px;padding:4px 8px;cursor:grab;user-select:none;z-index:75;touch-action:none;}
+.zone-label::before{content:'';position:absolute;inset:-12px;z-index:-1;}
+.zone-label:active,.zone-label.dragging{cursor:grabbing;}
+.zone-label.dragging{z-index:300;opacity:0.95;}
+.zone-label.is-active .zone-label-text{color:#fff;}
+.zone-label-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.zone-label-text{font-size:12px;font-weight:600;color:#e8e8e8;text-transform:lowercase;letter-spacing:0.2px;pointer-events:none;}
+.map-pc{position:absolute;width:26px;height:26px;border-radius:3px;border:2px solid;background:#f5f5f5;color:#111;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:grab;user-select:none;z-index:95;touch-action:none;box-sizing:border-box;}
+.map-pc::before{content:'';position:absolute;inset:-10px;z-index:-1;}
+.map-pc:active,.map-pc.dragging{cursor:grabbing;}
+.map-pc.sel{outline:2px dashed rgba(255,255,255,0.6);outline-offset:2px;z-index:100;}
+.map-pc.is-new{box-shadow:0 0 0 2px var(--green);}
+.map-pc.dragging{z-index:290;opacity:0.95;}
+.map-pc-x{position:absolute;top:-7px;right:-7px;width:16px;height:16px;border-radius:50%;background:#c62828;color:#fff;font-size:10px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:2;border:1px solid #000;line-height:1;}
+.map-pc:hover .map-pc-x,.map-pc.sel .map-pc-x{display:flex;}
+.canvas-wrap.pc-placing{cursor:crosshair;}
+.pc-actions{margin-top:6px;}
+.zoom-ctrl{position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:4px;z-index:500;}
+.zoom-btn{width:30px;height:30px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#ccc;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.2s;}
+.zoom-btn:hover{background:#252525;color:#fff;}
+
+.map-palette{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.map-palette-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 4px;min-height:40px;border-radius:6px;background:#1a1a1a;border:1px solid #333;cursor:pointer;transition:0.2s;color:#ccc;}
+.map-palette-btn .map-glyph{font-size:10px;font-weight:700;letter-spacing:0.5px;color:#fff;line-height:1;}
+.map-palette-btn span{font-size:7px;font-weight:600;color:#666;text-align:center;line-height:1.2;text-transform:uppercase;}
+.map-palette-btn:hover{border-color:#555;}
+.map-palette-btn.active{border-color:#fff;background:#222;color:#fff;}
+.map-obj{position:absolute;cursor:grab;user-select:none;z-index:110;box-sizing:border-box;touch-action:none;}
+.map-obj::before{content:'';position:absolute;inset:-16px;z-index:0;}
+.map-obj:active,.map-obj.dragging{cursor:grabbing;}
+.map-obj.sel{outline:2px dashed rgba(255,255,255,0.55);outline-offset:3px;z-index:160;}
+.map-obj.dragging{z-index:280;opacity:0.95;}
+.map-obj-wall{background:#fff;border:none;border-radius:0;box-shadow:none;z-index:105;}
+.map-obj-wall::before{inset:-18px;}
+.map-obj-wall.sel{outline:2px dashed var(--green);outline-offset:2px;z-index:165;}
+.map-obj .map-obj-lbl,.map-obj .desk-bar{pointer-events:none;}
+.map-obj-facility{background:transparent;border:2px solid #fff;border-radius:2px;display:flex;align-items:center;justify-content:center;padding:4px;}
+.map-obj-facility .map-obj-lbl{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1px;pointer-events:none;text-align:center;line-height:1.2;}
+.map-obj-desk{background:transparent;border:none;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:0;gap:4px;}
+.map-obj-desk .desk-bar{width:100%;height:10px;background:#fff;border-radius:1px;}
+.map-obj-desk .map-obj-lbl{font-size:9px;font-weight:600;color:#ccc;text-transform:lowercase;letter-spacing:0;max-width:140px;line-height:1.3;white-space:normal;}
+.map-obj-entrance{background:transparent;border:2px solid #fff;border-radius:0;border-top:none;border-left:none;border-right:none;height:auto!important;min-height:4px;}
+.map-obj-entrance .map-obj-lbl{font-size:10px;font-weight:700;color:#fff;margin-top:6px;}
+.map-obj-del{position:absolute;top:-8px;right:-8px;width:18px;height:18px;border-radius:50%;background:#c62828;color:#fff;font-size:11px;display:none;align-items:center;justify-content:center;cursor:pointer;line-height:1;z-index:3;border:1px solid #000;pointer-events:auto;}
+.map-obj:hover .map-obj-del,.map-obj.sel .map-obj-del{display:flex;}
+.map-actions{display:flex;gap:4px;}
+.map-actions .btn{flex:1;justify-content:center;padding:6px 4px;font-size:8px;}
+.stats-row.stats-3 .stat-pill{min-width:0;}
+.stats-row.stats-3 .stat-val{font-size:15px;}
+.sandbox-panel .zone-chip.sel{border-color:#fff;background:#222;}
+.sandbox-panel .zone-chip.sel .z-dot{background:#fff!important;box-shadow:none;}
 
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:none;justify-content:center;align-items:center;z-index:3000;padding:20px;}
 .modal-overlay.active{display:flex;}
@@ -319,30 +354,41 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
   <div class="sandbox-layout">
     <div class="sandbox-panel">
       <span class="p-label">Статистика</span>
-      <div class="stats-row">
+      <div class="stats-row stats-3">
         <div class="stat-pill"><div class="stat-val" id="statPc">0</div><div class="stat-lbl">ПК</div></div>
         <div class="stat-pill"><div class="stat-val" id="statZones">0</div><div class="stat-lbl">Зон</div></div>
+        <div class="stat-pill"><div class="stat-val" id="statMap">0</div><div class="stat-lbl">Объект</div></div>
       </div>
+      <div class="p-divider"></div>
+      <span class="p-label">План клуба</span>
+      <div class="map-palette" id="mapPalette"></div>
+      <div class="map-actions" id="mapObjActions" style="display:none;">
+        <button type="button" class="btn btn-ghost" id="mapRotateBtn" title="Повернуть">↻</button>
+        <button type="button" class="btn btn-danger" id="mapDeleteBtn">Удалить</button>
+      </div>
+      <div class="hint-box" id="mapHint">Объект → клик на план · стены белые линии</div>
       <div class="p-divider"></div>
       <span class="p-label">Зоны</span>
       <div class="zone-chips" id="sandboxChips"></div>
       <div class="p-divider"></div>
-      <span class="p-label">Выбранная</span>
-      <div class="cols-row">
-        <label>Столбцов:</label>
-        <input class="cols-input" type="number" id="colsInput" value="6" min="1" max="20" disabled>
-      </div>
+      <span class="p-label">Зона для нового ПК</span>
       <button class="add-pc-btn" id="addPcBtn" disabled>
-        <span>＋</span><span id="addLabel">Добавить ПК</span>
+        <span>＋</span><span id="addLabel">Поставить ПК</span>
       </button>
-      <div class="hint-box" id="hint">
-        Кликни пустой слот → ПК<br>✕ на ПК → удалить<br>Тяни блок → переставить
+      <div class="hint-box" id="hint">Выбери зону → «Поставить ПК» → клик на план</div>
+      <div class="pc-actions" id="pcActions" style="display:none;">
+        <span class="p-label">Выбранный ПК</span>
+        <div class="field-group" style="margin-bottom:8px;">
+          <label style="position:static;display:block;font-size:9px;color:var(--muted);margin-bottom:4px;">Зона</label>
+          <select id="pcZoneSelect" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px;font-size:10px;font-family:'Montserrat',sans-serif;"></select>
+        </div>
+        <button type="button" class="btn btn-danger" id="pcDeleteBtn" style="width:100%;justify-content:center;">Удалить ПК</button>
       </div>
       <div class="p-divider"></div>
-      <div class="tips">🖱 Колёсико — масштаб<br>🖐 Тяни фон — прокрутка</div>
+      <div class="tips">Колёсико — масштаб<br>Фон — прокрутка<br>Стены рисуются первым слоем</div>
       <button class="btn btn-green" id="sandboxSaveBtn" style="margin-top:auto;">💾 Сохранить</button>
     </div>
-    <div class="canvas-wrap" id="wrap">
+    <div class="canvas-wrap floor-plan" id="wrap">
       <div class="canvas" id="canvas"></div>
       <div class="zoom-ctrl">
         <button class="zoom-btn" id="zoomIn">+</button>
@@ -686,17 +732,118 @@ document.getElementById('saveZonesBtn').addEventListener('click',async()=>{
 
 // ── TAB 3: SANDBOX ──
 const COLORS=['#00e5ff','#ff6b35','#a78bfa','#fbbf24','#34d399','#f472b6','#60a5fa','#4ade80','#fb923c','#e879f9','#38bdf8','#facc15'];
-let sbZones=[],sbActiveId=null,sbPlacing=false;
-let scale=1,px=20,py=20,panning=false,ps={},po={};
+const MAP_OBJECT_TYPES=[
+  {type:'wall',label:'Стена',glyph:'━━',w:120,h:5},
+  {type:'wall',label:'Стена ⟂',glyph:'┃',w:5,h:100},
+  {type:'toilet',label:'WC',glyph:'WC',w:48,h:40},
+  {type:'admin_desk',label:'Стойка адм.',glyph:'▭',w:100,h:44},
+  {type:'entrance',label:'Вход',glyph:'⌐',w:64,h:36},
+  {type:'reception',label:'Ресепшн',glyph:'▭',w:90,h:40},
+  {type:'stairs',label:'Лестница',glyph:'▤',w:44,h:80},
+  {type:'storage',label:'Склад',glyph:'□',w:56,h:56},
+];
+const SB_SEAT=26, SB_GAP=8;
+let sbZones=[],sbActiveId=null,sbClubName='';
+let sbMapObjects=[],sbMapPlacingDef=null,sbSelectedMapId=null,sbSelectedMapRef=null;
+let sbMapDeletedIds=[],sbPcDeletedIds=[];
+let sbPcPlacing=false,sbSelectedPcRef=null;
+let scale=1,px=20,py=20,panning=false,ps={},po={},sbMapDragging=false,sbPcDragging=false;
 
 const wrap=document.getElementById('wrap');
 const canvas=document.getElementById('canvas');
 
 function applyT(){ canvas.style.transform=`translate(${px}px,${py}px) scale(${scale})`; }
 
-wrap.addEventListener('mousedown',e=>{ const t=e.target; if(t===wrap||t===canvas){ panning=true; ps={x:e.clientX,y:e.clientY}; po={x:px,y:py}; wrap.classList.add('panning'); } });
-window.addEventListener('mousemove',e=>{ if(!panning) return; px=po.x+(e.clientX-ps.x); py=po.y+(e.clientY-ps.y); applyT(); });
-window.addEventListener('mouseup',()=>{ panning=false; wrap.classList.remove('panning'); });
+function sbScreenToCanvas(cx,cy){
+  const r=wrap.getBoundingClientRect();
+  return{x:(cx-r.left-px)/scale,y:(cy-r.top-py)/scale};
+}
+function sbMapTypeDef(type){
+  const m={toilet:'WC',admin_desk:'стойка администратора',entrance:'вход',reception:'ресепшн',stairs:'лестница',storage:'склад',wall:''};
+  return MAP_OBJECT_TYPES.find(t=>t.type===type)||{type,label:m[type]||type,glyph:'□',w:56,h:40};
+}
+
+function sbZoneHasStoredPos(z){
+  return z.x!=null&&z.y!=null&&(z.x!==0||z.y!==0);
+}
+
+function sbLayoutUnpositionedZones(){
+  let bx=70,by=130;
+  sbZones.filter(z=>!z._hasStoredPos).forEach(zone=>{
+    zone.bx=bx; zone.by=by;
+    bx+=140; if(bx>1000){ bx=70; by+=80; }
+  });
+}
+
+function sbPcsLookLikeGrid(pcs){
+  if(!pcs.length) return false;
+  const mx=Math.max(...pcs.map(p=>p.x??0));
+  const my=Math.max(...pcs.map(p=>p.y??0));
+  return mx<24&&my<24;
+}
+
+function sbNormalizePcCoords(zone){
+  const pcs=zone.computers;
+  if(!pcs.length||!sbPcsLookLikeGrid(pcs)) return;
+  const step=SB_SEAT+SB_GAP;
+  const baseX=(zone.bx||0)+8;
+  const baseY=(zone.by||0)+28;
+  pcs.forEach((pc,i)=>{
+    const gx=pc.x??(i%4);
+    const gy=pc.y??Math.floor(i/4);
+    pc.x=baseX+gx*step;
+    pc.y=baseY+gy*step;
+  });
+}
+
+function sbFindPcZone(pc){
+  return sbZones.find(z=>z.computers.includes(pc));
+}
+
+function sbMarkPcDirty(pc){
+  if(pc.isNew||!pc.id||!pc._orig) return;
+  const o=pc._orig;
+  if(o.x!==pc.x||o.y!==pc.y||o.number!==pc.number||o.zone_id!==pc.zone_id) pc.dirty=true;
+}
+
+function sbAllPcs(){
+  return sbZones.flatMap(z=>z.computers);
+}
+
+function sbNextPcNumber(){
+  const all=sbAllPcs();
+  return all.length?Math.max(...all.map(p=>p.number))+1:1;
+}
+
+wrap.addEventListener('mousedown',e=>{
+  const t=e.target;
+  if(sbPcPlacing&&sbActiveId&&(t===wrap||t===canvas)){
+    e.preventDefault();
+    const {x,y}=sbScreenToCanvas(e.clientX,e.clientY);
+    sbAddPcAt(sbActiveId,x,y);
+    sbSetPcPlacing(false);
+    return;
+  }
+  if(sbMapPlacingDef && (t===wrap||t===canvas)){
+    e.preventDefault();
+    const {x,y}=sbScreenToCanvas(e.clientX,e.clientY);
+    const def=sbMapPlacingDef;
+    const lbl=def.type==='wall'?'':(def.label||'');
+    sbMapObjects.push({isNew:true,dirty:false,type:def.type,label:lbl,x:Math.round(x-def.w/2),y:Math.round(y-def.h/2),width:def.w,height:def.h,rotation:0});
+    sbMapPlacingDef=null; sbRenderMapPalette(); sbRenderAll(); toast(`${def.label} добавлен`,'green');
+    return;
+  }
+  if(sbMapDragging||sbPcDragging) return;
+  if(t===wrap||t===canvas){ panning=true; ps={x:e.clientX,y:e.clientY}; po={x:px,y:py}; wrap.classList.add('panning'); }
+});
+wrap.addEventListener('click',e=>{
+  if(e.target.closest('.zone-label')||e.target.closest('.map-pc')||e.target.closest('.map-obj')) return;
+  if(sbMapPlacingDef||sbPcPlacing) return;
+  sbSelectedMapId=null; sbSelectedMapRef=null; sbSelectedPcRef=null;
+  sbUpdateMapActions(); sbUpdatePcActions();
+});
+window.addEventListener('mousemove',e=>{ if(!panning||sbMapDragging||sbPcDragging) return; px=po.x+(e.clientX-ps.x); py=po.y+(e.clientY-ps.y); applyT(); });
+window.addEventListener('mouseup',()=>{ if(sbMapDragging||sbPcDragging) return; panning=false; wrap.classList.remove('panning'); });
 wrap.addEventListener('wheel',e=>{ e.preventDefault(); scale=Math.min(2.5,Math.max(0.25,scale+(e.deltaY>0?-0.09:0.09))); applyT(); },{passive:false});
 document.getElementById('zoomIn').onclick=()=>{ scale=Math.min(2.5,scale+0.15); applyT(); };
 document.getElementById('zoomOut').onclick=()=>{ scale=Math.max(0.25,scale-0.15); applyT(); };
@@ -704,103 +851,380 @@ document.getElementById('zoomOut').onclick=()=>{ scale=Math.max(0.25,scale-0.15)
 async function initSandbox(){
   if(!CLUB_ID){ toast('Клуб не найден','red'); return; }
   try{
+    try{
+      const cr=await _api.get(`/clubs/${CLUB_ID}`);
+      sbClubName=cr.data.name||'';
+      const badge=document.getElementById('clubBadge');
+      if(sbClubName&&badge){ badge.textContent=sbClubName; badge.style.display=''; }
+    }catch{}
     const zonesRes=await _api.get('/zones/',{params:{club_id:CLUB_ID}});
     const zonesData=zonesRes.data;
     if(!zonesData.length){ toast('Зон нет. Сначала создайте зоны.','red'); return; }
-    let bx=30,by=30;
     sbZones=zonesData.map((z,i)=>{
-      const color=COLORS[i%COLORS.length];
-      const obj={id:z.id,name:z.name,color,bx,by,cols:6,computers:[],visible:true};
-      bx+=260; if(bx>1000){bx=30;by+=200;}
-      return obj;
+      const hasPos=sbZoneHasStoredPos(z);
+      const px=hasPos?Math.round(z.x):0;
+      const py=hasPos?Math.round(z.y):0;
+      return{
+        id:z.id,name:z.name,cost:z.cost??0,cpu:z.cpu,gpu:z.gpu,ram:z.ram,ssd:z.ssd,monitor:z.monitor,
+        color:COLORS[i%COLORS.length],bx:px,by:py,_origX:px,_origY:py,_hasStoredPos:hasPos,posDirty:false,
+        computers:[],visible:true,
+      };
     });
-    for(let i=0;i<sbZones.length;i++){
-      const zone=sbZones[i];
+    for(const zone of sbZones){
       try{
         const res=await _api.get('/computers/',{params:{zone_id:zone.id}});
-        zone.computers=res.data.map(pc=>({id:pc.id,number:pc.number,x:pc.x,y:pc.y,isNew:false,zone_id:zone.id}));
+        zone.computers=res.data.map(pc=>{
+          const o={number:pc.number,x:pc.x??0,y:pc.y??0,zone_id:zone.id};
+          return{
+            id:pc.id,number:pc.number,specification:pc.specification||'string',
+            x:o.x,y:o.y,isNew:false,dirty:false,zone_id:zone.id,_orig:{...o},
+          };
+        });
         zone.computers.sort((a,b)=>a.number-b.number);
-        const maxX=Math.max(0,...zone.computers.map(p=>p.x));
-        if(maxX>0) zone.cols=maxX+1;
       }catch{}
     }
-    applyT(); sbRenderAll();
+    sbLayoutUnpositionedZones();
+    sbZones.forEach(z=>sbNormalizePcCoords(z));
+    sbMapObjects=[]; sbMapDeletedIds=[]; sbPcDeletedIds=[];
+    sbSelectedMapId=null; sbSelectedMapRef=null; sbSelectedPcRef=null;
+    sbSetPcPlacing(false);
+    try{
+      const mapRes=await _api.get(`/map-objects/${CLUB_ID}/map-objects/`);
+      sbMapObjects=(mapRes.data||[]).map(o=>({...o,isNew:false,dirty:false,rotation:o.rotation||0}));
+    }catch{ sbMapObjects=[]; }
+    sbBuildMapPalette();
+    sbCenterView();
+    sbRenderAll();
   }catch(e){ toast(`Ошибка загрузки зон: ${e.message}`,'red'); }
+}
+
+function sbCenterView(){
+  const r=wrap.getBoundingClientRect();
+  px=Math.max(20,(r.width-900*scale)/2);
+  py=50;
+  applyT();
+}
+
+function sbRenderFloorChrome(){
+  const chrome=document.createElement('div');
+  chrome.className='floor-chrome';
+  chrome.innerHTML=`<h2>${sbClubName||'План клуба'}</h2><p>ПК и подписи зон — на плане · x,y в API</p>`;
+  canvas.appendChild(chrome);
 }
 
 function sbRenderAll(){
   canvas.innerHTML='';
-  sbZones.forEach(z=>{ if(z.visible!==false) sbRenderBlock(z); });
-  sbUpdateStats(); sbRenderPanel();
+  sbRenderFloorChrome();
+  sbRenderMapObjects('wall');
+  sbRenderZoneLabels();
+  sbRenderPcs();
+  sbRenderMapObjects('other');
+  sbUpdateStats(); sbRenderPanel(); sbUpdateMapActions(); sbUpdatePcActions();
 }
 
 function sbUpdateStats(){
   document.getElementById('statPc').textContent=sbZones.reduce((s,z)=>s+z.computers.length,0);
   document.getElementById('statZones').textContent=sbZones.filter(z=>z.visible!==false).length;
+  document.getElementById('statMap').textContent=sbMapObjects.length;
 }
 
-function sbRenderBlock(zone){
-  const cols=zone.cols||6;
-  const extraRows=zone._extra||0;
-  const filledRows=Math.ceil((zone.computers.length+1)/cols);
-  const rows=Math.max(filledRows,1)+extraRows;
-  const total=rows*cols;
-  const block=document.createElement('div');
-  block.className='zone-block'; block.id=`blk-${zone.id}`;
-  block.style.left=(zone.bx||40)+'px'; block.style.top=(zone.by||40)+'px';
-  block.style.borderColor=zone.color; block.style.boxShadow=`0 0 0 1px ${zone.color}18,0 4px 20px rgba(0,0,0,0.5)`;
-  const head=document.createElement('div'); head.className='zb-head';
-  head.innerHTML=`<div class="zb-dot" style="background:${zone.color};box-shadow:0 0 4px ${zone.color};"></div><div class="zb-name" style="color:${zone.color};">${zone.name}</div>`;
-  block.appendChild(head);
-  const grid=document.createElement('div'); grid.className='seat-grid'; grid.style.gridTemplateColumns=`repeat(${cols},32px)`;
-  const occ=new Map(); zone.computers.forEach((pc,i)=>occ.set(i,pc));
-  for(let i=0;i<total;i++){
-    const seat=document.createElement('div'); seat.className='seat';
-    if(occ.has(i)){
-      const pc=occ.get(i); seat.classList.add('occupied');
-      seat.style.background=zone.color; seat.style.borderColor=zone.color;
-      seat.style.color=isDark(zone.color)?'#fff':'#000';
-      seat.innerHTML=`<span>${pc.number}</span><div class="seat-x">✕</div>`;
-      seat.querySelector('.seat-x').addEventListener('click',e=>{ e.stopPropagation(); sbRemovePC(zone.id,i); });
-    } else {
-      seat.classList.add('empty');
-      if(sbPlacing&&zone.id===sbActiveId){ seat.classList.add('placeable'); seat.textContent='+'; seat.addEventListener('click',e=>{e.stopPropagation();sbAddPC(zone.id,i);}); }
-    }
-    grid.appendChild(seat);
-  }
-  block.appendChild(grid);
-  if(zone.id===sbActiveId){
-    const ar=document.createElement('button'); ar.className='add-row-btn'; ar.textContent='+ добавить ряд';
-    ar.addEventListener('click',e=>{e.stopPropagation();zone._extra=(zone._extra||0)+1;sbRenderAll();});
-    block.appendChild(ar);
-  }
-  canvas.appendChild(block); sbMakeDraggable(block,zone);
+function sbBuildMapPalette(){
+  const pal=document.getElementById('mapPalette'); if(!pal) return;
+  pal.innerHTML='';
+  MAP_OBJECT_TYPES.forEach((def,idx)=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    const active=sbMapPlacingDef&&sbMapPlacingDef._pid===idx;
+    btn.className='map-palette-btn'+(active?' active':'');
+    btn.innerHTML=`<span class="map-glyph">${def.glyph}</span><span>${def.label}</span>`;
+    btn.addEventListener('click',()=>{
+      if(active){ sbMapPlacingDef=null; document.getElementById('mapHint').classList.remove('show'); }
+      else{
+        sbMapPlacingDef={...def,_pid:idx};
+        document.getElementById('mapHint').classList.add('show');
+      }
+      sbBuildMapPalette();
+    });
+    pal.appendChild(btn);
+  });
+}
+function sbRenderMapPalette(){ sbBuildMapPalette(); }
+
+function sbMapObjClasses(obj){
+  const c=['map-obj'];
+  if(obj===sbSelectedMapRef) c.push('sel');
+  if(obj.type==='wall') c.push('map-obj-wall');
+  else if(obj.type==='admin_desk') c.push('map-obj-desk');
+  else if(obj.type==='entrance') c.push('map-obj-entrance');
+  else c.push('map-obj-facility');
+  return c.join(' ');
 }
 
-function isDark(hex){ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return(0.299*r+0.587*g+0.114*b)<145; }
-
-function sbMakeDraggable(block,zone){
-  let d=false,sx,sy,ox,oy;
-  block.addEventListener('mousedown',e=>{ if(e.target.classList.contains('seat-x')||e.target.classList.contains('placeable')||e.target.classList.contains('add-row-btn')||e.target.tagName==='SPAN') return; d=true;sx=e.clientX;sy=e.clientY;ox=zone.bx||0;oy=zone.by||0;block.classList.add('dragging');e.stopPropagation(); });
-  window.addEventListener('mousemove',e=>{ if(!d)return;zone.bx=ox+(e.clientX-sx)/scale;zone.by=oy+(e.clientY-sy)/scale;block.style.left=zone.bx+'px';block.style.top=zone.by+'px'; });
-  window.addEventListener('mouseup',()=>{ if(d){d=false;block.classList.remove('dragging');} });
+function sbMapObjInner(obj,def){
+  const lbl=(obj.label||def.label||'').trim();
+  if(obj.type==='wall') return '<div class="map-obj-del" title="Удалить">✕</div>';
+  if(obj.type==='admin_desk') return `<div class="map-obj-del" title="Удалить">✕</div><div class="desk-bar"></div><div class="map-obj-lbl">${lbl||'стойка администратора'}</div>`;
+  if(obj.type==='entrance') return `<div class="map-obj-del" title="Удалить">✕</div><div class="map-obj-lbl">${lbl||'вход'}</div>`;
+  return `<div class="map-obj-del" title="Удалить">✕</div><div class="map-obj-lbl">${lbl||def.glyph||def.label}</div>`;
 }
 
-function sbAddPC(zoneId,slotIdx){
-  const z=sbZones.find(z=>z.id===zoneId); if(!z) return;
-  const num=z.computers.length?Math.max(...z.computers.map(p=>p.number))+1:1;
-  const cols=z.cols||6;
-  z.computers.splice(slotIdx,0,{number:num,x:slotIdx%cols,y:Math.floor(slotIdx/cols),isNew:true,zone_id:zoneId});
-  z.computers.forEach((p,i)=>{p.number=i+1;p.x=i%cols;p.y=Math.floor(i/cols);});
-  sbRenderAll(); toast(`ПК #${num} добавлен в «${z.name}»`,'green');
+function sbRenderMapObjects(layer){
+  sbMapObjects.forEach(obj=>{
+    const isWall=obj.type==='wall';
+    if(layer==='wall'&&!isWall) return;
+    if(layer==='other'&&isWall) return;
+    const def=sbMapTypeDef(obj.type);
+    const el=document.createElement('div');
+    el.className=sbMapObjClasses(obj);
+    el.style.left=(obj.x||0)+'px'; el.style.top=(obj.y||0)+'px';
+    el.style.width=(obj.width||def.w)+'px'; el.style.height=(obj.height||def.h)+'px';
+    el.style.transform=`rotate(${obj.rotation||0}deg)`;
+    el.innerHTML=sbMapObjInner(obj,def);
+    el.querySelector('.map-obj-del').addEventListener('click',e=>{ e.stopPropagation(); sbDeleteMapObject(obj); });
+    el.addEventListener('pointerdown',e=>{
+      if(e.button!==0||e.target.classList.contains('map-obj-del')) return;
+      e.preventDefault(); e.stopPropagation();
+      sbSelectedMapRef=obj; sbSelectedMapId=obj.id||null;
+      sbMapPlacingDef=null; sbRenderMapPalette();
+      document.getElementById('mapHint').classList.remove('show');
+      sbUpdateMapActions();
+      canvas.querySelectorAll('.map-obj.sel').forEach(n=>n.classList.remove('sel'));
+      el.classList.add('sel');
+      sbStartMapDrag(el,obj,e);
+    });
+    el.addEventListener('dblclick',e=>{
+      e.stopPropagation();
+      if(obj.type==='wall') return;
+      const nl=prompt('Подпись:',obj.label||def.label);
+      if(nl===null) return;
+      obj.label=nl.trim();
+      if(!obj.isNew) obj.dirty=true;
+      sbRenderAll();
+    });
+    canvas.appendChild(el);
+  });
 }
 
-function sbRemovePC(zoneId,slotIdx){
-  const z=sbZones.find(z=>z.id===zoneId); if(!z) return;
-  z.computers.splice(slotIdx,1);
-  const cols=z.cols||6;
-  z.computers.forEach((p,i)=>{p.number=i+1;p.x=i%cols;p.y=Math.floor(i/cols);});
+function sbStartMapDrag(el,obj,e){
+  let d=true,sx=e.clientX,sy=e.clientY,ox=obj.x||0,oy=obj.y||0;
+  sbMapDragging=true; panning=false; wrap.classList.remove('panning');
+  el.classList.add('dragging');
+  try{ el.setPointerCapture(e.pointerId); }catch{}
+  const onMove=ev=>{
+    if(!d) return;
+    ev.preventDefault();
+    obj.x=ox+(ev.clientX-sx)/scale; obj.y=oy+(ev.clientY-sy)/scale;
+    el.style.left=obj.x+'px'; el.style.top=obj.y+'px';
+    if(!obj.isNew) obj.dirty=true;
+  };
+  const onUp=ev=>{
+    if(!d) return;
+    d=false; sbMapDragging=false;
+    el.classList.remove('dragging');
+    try{ el.releasePointerCapture(ev.pointerId); }catch{}
+    el.removeEventListener('pointermove',onMove);
+    el.removeEventListener('pointerup',onUp);
+    el.removeEventListener('pointercancel',onUp);
+    obj.x=Math.round(obj.x); obj.y=Math.round(obj.y);
+    el.style.left=obj.x+'px'; el.style.top=obj.y+'px';
+    sbUpdateMapActions();
+  };
+  el.addEventListener('pointermove',onMove);
+  el.addEventListener('pointerup',onUp);
+  el.addEventListener('pointercancel',onUp);
+}
+
+function sbDeleteMapObject(obj){
+  const idx=sbMapObjects.indexOf(obj);
+  if(idx<0) return;
+  if(obj.id) sbMapDeletedIds.push(obj.id);
+  sbMapObjects.splice(idx,1);
+  if(sbSelectedMapRef===obj){ sbSelectedMapRef=null; sbSelectedMapId=null; }
   sbRenderAll();
+}
+
+function sbUpdateMapActions(){
+  const box=document.getElementById('mapObjActions');
+  if(box) box.style.display=sbSelectedMapRef?'flex':'none';
+}
+
+function sbHasPendingChanges(){
+  if(sbPcDeletedIds.length||sbMapDeletedIds.length) return true;
+  if(sbMapObjects.some(o=>o.isNew||o.dirty)) return true;
+  if(sbZones.some(z=>z.posDirty)) return true;
+  return sbZones.some(z=>z.computers.some(p=>p.isNew||p.dirty));
+}
+
+function sbMarkZonePosDirty(zone){
+  const x=Math.round(zone.bx||0),y=Math.round(zone.by||0);
+  zone.bx=x; zone.by=y;
+  zone.posDirty=x!==zone._origX||y!==zone._origY;
+}
+
+function sbRenderZoneLabels(){
+  sbZones.forEach(zone=>{
+    if(zone.visible===false) return;
+    const el=document.createElement('div');
+    el.className='zone-label'+(zone.id===sbActiveId?' is-active':'');
+    el.style.left=(zone.bx||0)+'px'; el.style.top=(zone.by||0)+'px';
+    el.innerHTML=`<span class="zone-label-dot" style="background:${zone.color}"></span><span class="zone-label-text">${zone.name}</span>`;
+    el.addEventListener('pointerdown',e=>{
+      if(e.button!==0) return;
+      e.preventDefault(); e.stopPropagation();
+      sbSelectedPcRef=null; sbUpdatePcActions();
+      sbStartZoneLabelDrag(el,zone,e);
+    });
+    canvas.appendChild(el);
+  });
+}
+
+function sbStartZoneLabelDrag(el,zone,e){
+  let d=true,sx=e.clientX,sy=e.clientY,ox=zone.bx||0,oy=zone.by||0;
+  sbPcDragging=true; panning=false; wrap.classList.remove('panning');
+  el.classList.add('dragging');
+  try{ el.setPointerCapture(e.pointerId); }catch{}
+  const onMove=ev=>{
+    if(!d) return;
+    ev.preventDefault();
+    zone.bx=ox+(ev.clientX-sx)/scale; zone.by=oy+(ev.clientY-sy)/scale;
+    el.style.left=zone.bx+'px'; el.style.top=zone.by+'px';
+  };
+  const onUp=ev=>{
+    if(!d) return;
+    d=false; sbPcDragging=false;
+    el.classList.remove('dragging');
+    try{ el.releasePointerCapture(ev.pointerId); }catch{}
+    el.removeEventListener('pointermove',onMove);
+    el.removeEventListener('pointerup',onUp);
+    el.removeEventListener('pointercancel',onUp);
+    sbMarkZonePosDirty(zone);
+  };
+  el.addEventListener('pointermove',onMove);
+  el.addEventListener('pointerup',onUp);
+  el.addEventListener('pointercancel',onUp);
+}
+
+function sbRenderPcs(){
+  sbZones.forEach(zone=>{
+    zone.computers.forEach(pc=>{
+      const el=document.createElement('div');
+      el.className='map-pc'+(pc===sbSelectedPcRef?' sel':'')+(pc.isNew?' is-new':'');
+      el.style.left=Math.round(pc.x||0)+'px';
+      el.style.top=Math.round(pc.y||0)+'px';
+      el.style.borderColor=zone.color;
+      el.innerHTML=`<span>${pc.number}</span><div class="map-pc-x" title="Удалить">✕</div>`;
+      el.querySelector('.map-pc-x').addEventListener('click',e=>{ e.stopPropagation(); sbRemovePC(pc); });
+      el.addEventListener('pointerdown',e=>{
+        if(e.button!==0||e.target.classList.contains('map-pc-x')) return;
+        e.preventDefault(); e.stopPropagation();
+        sbSelectedPcRef=pc; sbSelectedMapRef=null;
+        sbUpdateMapActions(); sbUpdatePcActions();
+        canvas.querySelectorAll('.map-pc.sel').forEach(n=>n.classList.remove('sel'));
+        el.classList.add('sel');
+        sbStartPcDrag(el,pc,e);
+      });
+      el.addEventListener('dblclick',e=>{
+        e.stopPropagation();
+        const nn=prompt('Номер ПК:',String(pc.number));
+        if(nn===null) return;
+        const n=parseInt(nn,10);
+        if(!n||n<1) return;
+        pc.number=n; sbMarkPcDirty(pc); sbRenderAll();
+      });
+      canvas.appendChild(el);
+    });
+  });
+}
+
+function sbStartPcDrag(el,pc,e){
+  let d=true,sx=e.clientX,sy=e.clientY,ox=pc.x||0,oy=pc.y||0;
+  sbPcDragging=true; panning=false; wrap.classList.remove('panning');
+  el.classList.add('dragging');
+  try{ el.setPointerCapture(e.pointerId); }catch{}
+  const onMove=ev=>{
+    if(!d) return;
+    ev.preventDefault();
+    pc.x=ox+(ev.clientX-sx)/scale; pc.y=oy+(ev.clientY-sy)/scale;
+    el.style.left=pc.x+'px'; el.style.top=pc.y+'px';
+    sbMarkPcDirty(pc);
+  };
+  const onUp=ev=>{
+    if(!d) return;
+    d=false; sbPcDragging=false;
+    el.classList.remove('dragging');
+    try{ el.releasePointerCapture(ev.pointerId); }catch{}
+    el.removeEventListener('pointermove',onMove);
+    el.removeEventListener('pointerup',onUp);
+    el.removeEventListener('pointercancel',onUp);
+    pc.x=Math.round(pc.x); pc.y=Math.round(pc.y);
+    el.style.left=pc.x+'px'; el.style.top=pc.y+'px';
+  };
+  el.addEventListener('pointermove',onMove);
+  el.addEventListener('pointerup',onUp);
+  el.addEventListener('pointercancel',onUp);
+}
+
+function sbAddPcAt(zoneId,cx,cy){
+  const z=sbZones.find(z=>z.id===zoneId); if(!z) return;
+  const num=sbNextPcNumber();
+  const x=Math.round(cx-SB_SEAT/2);
+  const y=Math.round(cy-SB_SEAT/2);
+  z.computers.push({number:num,specification:'string',x,y,isNew:true,dirty:false,zone_id:zoneId});
+  sbRenderAll(); toast(`ПК #${num} → «${z.name}»`,'green');
+}
+
+function sbRemovePC(pc){
+  const z=sbFindPcZone(pc); if(!z) return;
+  const idx=z.computers.indexOf(pc);
+  if(idx<0) return;
+  if(pc.id) sbPcDeletedIds.push(pc.id);
+  z.computers.splice(idx,1);
+  if(sbSelectedPcRef===pc){ sbSelectedPcRef=null; sbUpdatePcActions(); }
+  sbRenderAll();
+}
+
+function sbMovePcToZone(pc,newZoneId){
+  const oldZ=sbFindPcZone(pc);
+  const newZ=sbZones.find(z=>z.id===newZoneId);
+  if(!oldZ||!newZ||oldZ.id===newZ.id) return;
+  oldZ.computers.splice(oldZ.computers.indexOf(pc),1);
+  pc.zone_id=newZoneId;
+  newZ.computers.push(pc);
+  sbMarkPcDirty(pc);
+  sbRenderAll();
+}
+
+function sbSetPcPlacing(on){
+  sbPcPlacing=on;
+  wrap.classList.toggle('pc-placing',on);
+  const btn=document.getElementById('addPcBtn');
+  const hint=document.getElementById('hint');
+  if(on){
+    sbMapPlacingDef=null; document.getElementById('mapHint')?.classList.remove('show');
+    sbRenderMapPalette();
+    if(btn){ btn.className='add-pc-btn placing'; }
+    document.getElementById('addLabel').textContent='Отмена';
+    if(hint) hint.classList.add('show');
+  }else{
+    if(btn){ btn.className='add-pc-btn'; btn.disabled=!sbActiveId; }
+    document.getElementById('addLabel').textContent='Поставить ПК';
+    if(hint) hint.classList.remove('show');
+  }
+}
+
+function sbUpdatePcActions(){
+  const box=document.getElementById('pcActions');
+  const sel=document.getElementById('pcZoneSelect');
+  if(!box) return;
+  if(!sbSelectedPcRef){
+    box.style.display='none';
+    return;
+  }
+  box.style.display='block';
+  if(sel){
+    sel.innerHTML=sbZones.map(z=>`<option value="${z.id}" ${z.id===sbSelectedPcRef.zone_id?'selected':''}>${z.name}</option>`).join('');
+    sel.onchange=()=>sbMovePcToZone(sbSelectedPcRef,parseInt(sel.value,10));
+  }
 }
 
 function sbRenderPanel(){
@@ -815,37 +1239,111 @@ function sbRenderPanel(){
 }
 
 function sbSelectZone(id){
-  sbActiveId=id; sbPlacing=false;
-  const z=sbZones.find(z=>z.id===id);
-  const ci=document.getElementById('colsInput');
-  if(z){ci.value=z.cols||6; ci.disabled=false;}
-  sbSetPlacing(false); sbRenderAll();
-}
-
-function sbSetPlacing(on){
-  sbPlacing=on;
+  sbActiveId=id;
+  sbSetPcPlacing(false);
+  sbMapPlacingDef=null; document.getElementById('mapHint')?.classList.remove('show');
+  sbRenderMapPalette();
   const btn=document.getElementById('addPcBtn');
-  const hint=document.getElementById('hint');
-  if(on){ btn.className='add-pc-btn placing'; document.getElementById('addLabel').textContent='Отмена'; hint.classList.add('show'); }
-  else { btn.className='add-pc-btn'; document.getElementById('addLabel').textContent='Добавить ПК'; hint.classList.remove('show'); btn.disabled=!sbActiveId; }
+  if(btn){ btn.disabled=false; btn.className='add-pc-btn'; }
   sbRenderAll();
 }
 
-document.getElementById('addPcBtn').addEventListener('click',()=>{ if(!sbActiveId){toast('Выберите зону','red');return;} sbSetPlacing(!sbPlacing); });
-document.getElementById('colsInput').addEventListener('change',e=>{ if(!sbActiveId) return; const z=sbZones.find(z=>z.id===sbActiveId); if(!z) return; z.cols=Math.max(1,parseInt(e.target.value)||6); sbRenderAll(); });
+document.getElementById('addPcBtn').addEventListener('click',()=>{
+  if(!sbActiveId){ toast('Выберите зону','red'); return; }
+  sbSetPcPlacing(!sbPcPlacing);
+});
+document.getElementById('pcDeleteBtn')?.addEventListener('click',()=>{
+  if(sbSelectedPcRef) sbRemovePC(sbSelectedPcRef);
+});
+
+document.getElementById('mapDeleteBtn')?.addEventListener('click',()=>{
+  if(sbSelectedMapRef) sbDeleteMapObject(sbSelectedMapRef);
+});
+document.getElementById('mapRotateBtn')?.addEventListener('click',()=>{
+  const obj=sbSelectedMapRef;
+  if(!obj) return;
+  obj.rotation=((obj.rotation||0)+90)%360;
+  if(!obj.isNew) obj.dirty=true;
+  sbRenderAll();
+});
 
 document.getElementById('sandboxSaveBtn').addEventListener('click',async()=>{
   const btn=document.getElementById('sandboxSaveBtn');
-  const newPcs=[];
-  sbZones.forEach(z=>z.computers.filter(p=>p.isNew).forEach(pc=>newPcs.push({number:pc.number,specification:'string',zone_id:z.id,x:pc.x,y:pc.y})));
-  if(!newPcs.length){toast('Нет новых ПК для сохранения');return;}
+  if(!sbHasPendingChanges()){ toast('Нет изменений для сохранения'); return; }
   btn.disabled=true;
+  const done={pcs:0,map:0,del:0,zones:0};
   try{
-    await _api.post('/computers/',newPcs,{params:{club_id:CLUB_ID}});
-    sbZones.forEach(z=>z.computers.forEach(p=>p.isNew=false));
-    toast(`✅ ${newPcs.length} ПК сохранено!`,'green');
-  }catch(e){ const d=e.response?.data?.detail; toast(`❌ ${typeof d==='string'?d:'Ошибка '+(e.response?.status||'?')}`,'red'); }
-  finally{btn.disabled=false;}
+    for(const z of sbZones.filter(z=>z.posDirty)){
+      const x=Math.round(z.bx||0),y=Math.round(z.by||0);
+      await _api.patch(`/zones/${z.id}`,[{
+        id:z.id,name:z.name,cost:z.cost??0,
+        cpu:z.cpu||'string',gpu:z.gpu||'string',ram:z.ram||'string',ssd:z.ssd||'string',monitor:z.monitor||'string',
+        x,y,
+      }],{params:{club_id:CLUB_ID}});
+      z._origX=x; z._origY=y; z.posDirty=false; z._hasStoredPos=true;
+      done.zones++;
+    }
+    for(const id of [...sbPcDeletedIds]){
+      await _api.delete(`/computers/${id}`,{params:{club_id:CLUB_ID}});
+      done.del++;
+    }
+    sbPcDeletedIds=[];
+    for(const id of [...sbMapDeletedIds]){
+      await _api.delete(`/map-objects/${id}`,{params:{club_id:CLUB_ID}});
+      done.del++;
+    }
+    sbMapDeletedIds=[];
+    const newPcs=[];
+    sbZones.forEach(z=>z.computers.filter(p=>p.isNew).forEach(pc=>{
+      newPcs.push({number:pc.number,specification:pc.specification||'string',zone_id:pc.zone_id,x:Math.round(pc.x),y:Math.round(pc.y)});
+    }));
+    if(newPcs.length){
+      await _api.post('/computers/',newPcs,{params:{club_id:CLUB_ID}});
+      done.pcs+=newPcs.length;
+      sbZones.forEach(z=>z.computers.forEach(p=>{
+        if(p.isNew){ p.isNew=false; p.dirty=false; p._orig={number:p.number,x:p.x,y:p.y,zone_id:p.zone_id}; }
+      }));
+    }
+    for(const z of sbZones){
+      for(const pc of z.computers.filter(p=>p.dirty&&!p.isNew&&p.id)){
+        const patchBody={number:pc.number,specification:pc.specification||'string',x:Math.round(pc.x),y:Math.round(pc.y)};
+        if(pc.zone_id!==pc._orig.zone_id) patchBody.zone_id=pc.zone_id;
+        await _api.patch(`/computers/${pc.id}`,patchBody,{params:{club_id:CLUB_ID}});
+        pc._orig={number:pc.number,x:pc.x,y:pc.y,zone_id:pc.zone_id};
+        pc.dirty=false;
+        done.pcs++;
+      }
+    }
+    for(const obj of sbMapObjects.filter(o=>o.isNew)){
+      const res=await _api.post(`/map-objects/${CLUB_ID}/map-objects/`,{
+        type:obj.type,label:obj.label,x:obj.x,y:obj.y,width:obj.width,height:obj.height,rotation:obj.rotation||0,
+      });
+      const created=res.data;
+      obj.id=created.id; obj.club_id=created.club_id??CLUB_ID;
+      obj.isNew=false; obj.dirty=false;
+      done.map++;
+    }
+    for(const obj of sbMapObjects.filter(o=>o.dirty&&!o.isNew&&o.id)){
+      await _api.patch(`/map-objects/${obj.id}`,{
+        type:obj.type,label:obj.label,x:obj.x,y:obj.y,width:obj.width,height:obj.height,rotation:obj.rotation||0,
+      },{params:{club_id:CLUB_ID}});
+      obj.dirty=false;
+      done.map++;
+    }
+    const parts=[];
+    if(done.zones) parts.push(`${done.zones} зон`);
+    if(done.pcs) parts.push(`${done.pcs} ПК`);
+    if(done.map) parts.push(`${done.map} объект.`);
+    if(done.del) parts.push(`${done.del} удал.`);
+    toast(parts.length?`✅ Сохранено: ${parts.join(', ')}`:'✅ Сохранено','green');
+    sbSelectedMapRef=null; sbSelectedMapId=null;
+    if(done.zones) loadZonesList();
+    await initSandbox();
+  }catch(e){
+    const d=e.response?.data?.detail;
+    const msg=typeof d==='string'?d:Array.isArray(d)?d.map(x=>x.msg).join('; '):`Ошибка ${e.response?.status||'?'}`;
+    toast(`❌ ${msg}`,'red');
+  }finally{ btn.disabled=false; }
 });
 
 // ── TAB 4: PRICING ──
