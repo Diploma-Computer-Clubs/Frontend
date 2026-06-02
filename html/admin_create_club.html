@@ -11,6 +11,7 @@
         :root {
             --bg-dark: #333333;
             --field-bg: #2d2d2d;
+            --card-bg: #2a2a2a;
             --text-main: #ffffff;
             --accent-green: #00ff00;
             --bg-light: #cccccc;
@@ -83,6 +84,42 @@
         }
         select option { background: #2d2d2d; color: white; }
 
+        .media-block {
+            background: var(--card-bg); border: 1px solid #444;
+            border-radius: 12px; padding: 14px; margin-bottom: 20px;
+        }
+        .media-block-title {
+            font-size: 11px; font-weight: 700; color: var(--bg-light);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+        }
+        .img-preview {
+            width: 100%; height: 140px; border-radius: 10px;
+            object-fit: cover; margin-bottom: 10px;
+            background: var(--field-bg); border: 1px solid #555;
+            display: none;
+        }
+        .img-preview.visible { display: block; }
+        .preview-empty {
+            width: 100%; height: 140px; border-radius: 10px; margin-bottom: 10px;
+            background: var(--field-bg); border: 1px dashed #555;
+            display: flex; align-items: center; justify-content: center;
+            color: #555; font-size: 11px; font-weight: 700; text-transform: uppercase;
+        }
+        .preview-empty.hidden { display: none; }
+        .upload-btn {
+            width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 12px; border-radius: 10px; cursor: pointer;
+            border: 1.5px dashed rgba(0,255,0,0.35); background: rgba(0,255,0,0.06);
+            color: var(--accent-green); font-size: 11px; font-weight: 700;
+            text-transform: uppercase; transition: 0.2s;
+        }
+        .upload-btn:hover { background: rgba(0,255,0,0.12); border-color: var(--accent-green); }
+        .upload-btn.uploading { opacity: 0.6; pointer-events: none; }
+        .upload-btn input { display: none; }
+        .upload-status { font-size: 10px; color: #666; margin-top: 8px; min-height: 14px; word-break: break-all; }
+        .upload-status.ok { color: var(--accent-green); }
+        .upload-status.err { color: var(--danger); }
+
         .save-btn {
             width: 100%; background: transparent;
             border: 1px solid var(--accent-green); color: var(--accent-green);
@@ -101,7 +138,6 @@
             font-size: 13px; line-height: 1.6; white-space: pre-wrap; margin-top: 14px;
         }
         .error-box.visible { display: block; }
-
         .success-box {
             display: none; background: rgba(0, 255, 0, 0.08);
             border: 1px solid var(--accent-green); color: var(--accent-green);
@@ -109,14 +145,6 @@
             font-size: 13px; line-height: 1.6; margin-top: 14px;
         }
         .success-box.visible { display: block; }
-
-        /* img preview */
-        .img-preview {
-            width: 100%; height: 120px; border-radius: 10px;
-            object-fit: cover; margin-top: -15px; margin-bottom: 18px;
-            background: #2a2a2a; border: 1px solid #444; display: none;
-        }
-        .img-preview.visible { display: block; }
     </style>
 </head>
 <body>
@@ -176,23 +204,44 @@
 
     <p class="section-title">Медиа</p>
 
-    <div class="field-group">
-        <label>URL Лого клуба</label>
-        <input type="text" id="image_url" placeholder="https://..." oninput="previewImg('image_url','imgPreview1')">
+    <div class="media-block">
+        <div class="media-block-title">Лого клуба</div>
+        <div class="preview-empty" id="empty1">Нет изображения</div>
+        <img class="img-preview" id="imgPreview1" alt="Лого">
+        <input type="hidden" id="image_url">
+        <label class="upload-btn" id="uploadBtn1">
+            <span class="material-symbols-outlined" style="font-size:18px;">upload</span>
+            <span>Загрузить лого</span>
+            <input type="file" accept="image/*" data-field="image_url" data-preview="imgPreview1" data-status="status1">
+        </label>
+        <div class="upload-status" id="status1"></div>
     </div>
-    <img class="img-preview" id="imgPreview1" alt="Превью лого">
 
-    <div class="field-group">
-        <label>URL Прайс-листа (фото)</label>
-        <input type="text" id="image_price_url" placeholder="https://..." oninput="previewImg('image_price_url','imgPreview3')">
+    <div class="media-block">
+        <div class="media-block-title">Прайс-лист (фото)</div>
+        <div class="preview-empty" id="empty3">Нет изображения</div>
+        <img class="img-preview" id="imgPreview3" alt="Прайс">
+        <input type="hidden" id="image_price_url">
+        <label class="upload-btn" id="uploadBtn3">
+            <span class="material-symbols-outlined" style="font-size:18px;">upload</span>
+            <span>Загрузить прайс</span>
+            <input type="file" accept="image/*" data-field="image_price_url" data-preview="imgPreview3" data-status="status3">
+        </label>
+        <div class="upload-status" id="status3"></div>
     </div>
-    <img class="img-preview" id="imgPreview3" alt="Превью прайса">
 
-    <div class="field-group">
-        <label>URL Фона зала (песочница)</label>
-        <input type="text" id="img_background" placeholder="https://..." oninput="previewImg('img_background','imgPreview2')">
+    <div class="media-block">
+        <div class="media-block-title">Фон клуба</div>
+        <div class="preview-empty" id="empty2">Нет изображения</div>
+        <img class="img-preview" id="imgPreview2" alt="Фон">
+        <input type="hidden" id="img_background">
+        <label class="upload-btn" id="uploadBtn2">
+            <span class="material-symbols-outlined" style="font-size:18px;">upload</span>
+            <span>Загрузить фон</span>
+            <input type="file" accept="image/*" data-field="img_background" data-preview="imgPreview2" data-status="status2">
+        </label>
+        <div class="upload-status" id="status2"></div>
     </div>
-    <img class="img-preview" id="imgPreview2" alt="Превью фона">
 
     <button class="save-btn" id="createBtn">Создать клуб</button>
     <div class="error-box" id="errorBox"></div>
@@ -207,7 +256,7 @@
 
     _api.interceptors.request.use(cfg => {
         const t = localStorage.getItem('access_token');
-        if (t) cfg.headers.Authorization = `Bearer ${t}`;
+        if (t) cfg.headers.Authorization = 'Bearer ' + t;
         return cfg;
     });
 
@@ -217,11 +266,11 @@
             const rt = localStorage.getItem('refresh_token');
             if (rt) {
                 try {
-                    const r = await axios.post(`${_API}/auth/refresh`, {}, {
-                        headers: { "Authorization": `Bearer ${rt}`, "ngrok-skip-browser-warning": "69420" }
+                    const r = await axios.post(_API + 'auth/refresh', {}, {
+                        headers: { "Authorization": 'Bearer ' + rt, "ngrok-skip-browser-warning": "69420" }
                     });
                     localStorage.setItem('access_token', r.data.access_token);
-                    err.config.headers.Authorization = `Bearer ${r.data.access_token}`;
+                    err.config.headers.Authorization = 'Bearer ' + r.data.access_token;
                     return _api(err.config);
                 } catch { localStorage.clear(); window.location.href = 'check.html'; }
             } else { localStorage.clear(); window.location.href = 'check.html'; }
@@ -236,21 +285,147 @@
     overlay.addEventListener('click', () => { burger.classList.remove('open'); drawer.classList.remove('open'); overlay.classList.remove('active'); });
     document.getElementById('logoutLink').addEventListener('click', e => { e.preventDefault(); localStorage.clear(); window.location.href = 'check.html'; });
 
-    function previewImg(inputId, previewId) {
-        const url = document.getElementById(inputId).value.trim();
+    function mediaUrl(path) {
+        if (!path || path === 'string') return '';
+        if (path.startsWith('http://') || path.startsWith('https://')) return path;
+        return _API + path.replace(/^\//, '');
+    }
+
+    function setPreview(path, previewId) {
         const img = document.getElementById(previewId);
-        if (url) { img.src = url; img.classList.add('visible'); img.onerror = () => img.classList.remove('visible'); }
-        else img.classList.remove('visible');
+        const emptyId = previewId.replace('imgPreview', 'empty');
+        const empty = document.getElementById(emptyId);
+        const url = mediaUrl(path);
+        if (url) {
+            img.src = url;
+            img.classList.add('visible');
+            empty?.classList.add('hidden');
+            img.onerror = () => {
+                img.classList.remove('visible');
+                img.removeAttribute('src');
+                empty?.classList.remove('hidden');
+            };
+        } else {
+            img.classList.remove('visible');
+            img.removeAttribute('src');
+            empty?.classList.remove('hidden');
+        }
+    }
+
+    function extractMediaPath(data) {
+        if (data == null) return null;
+        if (typeof data === 'string') {
+            const s = data.trim().replace(/^"|"$/g, '');
+            return (s && s !== 'string') ? s : null;
+        }
+        if (typeof data !== 'object') return null;
+        if (typeof data.image_url === 'string' && data.image_url.trim() && data.image_url !== 'string') {
+            return data.image_url.trim();
+        }
+        const fallback = [data.path, data.url, data.name, data.filename];
+        for (const v of fallback) {
+            if (typeof v === 'string' && v.trim() && v !== 'string') return v.trim();
+        }
+        return null;
+    }
+
+    // Храним выбранные файлы в памяти
+    const pendingFiles = { image_url: null, image_price_url: null, img_background: null };
+
+    // При выборе файла — показываем превью через blob, сохраняем в pendingFiles
+    document.querySelectorAll('.upload-btn input[type="file"]').forEach(input => {
+        input.addEventListener('change', e => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const fieldId  = input.dataset.field;
+            const previewId = input.dataset.preview;
+            const statusId  = input.dataset.status;
+
+            if (!file.type.startsWith('image/')) {
+                document.getElementById(statusId).textContent = 'Только изображения';
+                document.getElementById(statusId).className = 'upload-status err';
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                document.getElementById(statusId).textContent = 'Файл слишком большой (макс. 10 МБ)';
+                document.getElementById(statusId).className = 'upload-status err';
+                return;
+            }
+
+            // Освобождаем предыдущий blob если был
+            const img = document.getElementById(previewId);
+            if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+
+            pendingFiles[fieldId] = file;
+            img.src = URL.createObjectURL(file);
+            img.classList.add('visible');
+            document.getElementById(previewId.replace('imgPreview', 'empty'))?.classList.add('hidden');
+
+            document.getElementById(statusId).textContent = 'Готово к загрузке: ' + file.name;
+            document.getElementById(statusId).className = 'upload-status ok';
+            e.target.value = '';
+        });
+    });
+
+    // Загружаем один файл на сервер (без club_id)
+    async function uploadPendingImage(fieldId, previewId, statusId, uploadBtnId) {
+        const file = pendingFiles[fieldId];
+        if (!file) return null;
+
+        const btn    = document.getElementById(uploadBtnId);
+        const status = document.getElementById(statusId);
+        btn.classList.add('uploading');
+        status.textContent = 'Загрузка...';
+        status.className = 'upload-status';
+
+        const form = new FormData();
+        form.append('file', file);
+
+        try {
+            const res = await _api.post('/media/images', form);
+
+            let path = null;
+            if (typeof res.data === 'string') {
+                const s = res.data.trim().replace(/^"|"$/g, '');
+                if (s && s !== 'string') path = s;
+            } else if (res.data && typeof res.data === 'object') {
+                path = extractMediaPath(res.data);
+            }
+
+            if (!path) throw new Error('Сервер не вернул путь: ' + JSON.stringify(res.data));
+
+            // Заменяем blob-превью на реальный URL
+            const img = document.getElementById(previewId);
+            if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+            setPreview(path, previewId);
+
+            status.textContent = 'Загружено: ' + path;
+            status.className = 'upload-status ok';
+            return path;
+
+        } catch (err) {
+            const detail = err.response?.data?.detail;
+            const msg = typeof detail === 'string' ? detail
+                : Array.isArray(detail) ? detail.map(d => d.msg).join(', ')
+                : err.message;
+            status.textContent = (err.response?.status ? err.response.status + ': ' : '') + msg;
+            status.className = 'upload-status err';
+            return null;
+        } finally {
+            btn.classList.remove('uploading');
+        }
     }
 
     function showError(msg) {
         const box = document.getElementById('errorBox');
-        box.textContent = msg; box.classList.toggle('visible', !!msg);
+        box.textContent = msg;
+        box.classList.toggle('visible', !!msg);
         document.getElementById('successBox').classList.remove('visible');
     }
     function showSuccess(msg) {
         const box = document.getElementById('successBox');
-        box.textContent = msg; box.classList.add('visible');
+        box.textContent = msg;
+        box.classList.add('visible');
         document.getElementById('errorBox').classList.remove('visible');
     }
 
@@ -268,46 +443,65 @@
     }
 
     document.getElementById('createBtn').addEventListener('click', async () => {
-        const citySelect = document.getElementById('city_id');
+        const citySelect     = document.getElementById('city_id');
         const selectedOption = citySelect.options[citySelect.selectedIndex];
-        const btn = document.getElementById('createBtn');
+        const btn            = document.getElementById('createBtn');
 
         if (!citySelect.value) { showError("Выберите город из списка!"); return; }
+        if (!document.getElementById('name').value.trim()) { showError("Введите название клуба!"); return; }
 
+        btn.disabled = true;
+        showError("");
+
+        // ШАГ 1: сначала загружаем все медиа файлы
+        btn.textContent = "Загрузка медиа...";
+        const [logoPath, pricePath, bgPath] = await Promise.all([
+            uploadPendingImage('image_url',       'imgPreview1', 'status1', 'uploadBtn1'),
+            uploadPendingImage('image_price_url', 'imgPreview3', 'status3', 'uploadBtn3'),
+            uploadPendingImage('img_background',  'imgPreview2', 'status2', 'uploadBtn2'),
+        ]);
+
+        // ШАГ 2: создаём клуб с готовыми путями сразу
+        btn.textContent = "Создание...";
         const payload = {
-            name: document.getElementById('name').value.trim(),
-            address: document.getElementById('address').value.trim(),
-            image_url: document.getElementById('image_url').value.trim() || "string",
-            image_price_url: document.getElementById('image_price_url').value.trim() || "string",
-            img_background: document.getElementById('img_background').value.trim() || "string",
-            promos: [],
-            description: document.getElementById('description').value.trim(),
-            city_id: Number(citySelect.value),
-            city_name: selectedOption ? selectedOption.dataset.cityName : "",
-            rating: 5
+            name:            document.getElementById('name').value.trim(),
+            address:         document.getElementById('address').value.trim(),
+            description:     document.getElementById('description').value.trim(),
+            image_url:       logoPath  || "string",
+            image_price_url: pricePath || "string",
+            img_background:  bgPath    || "string",
+            promos:          [],
+            city_id:         Number(citySelect.value),
+            city_name:       selectedOption ? selectedOption.dataset.cityName : "",
+            rating:          5
         };
 
-        btn.disabled = true; btn.textContent = "Создание..."; showError("");
-
+        let clubId = null;
         try {
             const res = await _api.post('/clubs', payload);
-            localStorage.setItem('owner_club_id', res.data.id);
-            showSuccess("✅ Клуб создан! Переходим к панели управления...");
-            setTimeout(() => {
-                window.location.href = `admin_dashboard.html?club_id=${res.data.id}&new=1`;
-            }, 1200);
+            clubId = res.data.id;
+            localStorage.setItem('owner_club_id', clubId);
         } catch (err) {
             const status = err.response?.status;
             const detail = err.response?.data?.detail;
             let msg = "";
-            if (status === 403) msg = "❌ 403 Forbidden\n\nУ вашего аккаунта нет роли owner.\nОбратитесь к администратору.";
-            else if (Array.isArray(detail)) msg = `❌ ${status} Validation:\n` + detail.map(d => `• ${d.loc?.join('.')} — ${d.msg}`).join('\n');
-            else if (typeof detail === 'string') msg = `❌ ${status}: ${detail}`;
-            else msg = `❌ ${status || '?'} Error:\n${JSON.stringify(err.response?.data, null, 2)}`;
+            if (status === 403) msg = "403 Forbidden — у аккаунта нет роли owner.";
+            else if (Array.isArray(detail)) msg = status + ' Validation:\n' + detail.map(d => '• ' + d.loc?.join('.') + ' — ' + d.msg).join('\n');
+            else if (typeof detail === 'string') msg = status + ': ' + detail;
+            else msg = (status || '?') + ' Error:\n' + JSON.stringify(err.response?.data, null, 2);
             showError(msg);
-        } finally {
-            btn.disabled = false; btn.textContent = "Создать клуб";
+            btn.disabled = false;
+            btn.textContent = "Создать клуб";
+            return;
         }
+
+        showSuccess("Клуб создан! Переходим к панели управления...");
+        setTimeout(() => {
+            window.location.href = 'admin_dashboard.html?club_id=' + clubId + '&new=1';
+        }, 1200);
+
+        btn.disabled = false;
+        btn.textContent = "Создать клуб";
     });
 
     document.addEventListener('DOMContentLoaded', async () => {
