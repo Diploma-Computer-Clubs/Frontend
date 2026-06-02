@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underlie — Суперадмин</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --bg: #333;
+            --surface: #2d2d2d;
+            --card: #2a2a2a;
+            --field: #1e1e1e;
+            --border: #555;
+            --text: #fff;
+            --muted: #888;
+            --green: #00ff00;
+            --green-dim: rgba(0,255,0,0.08);
+            --danger: #ff453a;
+            --gold: #ffc800;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 18px; background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
+        .back-btn { background: none; border: none; color: var(--text); cursor: pointer; display: flex; }
+        .topbar h1 { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .badge-sa {
+            font-size: 9px; font-weight: 700; color: var(--gold);
+            background: rgba(255,200,0,0.1); border: 1px solid rgba(255,200,0,0.35);
+            padding: 4px 10px; border-radius: 20px; text-transform: uppercase;
+        }
+
+        .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+        .tab-btn {
+            flex: 1; padding: 12px; background: none; border: none; color: var(--muted);
+            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+            cursor: pointer; border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active { color: var(--green); border-bottom-color: var(--green); }
+
+        .panel { display: none; max-width: 480px; margin: 0 auto; padding: 20px 20px 50px; }
+        .panel.active { display: block; }
+
+        .section-title {
+            font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase;
+            letter-spacing: 1.5px; margin-bottom: 14px; opacity: 0.8;
+        }
+
+        .field-group { position: relative; margin-bottom: 18px; }
+        .field-group label {
+            position: absolute; top: -9px; left: 12px; background: var(--bg);
+            padding: 0 6px; font-size: 10px; font-weight: 700; color: #ccc; z-index: 1;
+        }
+        .field-group input {
+            width: 100%; background: var(--field); border: 1px solid var(--border);
+            border-radius: 10px; padding: 14px; color: #fff; font-size: 14px; outline: none;
+        }
+        .field-group input:focus { border-color: var(--green); }
+
+        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .btn {
+            flex: 1; min-width: 120px; padding: 12px 14px; border-radius: 10px;
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            cursor: pointer; border: 1px solid; transition: 0.2s;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-green { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+        .btn-green:active:not(:disabled) { background: var(--green); color: #000; }
+        .btn-gold { background: rgba(255,200,0,0.08); border-color: var(--gold); color: var(--gold); }
+        .btn-muted { background: transparent; border-color: var(--border); color: var(--muted); }
+        .btn-danger { background: rgba(255,69,58,0.08); border-color: rgba(255,69,58,0.4); color: var(--danger); }
+
+        .user-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 16px; margin-bottom: 16px; display: none;
+        }
+        .user-card.visible { display: block; }
+        .user-card-name { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+        .user-card-meta { font-size: 12px; color: var(--muted); line-height: 1.7; }
+        .role-pill {
+            display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 10px;
+            border-radius: 20px; margin-top: 8px; text-transform: uppercase;
+        }
+        .role-pill.owner { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,255,0,0.25); }
+        .role-pill.user { background: rgba(255,255,255,0.05); color: #aaa; border: 1px solid #444; }
+        .role-pill.superadmin { background: rgba(255,200,0,0.1); color: var(--gold); border: 1px solid rgba(255,200,0,0.3); }
+
+        .city-item {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
+        }
+        .city-item.editing { flex-direction: column; align-items: stretch; }
+        .city-info { flex: 1; min-width: 0; }
+        .city-name { font-size: 14px; font-weight: 700; }
+        .city-id { font-size: 10px; color: var(--muted); margin-top: 2px; }
+        .city-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .icon-btn {
+            background: none; border: 1px solid var(--border); border-radius: 8px;
+            padding: 6px; cursor: pointer; color: var(--muted); display: flex;
+        }
+        .icon-btn:hover { color: var(--text); border-color: #666; }
+        .icon-btn.danger { color: var(--danger); border-color: rgba(255,69,58,0.3); }
+
+        .msg {
+            display: none; border-radius: 10px; padding: 12px 14px;
+            font-size: 12px; line-height: 1.6; margin-top: 12px; white-space: pre-wrap;
+        }
+        .msg.visible { display: block; }
+        .msg.err { background: rgba(255,69,58,0.1); border: 1px solid var(--danger); color: var(--danger); }
+        .msg.ok { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); }
+
+        .empty { text-align: center; padding: 30px; color: var(--muted); font-size: 13px; }
+        .toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+            background: #111; border: 1px solid var(--border); padding: 10px 18px;
+            border-radius: 9px; font-size: 11px; font-weight: 600; z-index: 9999;
+            transition: transform 0.3s; white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.green { border-color: var(--green); color: var(--green); }
+        .toast.red { border-color: var(--danger); color: var(--danger); }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+            display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-card {
+            background: #262626; width: 100%; max-width: 300px; padding: 24px;
+            border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.06);
+        }
+        .modal-card h2 { font-size: 16px; margin-bottom: 8px; }
+        .modal-card p { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+        .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+        .m-btn { padding: 13px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 13px; }
+        .m-confirm { background: var(--danger); color: #fff; }
+        .m-cancel { background: transparent; color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<div class="modal-overlay" id="deleteCityModal">
+    <div class="modal-card">
+        <span class="material-symbols-outlined" style="font-size:40px;color:var(--danger);">delete_forever</span>
+        <h2>Удалить город?</h2>
+        <p id="deleteCityText">Город будет удалён навсегда.</p>
+        <div class="modal-actions">
+            <button class="m-btn m-confirm" id="confirmDeleteCity">Удалить</button>
+            <button class="m-btn m-cancel" id="cancelDeleteCity">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <button class="back-btn" onclick="location.href='mainpage.html'">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <h1>Суперадмин</h1>
+    </div>
+    <span class="badge-sa">Superadmin</span>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" data-tab="users">Пользователи</button>
+    <button class="tab-btn" data-tab="cities">Города</button>
+</div>
+
+<!-- USERS -->
+<div class="panel active" id="panel-users">
+    <p class="section-title">Поиск по телефону</p>
+    <div class="field-group">
+        <label>Номер телефона</label>
+        <input type="tel" id="userPhone" placeholder="+7 700 000 00 00">
+    </div>
+    <div class="btn-row">
+        <button class="btn btn-muted" id="searchUserBtn">
+            <span class="material-symbols-outlined" style="font-size:16px;">search</span> Найти
+        </button>
+    </div>
+
+    <div class="user-card" id="userCard">
+        <div class="user-card-name" id="foundUserName">—</div>
+        <div class="user-card-meta" id="foundUserMeta"></div>
+        <span class="role-pill user" id="foundUserRole">—</span>
+    </div>
+
+    <p class="section-title" style="margin-top:8px;">Роль</p>
+    <div class="btn-row">
+        <button class="btn btn-gold" id="promoteBtn" disabled>
+            <span class="material-symbols-outlined" style="font-size:16px;">upgrade</span> → Owner
+        </button>
+        <button class="btn btn-danger" id="demoteBtn" disabled>
+            <span class="material-symbols-outlined" style="font-size:16px;">arrow_downward</span> → User
+        </button>
+    </div>
+    <div class="msg err" id="usersErr"></div>
+    <div class="msg ok" id="usersOk"></div>
+</div>
+
+<!-- CITIES -->
+<div class="panel" id="panel-cities">
+    <p class="section-title">Добавить город</p>
+    <div class="field-group">
+        <label>Название</label>
+        <input type="text" id="newCityName" placeholder="Astana">
+    </div>
+    <button class="btn btn-green" id="addCityBtn" style="width:100%;margin-bottom:20px;">Добавить город</button>
+
+    <p class="section-title">Все города</p>
+    <div id="citiesList"><div class="empty">Загрузка...</div></div>
+    <div class="msg err" id="citiesErr"></div>
+    <div class="msg ok" id="citiesOk"></div>
+</div>
+
+<script>
+(function() {
+    if (!localStorage.getItem('access_token')) {
+        window.location.replace('check.html');
+        return;
+    }
+})();
+
+const _API = 'http://138.16.224.101:8000/';
+const _api = axios.create({ baseURL: _API, headers: { 'ngrok-skip-browser-warning': '69420' } });
+
+_api.interceptors.request.use(cfg => {
+    const t = localStorage.getItem('access_token');
+    if (t) cfg.headers.Authorization = 'Bearer ' + t;
+    return cfg;
+});
+
+_api.interceptors.response.use(r => r, async err => {
+    if (err.response?.status === 401 && !err.config._retry) {
+        err.config._retry = true;
+        const rt = localStorage.getItem('refresh_token');
+        if (rt) {
+            try {
+                const r = await axios.post(_API + 'auth/refresh', {}, {
+                    headers: { Authorization: 'Bearer ' + rt, 'ngrok-skip-browser-warning': '69420' }
+                });
+                localStorage.setItem('access_token', r.data.access_token);
+                err.config.headers.Authorization = 'Bearer ' + r.data.access_token;
+                return _api(err.config);
+            } catch {
+                localStorage.clear();
+                location.href = 'check.html';
+            }
+        } else {
+            localStorage.clear();
+            location.href = 'check.html';
+        }
+    }
+    return Promise.reject(err);
+});
+
+let foundUser = null;
+let pendingDeleteCityId = null;
+
+function toast(msg, type) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast ' + (type || '') + ' show';
+    setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function showPanelMsg(errId, okId, msg, type) {
+    const err = document.getElementById(errId);
+    const ok = document.getElementById(okId);
+    err.classList.remove('visible');
+    ok.classList.remove('visible');
+    if (!msg) return;
+    const box = type === 'ok' ? ok : err;
+    box.textContent = msg;
+    box.classList.add('visible');
+}
+
+function apiError(err) {
+    const d = err.response?.data?.detail;
+    if (typeof d === 'string') return d;
+    if (Array.isArray(d)) return d.map(x => (x.loc ? x.loc.join('.') + ': ' : '') + x.msg).join('\n');
+    return err.message || 'Ошибка';
+}
+
+function normalizePhone(raw) {
+    let p = raw.replace(/\D/g, '');
+    if (p.startsWith('8') && p.length === 11) p = '7' + p.slice(1);
+    if (p.startsWith('7') && p.length === 11) return '+' + p;
+    if (p.length === 10) return '+7' + p;
+    return raw.trim().startsWith('+') ? raw.trim() : '+' + p;
+}
+
+function extractUserId(data) {
+    if (!data || typeof data !== 'object') return null;
+    return data.id ?? data.user_id ?? data.user?.id ?? data.user?.user_id ?? null;
+}
+
+function extractUserInfo(data) {
+    const u = data.user || data;
+    return {
+        id: extractUserId(data),
+        full_name: u.full_name || u.name || '—',
+        phone_number: u.phone_number || u.phone || '',
+        role: u.role || '—'
+    };
+}
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+        if (btn.dataset.tab === 'cities') loadCities();
+    });
+});
+
+// Users: search
+document.getElementById('searchUserBtn').addEventListener('click', async () => {
+    const phone = normalizePhone(document.getElementById('userPhone').value);
+    if (!phone || phone.length < 11) {
+        showPanelMsg('usersErr', 'usersOk', 'Введите корректный номер телефона', 'err');
+        return;
+    }
+
+    const btn = document.getElementById('searchUserBtn');
+    btn.disabled = true;
+    showPanelMsg('usersErr', 'usersOk', '', 'err');
+    foundUser = null;
+    document.getElementById('promoteBtn').disabled = true;
+    document.getElementById('demoteBtn').disabled = true;
+    document.getElementById('userCard').classList.remove('visible');
+
+    try {
+        const res = await _api.get('/users/search', { params: { phone_number: phone } });
+        const info = extractUserInfo(res.data);
+
+        if (!info.id) {
+            showPanelMsg('usersErr', 'usersOk', 'Пользователь найден, но API не вернул id.\nОтвет: ' + JSON.stringify(res.data), 'err');
+            return;
+        }
+
+        foundUser = { ...info, phone };
+        document.getElementById('foundUserName').textContent = info.full_name;
+        document.getElementById('foundUserMeta').innerHTML =
+            'ID: <b>' + info.id + '</b><br>Телефон: ' + (info.phone_number || phone);
+        const roleEl = document.getElementById('foundUserRole');
+        roleEl.textContent = info.role;
+        roleEl.className = 'role-pill ' + (info.role === 'owner' ? 'owner' : info.role === 'superadmin' ? 'superadmin' : 'user');
+        document.getElementById('userCard').classList.add('visible');
+        document.getElementById('promoteBtn').disabled = false;
+        document.getElementById('demoteBtn').disabled = false;
+        showPanelMsg('usersErr', 'usersOk', 'Пользователь найден', 'ok');
+    } catch (err) {
+        if (err.response?.status === 404) {
+            showPanelMsg('usersErr', 'usersOk', 'Пользователь не найден', 'err');
+        } else {
+            showPanelMsg('usersErr', 'usersOk', apiError(err), 'err');
+        }
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+async function changeRole(endpoint) {
+    if (!foundUser?.id) {
+        showPanelMsg('usersErr', 'usersOk', 'Сначала найдите пользователя', 'err');
+        return;
+    }
+    showPanelMsg('usersErr', 'usersOk', '', 'err');
+    try {
+        await _api.patch('/users/' + foundUser.id + '/' + endpoint, null, {
+            params: { phone_number: foundUser.phone }
+        });
+        const label = endpoint === 'promote-to-owner' ? 'owner' : 'user';
+        foundUser.role = label;
+        const roleEl = document.getElementById('foundUserRole');
+        roleEl.textContent = label;
+        roleEl.className = 'role-pill ' + (label === 'owner' ? 'owner' : 'user');
+        showPanelMsg('usersErr', 'usersOk', 'Роль изменена → ' + label, 'ok');
+        toast('Роль обновлена', 'green');
+    } catch (err) {
+        showPanelMsg('usersErr', 'usersOk', apiError(err), 'err');
+    }
+}
+
+document.getElementById('promoteBtn').addEventListener('click', () => changeRole('promote-to-owner'));
+document.getElementById('demoteBtn').addEventListener('click', () => changeRole('demote-to-user'));
+
+// Cities
+async function loadCities() {
+    const list = document.getElementById('citiesList');
+    list.innerHTML = '<div class="empty">Загрузка...</div>';
+    showPanelMsg('citiesErr', 'citiesOk', '', 'err');
+
+    try {
+        const res = await _api.get('/cities/');
+        const cities = Array.isArray(res.data) ? res.data : [];
+        if (!cities.length) {
+            list.innerHTML = '<div class="empty">Городов пока нет</div>';
+            return;
+        }
+        list.innerHTML = '';
+        cities.forEach(city => list.appendChild(renderCityItem(city)));
+    } catch (err) {
+        list.innerHTML = '';
+        showPanelMsg('citiesErr', 'citiesOk', apiError(err), 'err');
+    }
+}
+
+function renderCityItem(city) {
+    const item = document.createElement('div');
+    item.className = 'city-item';
+    item.dataset.cityId = city.id;
+
+    item.innerHTML =
+        '<div class="city-info">' +
+            '<div class="city-name">' + escapeHtml(city.city || city.name || '—') + '</div>' +
+            '<div class="city-id">ID: ' + city.id + '</div>' +
+        '</div>' +
+        '<div class="city-actions">' +
+            '<button class="icon-btn" title="Редактировать" data-action="edit">' +
+                '<span class="material-symbols-outlined" style="font-size:18px;">edit</span>' +
+            '</button>' +
+            '<button class="icon-btn danger" title="Удалить" data-action="delete">' +
+                '<span class="material-symbols-outlined" style="font-size:18px;">delete</span>' +
+            '</button>' +
+        '</div>';
+
+    item.querySelector('[data-action="edit"]').addEventListener('click', () => startEditCity(item, city));
+    item.querySelector('[data-action="delete"]').addEventListener('click', () => openDeleteCityModal(city));
+    return item;
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function startEditCity(item, city) {
+    item.classList.add('editing');
+    item.innerHTML =
+        '<div class="field-group" style="margin-bottom:10px;">' +
+            '<label>Название города</label>' +
+            '<input type="text" class="edit-city-input" value="' + escapeHtml(city.city || '') + '">' +
+        '</div>' +
+        '<div class="btn-row" style="margin:0;">' +
+            '<button class="btn btn-green save-city-btn">Сохранить</button>' +
+            '<button class="btn btn-muted cancel-city-btn">Отмена</button>' +
+        '</div>';
+
+    item.querySelector('.save-city-btn').addEventListener('click', async () => {
+        const name = item.querySelector('.edit-city-input').value.trim();
+        if (!name) { toast('Введите название', 'red'); return; }
+        try {
+            await _api.patch('/cities/' + city.id, { city: name, id: city.id });
+            toast('Город обновлён', 'green');
+            loadCities();
+        } catch (err) {
+            showPanelMsg('citiesErr', 'citiesOk', apiError(err), 'err');
+        }
+    });
+    item.querySelector('.cancel-city-btn').addEventListener('click', loadCities);
+}
+
+function openDeleteCityModal(city) {
+    pendingDeleteCityId = city.id;
+    document.getElementById('deleteCityText').textContent =
+        'Удалить «' + (city.city || city.name) + '» (ID: ' + city.id + ')?';
+    document.getElementById('deleteCityModal').classList.add('active');
+}
+
+document.getElementById('cancelDeleteCity').addEventListener('click', () => {
+    document.getElementById('deleteCityModal').classList.remove('active');
+    pendingDeleteCityId = null;
+});
+
+document.getElementById('confirmDeleteCity').addEventListener('click', async () => {
+    if (!pendingDeleteCityId) return;
+    const btn = document.getElementById('confirmDeleteCity');
+    btn.disabled = true;
+    try {
+        await _api.delete('/cities/' + pendingDeleteCityId);
+        document.getElementById('deleteCityModal').classList.remove('active');
+        toast('Город удалён', 'green');
+        loadCities();
+    } catch (err) {
+        showPanelMsg('citiesErr', 'citiesOk', apiError(err), 'err');
+    } finally {
+        btn.disabled = false;
+        pendingDeleteCityId = null;
+    }
+});
+
+document.getElementById('addCityBtn').addEventListener('click', async () => {
+    const name = document.getElementById('newCityName').value.trim();
+    if (!name) {
+        showPanelMsg('citiesErr', 'citiesOk', 'Введите название города', 'err');
+        return;
+    }
+    const btn = document.getElementById('addCityBtn');
+    btn.disabled = true;
+    try {
+        await _api.post('/cities/', { city: name });
+        document.getElementById('newCityName').value = '';
+        showPanelMsg('citiesErr', 'citiesOk', 'Город «' + name + '» добавлен', 'ok');
+        toast('Город добавлен', 'green');
+        loadCities();
+    } catch (err) {
+        showPanelMsg('citiesErr', 'citiesOk', apiError(err), 'err');
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+// Init: superadmin only
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const me = await _api.get('/users/me');
+        if (me.data.role !== 'superadmin') {
+            alert('Доступ только для superadmin');
+            location.href = 'mainpage.html';
+            return;
+        }
+        loadCities();
+    } catch (err) {
+        console.error(err);
+        location.href = 'check.html';
+    }
+});
+</script>
+</body>
+</html>
