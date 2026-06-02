@@ -146,15 +146,4 @@
         }
     }
 
-    const burgerBtn = document.getElementById('burger');
-    const sideDrawer = document.getElementById('sideDrawer');
-    const overlay = document.getElementById('overlay');
-    function toggleMenu() {
-        burgerBtn.classList.toggle('open');
-        sideDrawer.classList.toggle('open');
-        overlay.classList.toggle('active');
-    }
-    burgerBtn.onclick = toggleMenu;
-    overlay.onclick = toggleMenu;
-
     document.addEventListener('DOMContentLoaded', initPage);

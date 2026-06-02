@@ -6,6 +6,7 @@
 <title>Клубы</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+<link rel="stylesheet" href="../css/nav.css" />
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Montserrat',sans-serif; }
 html,body { height:100%; background:#000; color:#fff; overflow:hidden; }
@@ -103,7 +104,7 @@ select option { background:#111; color:#fff; }
 <script src="https://maps.api.2gis.ru/2.0/loader.js?pkg=full"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
-<body>
+<body data-nav-active="map">
 
 <div class="overlay" id="overlay"></div>
 
@@ -112,13 +113,7 @@ select option { background:#111; color:#fff; }
         <span class="user-name"  id="drawer_name">Загрузка...</span>
         <span class="user-phone" id="drawer_phone">...</span>
     </div>
-    <div class="drawer-nav">
-        <a href="profile.html"  class="drawer-link"><span class="material-symbols-outlined">account_circle</span> Профиль</a>
-        <a href="map.html"      class="drawer-link active"><span class="material-symbols-outlined">search</span> Карта клубов</a>
-        <a href="booking.html"  class="drawer-link"><span class="material-symbols-outlined">diamond</span> Бронь</a>
-        <a href="settings.html" class="drawer-link"><span class="material-symbols-outlined">settings</span> Настройки</a>
-        <a href="#" class="drawer-link logout" id="logoutLink"><span class="material-symbols-outlined">logout</span> Выйти</a>
-    </div>
+    <div class="drawer-nav" id="appDrawerNav"></div>
 </nav>
 
 <div class="slider-container">
@@ -202,36 +197,6 @@ api.interceptors.response.use(r => r, async err => {
     }
     return Promise.reject(err);
 });
-
-const burgerBtn  = document.getElementById('burger');
-const sideDrawer = document.getElementById('sideDrawer');
-const overlay    = document.getElementById('overlay');
-function toggleMenu() {
-    burgerBtn.classList.toggle('open');
-    sideDrawer.classList.toggle('open');
-    overlay.classList.toggle('active');
-}
-burgerBtn.addEventListener('click', toggleMenu);
-overlay.addEventListener('click', toggleMenu);
-
-async function syncProfile() {
-    const n = localStorage.getItem('user_full_name');
-    if (n) {
-        document.getElementById('drawer_name').innerText  = n;
-        document.getElementById('drawer_phone').innerText = localStorage.getItem('user_phone') || '';
-    }
-    try {
-        const r = await api.get('/users/me');
-        document.getElementById('drawer_name').innerText  = r.data.full_name    || 'Пользователь';
-        document.getElementById('drawer_phone').innerText = r.data.phone_number || '';
-        localStorage.setItem('user_full_name', r.data.full_name);
-        localStorage.setItem('user_phone',     r.data.phone_number);
-    } catch {
-        if (!localStorage.getItem('access_token')) {
-            document.getElementById('drawer_name').innerText = 'Войти в аккаунт';
-        }
-    }
-}
 
 let map, markers = [];
 const clubsCache = {};
@@ -423,16 +388,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.response?.status === 401) return;
         console.warn('Не удалось проверить сессию:', e);
     }
-    syncProfile();
     await loadCities();
     await loadUserCity();
 });
 
-document.getElementById('logoutLink').addEventListener('click', function(e) {
-    e.preventDefault();
-    localStorage.clear();
-    window.location.href = 'check.html';
-});
 </script>
+<script src="../js/nav.js"></script>
 </body>
 </html>

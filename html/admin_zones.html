@@ -6,6 +6,7 @@
     <title>Underlie - Создание зон</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="../css/nav.css" />
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         :root {
@@ -163,7 +164,7 @@
         }
     </style>
 </head>
-<body>
+<body data-nav-active="dashboard">
 
 <div class="overlay" id="overlay"></div>
 
@@ -172,13 +173,7 @@
         <span class="user-name" id="drawer_name">Загрузка...</span>
         <span class="user-phone" id="drawer_phone">...</span>
     </div>
-    <div class="drawer-nav">
-        <a href="mainpage.html" class="drawer-link"><span class="material-symbols-outlined">home</span> Главная</a>
-        <a href="profile.html" class="drawer-link"><span class="material-symbols-outlined">account_circle</span> Профиль</a>
-        <a href="map.html" class="drawer-link"><span class="material-symbols-outlined">search</span> Карта клубов</a>
-        <a href="booking.html" class="drawer-link"><span class="material-symbols-outlined">diamond</span> Бронь</a>
-        <a href="#" class="drawer-link logout" id="logoutLink"><span class="material-symbols-outlined">logout</span> Выйти</a>
-    </div>
+    <div class="drawer-nav" id="appDrawerNav"></div>
 </nav>
 
 <div class="phone-container">
@@ -208,6 +203,7 @@
     <div class="success-box" id="successBox"></div>
 </div>
 
+<script src="../js/nav.js"></script>
 <script>
     // ── AUTH GUARD ──
     (function() { if (!localStorage.getItem('access_token')) window.location.replace('check.html'); })();
@@ -248,28 +244,6 @@
             } else { localStorage.clear(); window.location.href = 'check.html'; }
         }
         return Promise.reject(err);
-    });
-
-    // ── БУРГЕР ──
-    const burger = document.getElementById('burger');
-    const drawer = document.getElementById('sideDrawer');
-    const overlay = document.getElementById('overlay');
-
-    burger.addEventListener('click', () => {
-        burger.classList.toggle('open');
-        drawer.classList.toggle('open');
-        overlay.classList.toggle('active');
-    });
-    overlay.addEventListener('click', () => {
-        burger.classList.remove('open');
-        drawer.classList.remove('open');
-        overlay.classList.remove('active');
-    });
-
-    document.getElementById('logoutLink').addEventListener('click', e => {
-        e.preventDefault();
-        localStorage.clear();
-        window.location.href = 'check.html';
     });
 
    async function loadUserData() {
