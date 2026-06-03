@@ -13,7 +13,7 @@ const ZONE_COLORS = ['#6b8cff', '#ff6b6b', '#34d399', '#fbbf24', '#a78bfa', '#fb
 
 function getTodayISO() {
     const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 const savedStartDate = localStorage.getItem('booking_start_date') || getTodayISO();
 const savedEndDate   = localStorage.getItem('booking_end_date')   || getTodayISO();
@@ -27,11 +27,6 @@ let clubDetail = null;
 let zoneColorById = {};
 let zoneNameById = {};
 let mapLayout = { ox: 0, oy: 0, w: 600, h: 480 };
-
-// пакеты: { [zone_id]: [ {id, name, duration, price, start_time, end_time, is_package} ] }
-let allPackages = {};
-let selectedPackageId = null;
-let calculatedPrice = 0; // цена с бэка
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 function showToast(message, type = 'error') {
@@ -120,10 +115,12 @@ function computeMapLayout() {
     }
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     pts.forEach(p => {
+        const w = p.w || 0;
+        const h = p.h || 0;
         minX = Math.min(minX, p.x);
         minY = Math.min(minY, p.y);
-        maxX = Math.max(maxX, p.x + (p.w || 0));
-        maxY = Math.max(maxY, p.y + (p.h || 0));
+        maxX = Math.max(maxX, p.x + w);
+        maxY = Math.max(maxY, p.y + h);
     });
     mapLayout = {
         ox: MAP_PAD - minX,
@@ -135,251 +132,6 @@ function computeMapLayout() {
 
 function mapX(x) { return (x || 0) + mapLayout.ox; }
 function mapY(y) { return (y || 0) + mapLayout.oy; }
-
-// ─── PACKAGES ─────────────────────────────────────────────────────────────────
-async function fetchPackages() {
-    try {
-        const res = await axios.get(`${API_URL}/pricing/`, {
-            params: { club_id: clubId },
-            headers: {
-                'ngrok-skip-browser-warning': '69420',
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-        });
-        allPackages = {};
-        (res.data || []).forEach(pkg => {
-            if (!allPackages[pkg.zone_id]) allPackages[pkg.zone_id] = [];
-            allPackages[pkg.zone_id].push(pkg);
-        });
-    } catch (e) {
-        console.error('Ошибка загрузки пакетов:', e);
-        allPackages = {};
-    }
-}
-
-// Пакеты для выбранных зон.
-// Если выбраны ПК из нескольких зон — показываем пакеты первой зоны (по duration),
-// но считаем цену через /pricing/calculate для каждой зоны отдельно.
-function getRelevantPackages() {
-    if (!selected.length) return [];
-    const zoneIds = [...new Set(selected.map(s => s.zid))];
-    // Показываем пакеты первой зоны как выбор длительности
-    return (allPackages[zoneIds[0]] || []).sort((a, b) => {
-        // Сначала сортируем: без start_time (обычные) → с start_time (ночные/временные)
-        if (!a.start_time && b.start_time) return -1;
-        if (a.start_time && !b.start_time) return 1;
-        return a.duration - b.duration;
-    });
-}
-
-function formatDuration(minutes) {
-    if (minutes < 60) return `${minutes} мин`;
-    const h = minutes / 60;
-    return h % 1 === 0 ? `${h} ч` : `${h.toFixed(1)} ч`;
-}
-
-// ─── CALCULATE PRICE via API ──────────────────────────────────────────────────
-async function calculatePrice(packageId) {
-    if (!packageId || !selected.length) return 0;
-
-    const refPkg = Object.values(allPackages).flat().find(p => p.id === packageId);
-    if (!refPkg) return 0;
-
-    // Считаем start/end time для расчёта
-    let bookStart, bookEnd;
-    if (refPkg.start_time && refPkg.end_time) {
-        bookStart = `${selectedDateStr}T${refPkg.start_time.slice(0,5)}:00`;
-        const startH = parseInt(refPkg.start_time.slice(0,2));
-        const endH = parseInt(refPkg.end_time.slice(0,2));
-        let endDate = selectedDateStr;
-        if (endH <= startH) {
-            const nd = new Date(selectedDateStr);
-            nd.setDate(nd.getDate() + 1);
-            endDate = `${nd.getFullYear()}-${String(nd.getMonth()+1).padStart(2,'0')}-${String(nd.getDate()).padStart(2,'0')}`;
-        }
-        bookEnd = `${endDate}T${refPkg.end_time.slice(0,5)}:00`;
-    } else {
-        bookStart = `${selectedDateStr}T${startTime}:00`;
-        const sd = new Date(`${selectedDateStr}T${startTime}:00`);
-        sd.setMinutes(sd.getMinutes() + refPkg.duration);
-        bookEnd = `${sd.getFullYear()}-${String(sd.getMonth()+1).padStart(2,'0')}-${String(sd.getDate()).padStart(2,'0')}T${String(sd.getHours()).padStart(2,'0')}:${String(sd.getMinutes()).padStart(2,'0')}:00`;
-    }
-
-    // Группируем выбранные ПК по зонам для bulk calculate
-    const zoneGroups = {};
-    selected.forEach(s => {
-        zoneGroups[s.zid] = (zoneGroups[s.zid] || 0) + 1;
-    });
-
-    const body = [{
-        items: Object.entries(zoneGroups).map(([zid, count]) => ({
-            zone_id: parseInt(zid),
-            count: count,
-        })),
-        start_time: bookStart,
-        end_time: bookEnd,
-    }];
-
-    try {
-        const res = await axios.post(`${API_URL}/pricing/calculate`, body, {
-            headers: {
-                'ngrok-skip-browser-warning': '69420',
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-        });
-        // Ответ: массив результатов, суммируем total_price
-        const data = res.data;
-        if (Array.isArray(data)) {
-            return data.reduce((sum, item) => sum + (item.total_price || 0), 0);
-        }
-        if (data && data.total_price != null) return data.total_price;
-        return 0;
-    } catch (e) {
-        console.error('Ошибка расчёта цены:', e);
-        // Fallback: считаем локально
-        return calculatePriceFallback(packageId);
-    }
-}
-
-// Локальный fallback если API недоступен
-function calculatePriceFallback(packageId) {
-    const refPkg = Object.values(allPackages).flat().find(p => p.id === packageId);
-    if (!refPkg) return 0;
-
-    let total = 0;
-    const zoneIds = [...new Set(selected.map(s => s.zid))];
-
-    zoneIds.forEach(zid => {
-        const countInZone = selected.filter(s => s.zid === zid).length;
-        const zonePkgs = allPackages[zid] || [];
-
-        // Точное совпадение по id
-        let pkg = zonePkgs.find(p => p.id === packageId);
-
-        // Иначе ищем по duration
-        if (!pkg) {
-            pkg = zonePkgs.find(p => p.duration === refPkg.duration);
-        }
-
-        if (pkg) {
-            total += pkg.price * countInZone;
-        } else {
-            // Пропорционально от почасовой
-            const hourly = zonePkgs.find(p => p.duration === 60);
-            if (hourly) {
-                total += Math.round(hourly.price * (refPkg.duration / 60)) * countInZone;
-            }
-        }
-    });
-
-    return total;
-}
-
-// ─── PACKAGE PICKER UI ────────────────────────────────────────────────────────
-function injectPackagePickerStyles() {
-    if (document.getElementById('pkg-picker-styles')) return;
-    const s = document.createElement('style');
-    s.id = 'pkg-picker-styles';
-    s.textContent = `
-        .pkg-section { margin-bottom: 14px; }
-        .pkg-section-label { font-size: 10px; color: #555; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .pkg-list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-        .pkg-list::-webkit-scrollbar { display: none; }
-        .pkg-chip {
-            flex: 0 0 auto; padding: 8px 12px; border-radius: 10px;
-            background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.08);
-            cursor: pointer; transition: all 0.15s; text-align: center; min-width: 68px;
-        }
-        .pkg-chip:active { transform: scale(0.96); }
-        .pkg-chip.active { background: rgba(139,26,26,0.35); border-color: #ff4d4d; }
-        .pkg-chip-dur { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.2; }
-        .pkg-chip-price { font-size: 10px; color: #888; margin-top: 2px; }
-        .pkg-chip.active .pkg-chip-price { color: #f0a0a0; }
-        .pkg-chip-night { border-color: rgba(120,80,255,0.4); background: rgba(30,0,80,0.3); }
-        .pkg-chip-night.active { background: rgba(120,80,255,0.3); border-color: #a78bfa; }
-        .pkg-chip-night .pkg-chip-dur { color: #c4b5fd; }
-        .pkg-chip-loading { opacity: 0.6; pointer-events: none; }
-        .pkg-price-calculating {
-            color: #555; font-size: 11px; text-align: center;
-            padding: 4px 0; letter-spacing: 0.5px;
-        }
-    `;
-    document.head.appendChild(s);
-}
-
-function renderPackagePicker() {
-    injectPackagePickerStyles();
-
-    let container = document.getElementById('packagePickerBox');
-    if (!container) {
-        const footer = document.querySelector('.footer');
-        const infoBox = footer?.querySelector('.info-box');
-        if (!footer || !infoBox) return;
-        container = document.createElement('div');
-        container.id = 'packagePickerBox';
-        footer.insertBefore(container, infoBox);
-    }
-
-    if (!selected.length) {
-        container.innerHTML = '';
-        return;
-    }
-
-    const pkgs = getRelevantPackages();
-    if (!pkgs.length) {
-        container.innerHTML = '';
-        return;
-    }
-
-    // Если выбранный пакет больше не в списке — сбросить
-    if (selectedPackageId && !pkgs.find(p => p.id === selectedPackageId)) {
-        selectedPackageId = null;
-        calculatedPrice = 0;
-    }
-
-    let html = '<div class="pkg-section"><div class="pkg-section-label">Выберите пакет</div><div class="pkg-list">';
-
-    pkgs.forEach(pkg => {
-        const isNight = pkg.start_time || (pkg.name || '').toLowerCase().includes('ноч');
-        const isActive = selectedPackageId === pkg.id;
-        const nightClass = isNight ? ' pkg-chip-night' : '';
-        const activeClass = isActive ? ' active' : '';
-        const nightLabel = isNight ? '🌙 ' : '';
-        // Показываем базовую цену пакета (за 1 ПК)
-        html += `<div class="pkg-chip${nightClass}${activeClass}" data-pkg-id="${pkg.id}">
-            <div class="pkg-chip-dur">${nightLabel}${formatDuration(pkg.duration)}</div>
-            <div class="pkg-chip-price">${pkg.price} ₸</div>
-        </div>`;
-    });
-
-    html += '</div></div>';
-    container.innerHTML = html;
-
-    container.querySelectorAll('.pkg-chip').forEach(chip => {
-        chip.addEventListener('click', async () => {
-            const pkgId = parseInt(chip.dataset.pkgId);
-            if (selectedPackageId === pkgId) {
-                selectedPackageId = null;
-                calculatedPrice = 0;
-                renderPackagePicker();
-                updateUI();
-                return;
-            }
-            selectedPackageId = pkgId;
-            calculatedPrice = 0;
-            // Помечаем как loading
-            container.querySelectorAll('.pkg-chip').forEach(c => c.classList.remove('active'));
-            chip.classList.add('active', 'pkg-chip-loading');
-            updateUI(true); // loading state
-
-            // Считаем цену через API
-            calculatedPrice = await calculatePrice(pkgId);
-            chip.classList.remove('pkg-chip-loading');
-            renderPackagePicker();
-            updateUI();
-        });
-    });
-}
 
 // ─── AVAILABILITY ─────────────────────────────────────────────────────────────
 async function fetchAvailability() {
@@ -417,8 +169,6 @@ async function fetchAvailability() {
     normalizeFloorCoords();
     computeMapLayout();
     selected = [];
-    selectedPackageId = null;
-    calculatedPrice = 0;
     updateUI();
     renderMap();
     scrollMapIntoView();
@@ -434,7 +184,7 @@ function scrollMapIntoView() {
     });
 }
 
-// ─── TOOLTIP ─────────────────────────────────────────────────────────────────
+// ─── TOOLTIP ────────────────────────────────────────────────────────────────
 function formatTime(isoStr) {
     if (!isoStr) return '--:--';
     const timePart = isoStr.split('T')[1] || isoStr;
@@ -512,7 +262,7 @@ function hidePcTooltip() {
     if (tt) tt.classList.remove('visible');
 }
 
-// ─── MAP RENDER ──────────────────────────────────────────────────────────────
+// ─── MAP RENDER ─────────────────────────────────────────────────────────────
 function renderMapObjects(layer) {
     mapObjects.forEach(obj => {
         if (obj.type === 'wall') {
@@ -636,7 +386,7 @@ function applyFreePcStyle(el, isVip, isSelected) {
     el.classList.remove('selected');
 }
 
-async function togglePcSelect(comp, zoneId, zoneName, isVip, el) {
+function togglePcSelect(comp, zoneId, zoneName, isVip, el) {
     const idx = selected.findIndex(s => s.id === comp.id);
     if (idx > -1) {
         selected.splice(idx, 1);
@@ -649,47 +399,45 @@ async function togglePcSelect(comp, zoneId, zoneName, isVip, el) {
         selected.push({ id: comp.id, n: comp.number, zid: zoneId, zoneName, isVip });
         el.classList.add('selected');
     }
-
-    // Сбросить пакет если зоны поменялись
-    if (selectedPackageId) {
-        const pkgs = getRelevantPackages();
-        if (!pkgs.find(p => p.id === selectedPackageId)) {
-            selectedPackageId = null;
-            calculatedPrice = 0;
-        } else {
-            // Пересчитать цену с новым количеством ПК
-            calculatedPrice = 0;
-            updateUI(true);
-            calculatedPrice = await calculatePrice(selectedPackageId);
-        }
-    }
-
-    renderPackagePicker();
     updateUI();
 }
 
-// ─── UI UPDATE ───────────────────────────────────────────────────────────────
-function updateUI(loading = false) {
+// ─── PRICE ──────────────────────────────────────────────────────────────────
+async function calculatePrice() {
+    if (selected.length === 0) return 0;
+    const zonesCount = selected.reduce((acc, pc) => {
+        acc[pc.zid] = (acc[pc.zid] || 0) + 1;
+        return acc;
+    }, {});
+    const items = Object.entries(zonesCount).map(([zid, count]) => ({
+        zone_id: parseInt(zid, 10),
+        count,
+    }));
+    const payload = [{
+        items,
+        start_time: `${selectedDateStr}T${startTime}:00`,
+        end_time: `${selectedEndDateStr}T${endTime}:00`,
+    }];
+    try {
+        const res = await axios.post(`${API_URL}/pricing/calculate`, payload, {
+            headers: { 'ngrok-skip-browser-warning': '69420' },
+        });
+        return res.data.total_amount;
+    } catch (e) {
+        console.error('Ошибка расчета цены:', e);
+        return 0;
+    }
+}
+
+// ─── UI UPDATE ──────────────────────────────────────────────────────────────
+async function updateUI() {
     const btn = document.getElementById('confirmBtn');
     const label = document.getElementById('seatLabel');
-    const timeLabel = document.getElementById('timeLabel');
-
-    if (timeLabel) {
-        if (selectedPackageId) {
-            const pkg = Object.values(allPackages).flat().find(p => p.id === selectedPackageId);
-            if (pkg) {
-                const dur = formatDuration(pkg.duration);
-                const timeStr = pkg.start_time
-                    ? `${pkg.start_time.slice(0,5)} – ${pkg.end_time.slice(0,5)}`
-                    : dur;
-                timeLabel.textContent = timeStr;
-            }
-        } else {
-            timeLabel.textContent = `${startTime} – ${endTime}`;
-        }
-    }
 
     if (selected.length > 0) {
+        const totalPrice = await calculatePrice();
+        window.currentTotalPrice = totalPrice;
+
         const grouped = selected.reduce((acc, curr) => {
             const zn = curr.zoneName || zoneNameById[curr.zid] || 'Зона';
             acc[zn] = acc[zn] || [];
@@ -697,92 +445,36 @@ function updateUI(loading = false) {
             return acc;
         }, {});
 
-        let priceHtml = '';
-
-        if (loading) {
-            priceHtml = `<br><span style="color:#555;font-size:11px;">⏳ расчёт цены...</span>`;
-            btn.classList.remove('active');
-        } else if (selectedPackageId && calculatedPrice > 0) {
-            const pkg = Object.values(allPackages).flat().find(p => p.id === selectedPackageId);
-            window.currentTotalPrice = calculatedPrice;
-            priceHtml = `<br><span style="color:#6fcf97;font-size:15px;font-weight:700;">К оплате: ${calculatedPrice} ₸</span>`;
-            if (pkg) priceHtml += `<br><span style="color:#555;font-size:10px;">${pkg.name} × ${selected.length} мест</span>`;
-            btn.classList.add('active');
-            btn.onclick = handleBooking;
-        } else if (selectedPackageId && calculatedPrice === 0 && !loading) {
-            // Цена 0 — ошибка расчёта
-            window.currentTotalPrice = 0;
-            priceHtml = `<br><span style="color:#ff6b6b;font-size:11px;">⚠ не удалось рассчитать цену</span>`;
-            btn.classList.remove('active');
-        } else {
-            window.currentTotalPrice = 0;
-            priceHtml = `<br><span style="color:#555;font-size:11px;">↑ выберите пакет</span>`;
-            btn.classList.remove('active');
-        }
-
         label.innerHTML = Object.entries(grouped)
             .map(([z, nums]) => `${z} <span>${nums.join(', ')}</span>`)
-            .join('<br>') + priceHtml;
+            .join('<br>') +
+            `<br><span style="color:#6fcf97;font-size:15px;font-weight:700;">К оплате: ${totalPrice} ₸</span>`;
 
+        btn.classList.add('active');
+        btn.onclick = handleBooking;
     } else {
         label.innerHTML = '<span style="color:#555">не выбраны</span>';
         btn.classList.remove('active');
         window.currentTotalPrice = 0;
-        if (timeLabel) timeLabel.textContent = `${startTime} – ${endTime}`;
     }
 }
 
-// ─── BOOKING ─────────────────────────────────────────────────────────────────
+// ─── BOOKING ────────────────────────────────────────────────────────────────
 async function handleBooking() {
     const btn = document.getElementById('confirmBtn');
-
-    if (!selected.length) {
-        showToast('Выберите место');
-        return;
-    }
-    if (!selectedPackageId) {
-        showToast('Выберите пакет');
-        return;
-    }
     if (!window.currentTotalPrice || window.currentTotalPrice === 0) {
         showToast('Ошибка: цена не рассчитана');
         return;
     }
 
-    const pkg = Object.values(allPackages).flat().find(p => p.id === selectedPackageId);
-    if (!pkg) { showToast('Пакет не найден'); return; }
-
     btn.textContent = 'Бронируем…';
     btn.classList.remove('active');
 
-    // Рассчитать start/end time бронирования
-    let bookStartTime, bookEndTime;
-
-    if (pkg.start_time && pkg.end_time) {
-        bookStartTime = `${selectedDateStr}T${pkg.start_time.slice(0,5)}:00`;
-        const startH = parseInt(pkg.start_time.slice(0,2));
-        const endH = parseInt(pkg.end_time.slice(0,2));
-        let endDate = selectedDateStr;
-        if (endH <= startH) {
-            const nd = new Date(selectedDateStr);
-            nd.setDate(nd.getDate() + 1);
-            endDate = `${nd.getFullYear()}-${String(nd.getMonth()+1).padStart(2,'0')}-${String(nd.getDate()).padStart(2,'0')}`;
-        }
-        bookEndTime = `${endDate}T${pkg.end_time.slice(0,5)}:00`;
-    } else {
-        bookStartTime = `${selectedDateStr}T${startTime}:00`;
-        const startDate = new Date(`${selectedDateStr}T${startTime}:00`);
-        startDate.setMinutes(startDate.getMinutes() + pkg.duration);
-        const ed = startDate;
-        const edStr = `${ed.getFullYear()}-${String(ed.getMonth()+1).padStart(2,'0')}-${String(ed.getDate()).padStart(2,'0')}`;
-        bookEndTime = `${edStr}T${String(ed.getHours()).padStart(2,'0')}:${String(ed.getMinutes()).padStart(2,'0')}:00`;
-    }
-
     try {
-        const pricePerPc = Math.round(window.currentTotalPrice / selected.length);
+        const pricePerPc = window.currentTotalPrice / selected.length;
         const data = selected.map(s => ({
-            start_time: bookStartTime,
-            end_time: bookEndTime,
+            start_time: `${selectedDateStr}T${startTime}:00`,
+            end_time: `${selectedEndDateStr}T${endTime}:00`,
             total_price: pricePerPc,
             computer_id: s.id,
             zone_id: s.zid,
@@ -805,7 +497,7 @@ async function handleBooking() {
     }
 }
 
-// ─── CLUB INFO ────────────────────────────────────────────────────────────────
+// ─── CLUB INFO ──────────────────────────────────────────────────────────────
 async function fetchClubInfo() {
     try {
         const cached = localStorage.getItem('club_cache_' + clubId);
@@ -861,7 +553,7 @@ function applyClubDetail(club) {
     }
 }
 
-// ─── CALENDAR ─────────────────────────────────────────────────────────────────
+// ─── CALENDAR ───────────────────────────────────────────────────────────────
 function initCalendar() {
     const list = document.getElementById('dateSelector');
     const daysShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
@@ -892,7 +584,7 @@ function initCalendar() {
             if (endTime <= startTime) {
                 const next = new Date(iso);
                 next.setDate(next.getDate() + 1);
-                selectedEndDateStr = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')}`;
+                selectedEndDateStr = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
             } else {
                 selectedEndDateStr = iso;
             }
@@ -902,12 +594,11 @@ function initCalendar() {
     }
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// ─── INIT ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('timeLabel').textContent = `${startTime} – ${endTime}`;
     document.getElementById('confirmBtn').onclick = handleBooking;
     await fetchClubInfo();
-    await fetchPackages();
     initCalendar();
     await fetchAvailability();
 });
