@@ -151,11 +151,9 @@ select option { background:#111; color:#fff; }
 </div>
 
 <script>
-// Без слеша в конце — убирает двойной слеш при подстановке image_url
 const API_BASE = 'http://138.16.224.101:8000';
 const API_URL  = API_BASE + '/';
 
-// Строит полный URL для изображения, избегая двойного слеша
 function imgUrl(path) {
     if (!path) return null;
     return API_BASE + (path.startsWith('/') ? path : '/' + path);
@@ -190,7 +188,6 @@ api.interceptors.response.use(r => r, async err => {
                 window.location.href = 'check.html';
             }
         } else {
-            // Нет refresh_token — сразу на логин
             localStorage.clear();
             window.location.href = 'check.html';
         }
@@ -200,12 +197,9 @@ api.interceptors.response.use(r => r, async err => {
 
 let map, markers = [];
 const clubsCache = {};
-const cityCoords = {
-    "Астана":    [51.1694, 71.4491],
-    "Karaganda": [49.8047, 73.1094],
-    "Kyiv":      [50.4501, 30.5234],
-    "Алматы":    [43.238949, 76.889709]
-};
+
+// Координаты городов — заполняются динамически из /cities/{id}/coordinates
+const cityCoords = {};
 
 DG.then(() => { map = DG.map('map', { center: [51.1694, 71.4491], zoom: 13 }); });
 
@@ -213,16 +207,24 @@ async function loadCities() {
     try {
         const r = await api.get('/cities/');
         const sel = document.getElementById('citySelect');
-        r.data.forEach(c => {
+
+        // Для каждого города параллельно запрашиваем координаты
+        await Promise.all(r.data.map(async c => {
+            try {
+                const coords = await api.get(`/cities/${c.id}/coordinates`);
+                cityCoords[c.id] = [coords.data.latitude, coords.data.longitude];
+            } catch(e) {
+                console.warn(`Не удалось получить координаты для города ${c.city}:`, e);
+            }
+
             const o = document.createElement('option');
             o.value = c.id;
             o.textContent = c.city;
             sel.appendChild(o);
-        });
+        }));
     } catch(e) { console.log('Города:', e); }
 }
 
-// Проверяет валидность image_url — не пустой и не "string"
 function isValidImg(url) {
     return url && url !== 'string' && url.trim() !== '';
 }
@@ -256,7 +258,6 @@ async function loadClubsByCity(cityId) {
         const mapClubs    = mapRes.data;
         const searchClubs = searchRes.data;
 
-        // Словарь image_url из /clubs/map
         const mapImgMap = {};
         mapClubs.forEach(mc => {
             if (isValidImg(mc.image_url)) mapImgMap[mc.id] = mc.image_url;
@@ -268,7 +269,6 @@ async function loadClubsByCity(cityId) {
             if (club.zones && club.zones.length) {
                 club._minPrice = Math.min(...club.zones.map(z => z.cost));
             }
-            // Подставляем image_url из /clubs/map если в /search он невалидный
             if (!isValidImg(club.image_url) && mapImgMap[club.id]) {
                 club.image_url = mapImgMap[club.id];
             }
@@ -360,9 +360,11 @@ async function loadUserCity() {
         for (const opt of sel.options) {
             if (opt.textContent === r.data.city) {
                 sel.value = opt.value;
-                const c = cityCoords[r.data.city];
+                const cityId = Number(opt.value);
+                // Берём координаты из уже загруженного словаря
+                const c = cityCoords[cityId];
                 if (c && map) map.setView(c, 13);
-                loadClubsByCity(opt.value);
+                loadClubsByCity(cityId);
                 break;
             }
         }
@@ -370,9 +372,10 @@ async function loadUserCity() {
 }
 
 document.getElementById('citySelect').addEventListener('change', function() {
-    const c = cityCoords[this.options[this.selectedIndex].text];
+    const cityId = Number(this.value);
+    const c = cityCoords[cityId];
     if (c && map) map.setView(c, 13);
-    loadClubsByCity(this.value);
+    loadClubsByCity(cityId);
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -383,15 +386,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await api.get('/users/me');
     } catch(e) {
-        // Если 401 и interceptor не смог обновить токен — он сам сделает редирект.
-        // Для других ошибок (сеть, 500) — не редиректим, даём страницу открыться.
         if (e.response?.status === 401) return;
         console.warn('Не удалось проверить сессию:', e);
     }
     await loadCities();
     await loadUserCity();
 });
-
 </script>
 <script src="../js/nav.js"></script>
 </body>
