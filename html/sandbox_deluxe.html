@@ -228,11 +228,22 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 .sandbox-panel .zone-chip.sel{border-color:#fff;background:#222;}
 .sandbox-panel .zone-chip.sel .z-dot{background:#fff!important;box-shadow:none;}
 
-/* ── CUSTOM PACKAGE CARD ── */
 .custom-pkg-card{background:var(--card);border:1px solid #3a3a3a;border-radius:14px;padding:16px;margin-bottom:12px;animation:fadeIn 0.25s ease;}
 .custom-pkg-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
 .custom-pkg-label{font-size:11px;font-weight:700;color:#ffc800;text-transform:uppercase;letter-spacing:1px;}
 .custom-pkg-time-badge{font-size:10px;color:#555;background:#1a1a1a;padding:3px 8px;border-radius:6px;font-weight:700;}
+
+.existing-pkg-row{background:var(--card);border:1px solid #3a3a3a;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;animation:fadeIn 0.2s ease;}
+.existing-pkg-info{flex:1;min-width:0;}
+.existing-pkg-name{font-size:13px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.existing-pkg-meta{font-size:10px;color:#555;display:flex;gap:8px;flex-wrap:wrap;}
+.existing-pkg-price{font-size:14px;font-weight:700;color:var(--green);white-space:nowrap;margin-right:4px;}
+.existing-pkg-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;}
+.existing-pkg-badge.timed{background:rgba(255,200,0,0.1);color:#ffc800;border:1px solid rgba(255,200,0,0.25);}
+.existing-pkg-badge.hourly{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,255,0,0.2);}
+
+.pricing-loading{text-align:center;padding:20px;color:#555;font-size:12px;font-weight:700;}
+.pricing-empty{text-align:center;padding:24px 16px;color:#444;font-size:12px;background:var(--card);border:1px dashed #3a3a3a;border-radius:12px;margin-bottom:12px;}
 
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:none;justify-content:center;align-items:center;z-index:3000;padding:20px;}
 .modal-overlay.active{display:flex;}
@@ -274,6 +285,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 </head>
 <body>
 
+<!-- DELETE ZONE MODAL -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-card">
     <div class="material-symbols-outlined modal-icon">delete_forever</div>
@@ -282,6 +294,19 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
     <div class="modal-actions">
       <button class="m-btn m-confirm" id="confirmDeleteBtn">Да, удалить</button>
       <button class="m-btn m-cancel" id="cancelDeleteBtn">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE STAFF MODAL -->
+<div class="modal-overlay" id="deleteStaffModal">
+  <div class="modal-card">
+    <div class="material-symbols-outlined modal-icon">person_remove</div>
+    <h2>Удалить сотрудника?</h2>
+    <p id="deleteStaffModalText">Сотрудник будет удалён из клуба.</p>
+    <div class="modal-actions">
+      <button class="m-btn m-confirm" id="confirmDeleteStaffBtn">Да, удалить</button>
+      <button class="m-btn m-cancel" id="cancelDeleteStaffBtn">Отмена</button>
     </div>
   </div>
 </div>
@@ -414,6 +439,16 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
       <select id="pricingZoneSelect"><option value="">Загрузка...</option></select>
     </div>
 
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <p class="section-title" style="margin:0;">Текущий прайсинг</p>
+      <button class="btn btn-ghost" id="refreshPricingBtn" style="padding:5px 10px;font-size:9px;">
+        <span class="material-symbols-outlined" style="font-size:13px;">refresh</span>Обновить
+      </button>
+    </div>
+    <div id="existingPricingList">
+      <div class="pricing-loading">Выберите зону для просмотра прайсинга</div>
+    </div>
+
     <p class="section-title">Базовая цена</p>
     <div class="price-hero">
       <span class="material-symbols-outlined price-hero-icon">payments</span>
@@ -426,7 +461,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
       </div>
     </div>
 
-    <!-- Hourly packages -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;margin-top:24px;">
       <p class="section-title" style="margin:0;">Почасовые пакеты</p>
       <span style="font-size:9px;color:#555;font-weight:700;text-transform:uppercase;">start/end = null</span>
@@ -434,7 +468,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
     <div style="font-size:10px;color:#555;margin-bottom:12px;">Duration отправляется в часах. Без привязки ко времени суток.</div>
     <div id="packagesList"></div>
 
-    <!-- Custom named packages -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;margin-top:28px;">
       <p class="section-title" style="margin:0;">Именные пакеты</p>
       <button class="btn btn-green" id="addCustomPkgBtn" style="padding:5px 12px;font-size:10px;">
@@ -531,10 +564,6 @@ function showSuccess(errBoxId, msg){
   const errEl  = document.getElementById(errBoxId);
   if(succEl){ succEl.textContent = msg; succEl.classList.toggle('visible', !!msg); }
   if(errEl) errEl.classList.remove('visible');
-}
-function showMsg(id, msg, type='error'){
-  if(type==='success') showSuccess(id, msg);
-  else showError(id, msg);
 }
 
 function pluralZone(n){ return n===1?'зона':n>=2&&n<=4?'зоны':'зон'; }
@@ -737,6 +766,7 @@ document.getElementById('saveZonesBtn').addEventListener('click',async()=>{
     await _api.post('/zones/',zones,{params:{club_id:CLUB_ID}});
     document.getElementById('zonesAddContainer').innerHTML=''; zoneCounter=0; updateZonesAddCount();
     sandboxInitialized=false;
+    showSuccess('zonesAddError','✅ Зоны сохранены!');
   }catch(e){
     const d=e.response?.data?.detail;
     let msg=e.response?.status===403?'❌ 403: нет прав (нужна роль owner).':Array.isArray(d)?`❌ Validation:\n`+d.map(x=>`• ${x.loc?.join('.')} — ${x.msg}`).join('\n'):typeof d==='string'?`❌ ${e.response?.status}: ${d}`:`❌ Ошибка: ${JSON.stringify(e.response?.data)}`;
@@ -777,9 +807,7 @@ function sbMapTypeDef(type){
   return MAP_OBJECT_TYPES.find(t=>t.type===type)||{type,label:m[type]||type,glyph:'□',w:56,h:40};
 }
 
-function sbZoneHasStoredPos(z){
-  return z.x!=null&&z.y!=null&&(z.x!==0||z.y!==0);
-}
+function sbZoneHasStoredPos(z){ return z.x!=null&&z.y!=null&&(z.x!==0||z.y!==0); }
 
 function sbLayoutUnpositionedZones(){
   let bx=70,by=130;
@@ -810,9 +838,7 @@ function sbNormalizePcCoords(zone){
   });
 }
 
-function sbFindPcZone(pc){
-  return sbZones.find(z=>z.computers.includes(pc));
-}
+function sbFindPcZone(pc){ return sbZones.find(z=>z.computers.includes(pc)); }
 
 function sbMarkPcDirty(pc){
   if(pc.isNew||!pc.id||!pc._orig) return;
@@ -820,9 +846,7 @@ function sbMarkPcDirty(pc){
   if(o.x!==pc.x||o.y!==pc.y||o.number!==pc.number||o.zone_id!==pc.zone_id) pc.dirty=true;
 }
 
-function sbAllPcs(){
-  return sbZones.flatMap(z=>z.computers);
-}
+function sbAllPcs(){ return sbZones.flatMap(z=>z.computers); }
 
 function sbNextPcNumber(){
   const all=sbAllPcs();
@@ -878,21 +902,14 @@ async function initSandbox(){
       const hasPos=sbZoneHasStoredPos(z);
       const px=hasPos?Math.round(z.x):0;
       const py=hasPos?Math.round(z.y):0;
-      return{
-        id:z.id,name:z.name,cost:z.cost??0,cpu:z.cpu,gpu:z.gpu,ram:z.ram,ssd:z.ssd,monitor:z.monitor,
-        color:COLORS[i%COLORS.length],bx:px,by:py,_origX:px,_origY:py,_hasStoredPos:hasPos,posDirty:false,
-        computers:[],visible:true,
-      };
+      return{id:z.id,name:z.name,cost:z.cost??0,cpu:z.cpu,gpu:z.gpu,ram:z.ram,ssd:z.ssd,monitor:z.monitor,color:COLORS[i%COLORS.length],bx:px,by:py,_origX:px,_origY:py,_hasStoredPos:hasPos,posDirty:false,computers:[],visible:true};
     });
     for(const zone of sbZones){
       try{
         const res=await _api.get('/computers/',{params:{zone_id:zone.id}});
         zone.computers=res.data.map(pc=>{
           const o={number:pc.number,x:pc.x??0,y:pc.y??0,zone_id:zone.id};
-          return{
-            id:pc.id,number:pc.number,specification:pc.specification||'string',
-            x:o.x,y:o.y,isNew:false,dirty:false,zone_id:zone.id,_orig:{...o},
-          };
+          return{id:pc.id,number:pc.number,specification:pc.specification||'string',x:o.x,y:o.y,isNew:false,dirty:false,zone_id:zone.id,_orig:{...o}};
         });
         zone.computers.sort((a,b)=>a.number-b.number);
       }catch{}
@@ -953,10 +970,7 @@ function sbBuildMapPalette(){
     btn.innerHTML=`<span class="map-glyph">${def.glyph}</span><span>${def.label}</span>`;
     btn.addEventListener('click',()=>{
       if(active){ sbMapPlacingDef=null; document.getElementById('mapHint').classList.remove('show'); }
-      else{
-        sbMapPlacingDef={...def,_pid:idx};
-        document.getElementById('mapHint').classList.add('show');
-      }
+      else{ sbMapPlacingDef={...def,_pid:idx}; document.getElementById('mapHint').classList.add('show'); }
       sbBuildMapPalette();
     });
     pal.appendChild(btn);
@@ -1024,33 +1038,13 @@ function sbStartMapDrag(el,obj,e){
   sbMapDragging=true; panning=false; wrap.classList.remove('panning');
   el.classList.add('dragging');
   try{ el.setPointerCapture(e.pointerId); }catch{}
-  const onMove=ev=>{
-    if(!d) return;
-    ev.preventDefault();
-    obj.x=ox+(ev.clientX-sx)/scale; obj.y=oy+(ev.clientY-sy)/scale;
-    el.style.left=obj.x+'px'; el.style.top=obj.y+'px';
-    if(!obj.isNew) obj.dirty=true;
-  };
-  const onUp=ev=>{
-    if(!d) return;
-    d=false; sbMapDragging=false;
-    el.classList.remove('dragging');
-    try{ el.releasePointerCapture(ev.pointerId); }catch{}
-    el.removeEventListener('pointermove',onMove);
-    el.removeEventListener('pointerup',onUp);
-    el.removeEventListener('pointercancel',onUp);
-    obj.x=Math.round(obj.x); obj.y=Math.round(obj.y);
-    el.style.left=obj.x+'px'; el.style.top=obj.y+'px';
-    sbUpdateMapActions();
-  };
-  el.addEventListener('pointermove',onMove);
-  el.addEventListener('pointerup',onUp);
-  el.addEventListener('pointercancel',onUp);
+  const onMove=ev=>{ if(!d) return; ev.preventDefault(); obj.x=ox+(ev.clientX-sx)/scale; obj.y=oy+(ev.clientY-sy)/scale; el.style.left=obj.x+'px'; el.style.top=obj.y+'px'; if(!obj.isNew) obj.dirty=true; };
+  const onUp=ev=>{ if(!d) return; d=false; sbMapDragging=false; el.classList.remove('dragging'); try{ el.releasePointerCapture(ev.pointerId); }catch{} el.removeEventListener('pointermove',onMove); el.removeEventListener('pointerup',onUp); el.removeEventListener('pointercancel',onUp); obj.x=Math.round(obj.x); obj.y=Math.round(obj.y); el.style.left=obj.x+'px'; el.style.top=obj.y+'px'; sbUpdateMapActions(); };
+  el.addEventListener('pointermove',onMove); el.addEventListener('pointerup',onUp); el.addEventListener('pointercancel',onUp);
 }
 
 function sbDeleteMapObject(obj){
-  const idx=sbMapObjects.indexOf(obj);
-  if(idx<0) return;
+  const idx=sbMapObjects.indexOf(obj); if(idx<0) return;
   if(obj.id) sbMapDeletedIds.push(obj.id);
   sbMapObjects.splice(idx,1);
   if(sbSelectedMapRef===obj){ sbSelectedMapRef=null; sbSelectedMapId=null; }
@@ -1082,12 +1076,7 @@ function sbRenderZoneLabels(){
     el.className='zone-label'+(zone.id===sbActiveId?' is-active':'');
     el.style.left=(zone.bx||0)+'px'; el.style.top=(zone.by||0)+'px';
     el.innerHTML=`<span class="zone-label-dot" style="background:${zone.color}"></span><span class="zone-label-text">${zone.name}</span>`;
-    el.addEventListener('pointerdown',e=>{
-      if(e.button!==0) return;
-      e.preventDefault(); e.stopPropagation();
-      sbSelectedPcRef=null; sbUpdatePcActions();
-      sbStartZoneLabelDrag(el,zone,e);
-    });
+    el.addEventListener('pointerdown',e=>{ if(e.button!==0) return; e.preventDefault(); e.stopPropagation(); sbSelectedPcRef=null; sbUpdatePcActions(); sbStartZoneLabelDrag(el,zone,e); });
     canvas.appendChild(el);
   });
 }
@@ -1097,25 +1086,9 @@ function sbStartZoneLabelDrag(el,zone,e){
   sbPcDragging=true; panning=false; wrap.classList.remove('panning');
   el.classList.add('dragging');
   try{ el.setPointerCapture(e.pointerId); }catch{}
-  const onMove=ev=>{
-    if(!d) return;
-    ev.preventDefault();
-    zone.bx=ox+(ev.clientX-sx)/scale; zone.by=oy+(ev.clientY-sy)/scale;
-    el.style.left=zone.bx+'px'; el.style.top=zone.by+'px';
-  };
-  const onUp=ev=>{
-    if(!d) return;
-    d=false; sbPcDragging=false;
-    el.classList.remove('dragging');
-    try{ el.releasePointerCapture(ev.pointerId); }catch{}
-    el.removeEventListener('pointermove',onMove);
-    el.removeEventListener('pointerup',onUp);
-    el.removeEventListener('pointercancel',onUp);
-    sbMarkZonePosDirty(zone);
-  };
-  el.addEventListener('pointermove',onMove);
-  el.addEventListener('pointerup',onUp);
-  el.addEventListener('pointercancel',onUp);
+  const onMove=ev=>{ if(!d) return; ev.preventDefault(); zone.bx=ox+(ev.clientX-sx)/scale; zone.by=oy+(ev.clientY-sy)/scale; el.style.left=zone.bx+'px'; el.style.top=zone.by+'px'; };
+  const onUp=ev=>{ if(!d) return; d=false; sbPcDragging=false; el.classList.remove('dragging'); try{ el.releasePointerCapture(ev.pointerId); }catch{} el.removeEventListener('pointermove',onMove); el.removeEventListener('pointerup',onUp); el.removeEventListener('pointercancel',onUp); sbMarkZonePosDirty(zone); };
+  el.addEventListener('pointermove',onMove); el.addEventListener('pointerup',onUp); el.addEventListener('pointercancel',onUp);
 }
 
 function sbRenderPcs(){
@@ -1137,14 +1110,7 @@ function sbRenderPcs(){
         el.classList.add('sel');
         sbStartPcDrag(el,pc,e);
       });
-      el.addEventListener('dblclick',e=>{
-        e.stopPropagation();
-        const nn=prompt('Номер ПК:',String(pc.number));
-        if(nn===null) return;
-        const n=parseInt(nn,10);
-        if(!n||n<1) return;
-        pc.number=n; sbMarkPcDirty(pc); sbRenderAll();
-      });
+      el.addEventListener('dblclick',e=>{ e.stopPropagation(); const nn=prompt('Номер ПК:',String(pc.number)); if(nn===null) return; const n=parseInt(nn,10); if(!n||n<1) return; pc.number=n; sbMarkPcDirty(pc); sbRenderAll(); });
       canvas.appendChild(el);
     });
   });
@@ -1155,42 +1121,21 @@ function sbStartPcDrag(el,pc,e){
   sbPcDragging=true; panning=false; wrap.classList.remove('panning');
   el.classList.add('dragging');
   try{ el.setPointerCapture(e.pointerId); }catch{}
-  const onMove=ev=>{
-    if(!d) return;
-    ev.preventDefault();
-    pc.x=ox+(ev.clientX-sx)/scale; pc.y=oy+(ev.clientY-sy)/scale;
-    el.style.left=pc.x+'px'; el.style.top=pc.y+'px';
-    sbMarkPcDirty(pc);
-  };
-  const onUp=ev=>{
-    if(!d) return;
-    d=false; sbPcDragging=false;
-    el.classList.remove('dragging');
-    try{ el.releasePointerCapture(ev.pointerId); }catch{}
-    el.removeEventListener('pointermove',onMove);
-    el.removeEventListener('pointerup',onUp);
-    el.removeEventListener('pointercancel',onUp);
-    pc.x=Math.round(pc.x); pc.y=Math.round(pc.y);
-    el.style.left=pc.x+'px'; el.style.top=pc.y+'px';
-  };
-  el.addEventListener('pointermove',onMove);
-  el.addEventListener('pointerup',onUp);
-  el.addEventListener('pointercancel',onUp);
+  const onMove=ev=>{ if(!d) return; ev.preventDefault(); pc.x=ox+(ev.clientX-sx)/scale; pc.y=oy+(ev.clientY-sy)/scale; el.style.left=pc.x+'px'; el.style.top=pc.y+'px'; sbMarkPcDirty(pc); };
+  const onUp=ev=>{ if(!d) return; d=false; sbPcDragging=false; el.classList.remove('dragging'); try{ el.releasePointerCapture(ev.pointerId); }catch{} el.removeEventListener('pointermove',onMove); el.removeEventListener('pointerup',onUp); el.removeEventListener('pointercancel',onUp); pc.x=Math.round(pc.x); pc.y=Math.round(pc.y); el.style.left=pc.x+'px'; el.style.top=pc.y+'px'; };
+  el.addEventListener('pointermove',onMove); el.addEventListener('pointerup',onUp); el.addEventListener('pointercancel',onUp);
 }
 
 function sbAddPcAt(zoneId,cx,cy){
   const z=sbZones.find(z=>z.id===zoneId); if(!z) return;
   const num=sbNextPcNumber();
-  const x=Math.round(cx-SB_SEAT/2);
-  const y=Math.round(cy-SB_SEAT/2);
-  z.computers.push({number:num,specification:'string',x,y,isNew:true,dirty:false,zone_id:zoneId});
+  z.computers.push({number:num,specification:'string',x:Math.round(cx-SB_SEAT/2),y:Math.round(cy-SB_SEAT/2),isNew:true,dirty:false,zone_id:zoneId});
   sbRenderAll(); toast(`ПК #${num} → «${z.name}»`,'green');
 }
 
 function sbRemovePC(pc){
   const z=sbFindPcZone(pc); if(!z) return;
-  const idx=z.computers.indexOf(pc);
-  if(idx<0) return;
+  const idx=z.computers.indexOf(pc); if(idx<0) return;
   if(pc.id) sbPcDeletedIds.push(pc.id);
   z.computers.splice(idx,1);
   if(sbSelectedPcRef===pc){ sbSelectedPcRef=null; sbUpdatePcActions(); }
@@ -1230,10 +1175,7 @@ function sbUpdatePcActions(){
   const box=document.getElementById('pcActions');
   const sel=document.getElementById('pcZoneSelect');
   if(!box) return;
-  if(!sbSelectedPcRef){
-    box.style.display='none';
-    return;
-  }
+  if(!sbSelectedPcRef){ box.style.display='none'; return; }
   box.style.display='block';
   if(sel){
     sel.innerHTML=sbZones.map(z=>`<option value="${z.id}" ${z.id===sbSelectedPcRef.zone_id?'selected':''}>${z.name}</option>`).join('');
@@ -1266,16 +1208,10 @@ document.getElementById('addPcBtn').addEventListener('click',()=>{
   if(!sbActiveId){ toast('Выберите зону','red'); return; }
   sbSetPcPlacing(!sbPcPlacing);
 });
-document.getElementById('pcDeleteBtn')?.addEventListener('click',()=>{
-  if(sbSelectedPcRef) sbRemovePC(sbSelectedPcRef);
-});
-
-document.getElementById('mapDeleteBtn')?.addEventListener('click',()=>{
-  if(sbSelectedMapRef) sbDeleteMapObject(sbSelectedMapRef);
-});
+document.getElementById('pcDeleteBtn')?.addEventListener('click',()=>{ if(sbSelectedPcRef) sbRemovePC(sbSelectedPcRef); });
+document.getElementById('mapDeleteBtn')?.addEventListener('click',()=>{ if(sbSelectedMapRef) sbDeleteMapObject(sbSelectedMapRef); });
 document.getElementById('mapRotateBtn')?.addEventListener('click',()=>{
-  const obj=sbSelectedMapRef;
-  if(!obj) return;
+  const obj=sbSelectedMapRef; if(!obj) return;
   obj.rotation=((obj.rotation||0)+90)%360;
   if(!obj.isNew) obj.dirty=true;
   sbRenderAll();
@@ -1289,60 +1225,35 @@ document.getElementById('sandboxSaveBtn').addEventListener('click',async()=>{
   try{
     for(const z of sbZones.filter(z=>z.posDirty)){
       const x=Math.round(z.bx||0),y=Math.round(z.by||0);
-      await _api.patch(`/zones/${z.id}`,[{
-        id:z.id,name:z.name,cost:z.cost??0,
-        cpu:z.cpu||'string',gpu:z.gpu||'string',ram:z.ram||'string',ssd:z.ssd||'string',monitor:z.monitor||'string',
-        x,y,
-      }],{params:{club_id:CLUB_ID}});
-      z._origX=x; z._origY=y; z.posDirty=false; z._hasStoredPos=true;
-      done.zones++;
+      await _api.patch(`/zones/${z.id}`,[{id:z.id,name:z.name,cost:z.cost??0,cpu:z.cpu||'string',gpu:z.gpu||'string',ram:z.ram||'string',ssd:z.ssd||'string',monitor:z.monitor||'string',x,y}],{params:{club_id:CLUB_ID}});
+      z._origX=x; z._origY=y; z.posDirty=false; z._hasStoredPos=true; done.zones++;
     }
-    for(const id of [...sbPcDeletedIds]){
-      await _api.delete(`/computers/${id}`,{params:{club_id:CLUB_ID}});
-      done.del++;
-    }
+    for(const id of [...sbPcDeletedIds]){ await _api.delete(`/computers/${id}`,{params:{club_id:CLUB_ID}}); done.del++; }
     sbPcDeletedIds=[];
-    for(const id of [...sbMapDeletedIds]){
-      await _api.delete(`/map-objects/${id}`,{params:{club_id:CLUB_ID}});
-      done.del++;
-    }
+    for(const id of [...sbMapDeletedIds]){ await _api.delete(`/map-objects/${id}`,{params:{club_id:CLUB_ID}}); done.del++; }
     sbMapDeletedIds=[];
     const newPcs=[];
-    sbZones.forEach(z=>z.computers.filter(p=>p.isNew).forEach(pc=>{
-      newPcs.push({number:pc.number,specification:pc.specification||'string',zone_id:pc.zone_id,x:Math.round(pc.x),y:Math.round(pc.y)});
-    }));
+    sbZones.forEach(z=>z.computers.filter(p=>p.isNew).forEach(pc=>{ newPcs.push({number:pc.number,specification:pc.specification||'string',zone_id:pc.zone_id,x:Math.round(pc.x),y:Math.round(pc.y)}); }));
     if(newPcs.length){
       await _api.post('/computers/',newPcs,{params:{club_id:CLUB_ID}});
       done.pcs+=newPcs.length;
-      sbZones.forEach(z=>z.computers.forEach(p=>{
-        if(p.isNew){ p.isNew=false; p.dirty=false; p._orig={number:p.number,x:p.x,y:p.y,zone_id:p.zone_id}; }
-      }));
+      sbZones.forEach(z=>z.computers.forEach(p=>{ if(p.isNew){ p.isNew=false; p.dirty=false; p._orig={number:p.number,x:p.x,y:p.y,zone_id:p.zone_id}; } }));
     }
     for(const z of sbZones){
       for(const pc of z.computers.filter(p=>p.dirty&&!p.isNew&&p.id)){
         const patchBody={number:pc.number,specification:pc.specification||'string',x:Math.round(pc.x),y:Math.round(pc.y)};
         if(pc.zone_id!==pc._orig.zone_id) patchBody.zone_id=pc.zone_id;
         await _api.patch(`/computers/${pc.id}`,patchBody,{params:{club_id:CLUB_ID}});
-        pc._orig={number:pc.number,x:pc.x,y:pc.y,zone_id:pc.zone_id};
-        pc.dirty=false;
-        done.pcs++;
+        pc._orig={number:pc.number,x:pc.x,y:pc.y,zone_id:pc.zone_id}; pc.dirty=false; done.pcs++;
       }
     }
     for(const obj of sbMapObjects.filter(o=>o.isNew)){
-      const res=await _api.post(`/map-objects/${CLUB_ID}/map-objects/`,{
-        type:obj.type,label:obj.label,x:obj.x,y:obj.y,width:obj.width,height:obj.height,rotation:obj.rotation||0,
-      });
-      const created=res.data;
-      obj.id=created.id; obj.club_id=created.club_id??CLUB_ID;
-      obj.isNew=false; obj.dirty=false;
-      done.map++;
+      const res=await _api.post(`/map-objects/${CLUB_ID}/map-objects/`,{type:obj.type,label:obj.label,x:obj.x,y:obj.y,width:obj.width,height:obj.height,rotation:obj.rotation||0});
+      const created=res.data; obj.id=created.id; obj.club_id=created.club_id??CLUB_ID; obj.isNew=false; obj.dirty=false; done.map++;
     }
     for(const obj of sbMapObjects.filter(o=>o.dirty&&!o.isNew&&o.id)){
-      await _api.patch(`/map-objects/${obj.id}`,{
-        type:obj.type,label:obj.label,x:obj.x,y:obj.y,width:obj.width,height:obj.height,rotation:obj.rotation||0,
-      },{params:{club_id:CLUB_ID}});
-      obj.dirty=false;
-      done.map++;
+      await _api.patch(`/map-objects/${obj.id}`,{type:obj.type,label:obj.label,x:obj.x,y:obj.y,width:obj.width,height:obj.height,rotation:obj.rotation||0},{params:{club_id:CLUB_ID}});
+      obj.dirty=false; done.map++;
     }
     const parts=[];
     if(done.zones) parts.push(`${done.zones} зон`);
@@ -1360,11 +1271,7 @@ document.getElementById('sandboxSaveBtn').addEventListener('click',async()=>{
   }finally{ btn.disabled=false; }
 });
 
-// ════════════════════════════════════════════════════
-// ── TAB 4: PRICING (переработан) ──
-// ════════════════════════════════════════════════════
-
-// Почасовые пакеты: duration в ЧАСАХ, start_time = null, end_time = null
+// ── TAB 4: PRICING ──
 const PKG_TEMPLATES = [
   { hours: 1,  label: '1 час',     discount: 0  },
   { hours: 2,  label: '2 часа',    discount: 0  },
@@ -1374,26 +1281,82 @@ const PKG_TEMPLATES = [
   { hours: 12, label: '12 часов',  discount: 20 },
 ];
 
-let pkgState = {};       // hourly packages state
-let customPkgs = [];     // custom named packages
+let pkgState = {};
+let customPkgs = [];
 let customPkgCounter = 0;
 
-async function loadPricingZones() {
-  pkgState = {};
-  customPkgs = [];
-  customPkgCounter = 0;
-  renderCustomPkgsList();
+async function loadExistingPricing() {
+  const list = document.getElementById('existingPricingList');
+  if (!CLUB_ID) { list.innerHTML = '<div class="pricing-empty">Клуб не найден</div>'; return; }
+  list.innerHTML = '<div class="pricing-loading"><span class="spinner-inline"></span> Загрузка...</div>';
+  try {
+    const res = await _api.get('/pricing/', { params: { club_id: CLUB_ID } });
+    const pkgs = Array.isArray(res.data) ? res.data : [];
+    if (!pkgs.length) { list.innerHTML = '<div class="pricing-empty">Прайсинг ещё не создан</div>'; return; }
+    list.innerHTML = '';
+    pkgs.forEach(pkg => {
+      const isTimed = pkg.start_time && pkg.end_time;
+      const timeStr = isTimed ? `${pkg.start_time.slice(0,5)} – ${pkg.end_time.slice(0,5)}` : `${pkg.duration}ч · без привязки`;
+      const row = document.createElement('div');
+      row.className = 'existing-pkg-row';
+      row.dataset.pkgId = pkg.id;
+      row.innerHTML = `
+        <div class="existing-pkg-info">
+          <div class="existing-pkg-name">${pkg.name}</div>
+          <div class="existing-pkg-meta">
+            <span>${timeStr}</span>
+            <span class="existing-pkg-badge ${isTimed ? 'timed' : 'hourly'}">${isTimed ? 'с временем' : 'почасовой'}</span>
+            <span>Зона ID: ${pkg.zone_id}</span>
+          </div>
+        </div>
+        <span class="existing-pkg-price">${pkg.price} ₸</span>
+        <button class="icon-btn danger" title="Удалить пакет" onclick="deletePricingPackage(${pkg.id}, this)">
+          <span class="material-symbols-outlined">delete</span>
+        </button>`;
+      list.appendChild(row);
+    });
+  } catch(e) {
+    list.innerHTML = `<div class="pricing-empty" style="color:var(--danger);">Ошибка загрузки: ${e.response?.status || e.message}</div>`;
+  }
+}
 
+async function deletePricingPackage(packageId, btn) {
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-inline"></span>';
+  try {
+    await _api.delete(`/pricing/${packageId}`, { params: { club_id: CLUB_ID } });
+    const row = document.querySelector(`.existing-pkg-row[data-pkg-id="${packageId}"]`);
+    if (row) {
+      row.style.opacity = '0'; row.style.transform = 'translateX(16px)'; row.style.transition = '0.2s';
+      setTimeout(() => {
+        row.remove();
+        const list = document.getElementById('existingPricingList');
+        if (!list.querySelector('.existing-pkg-row')) list.innerHTML = '<div class="pricing-empty">Прайсинг ещё не создан</div>';
+      }, 200);
+    }
+    toast('Пакет удалён', 'green');
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined">delete</span>';
+    toast(`❌ Ошибка удаления: ${e.response?.status || e.message}`, 'red');
+  }
+}
+
+document.getElementById('pricingZoneSelect').addEventListener('change', loadExistingPricing);
+document.getElementById('refreshPricingBtn').addEventListener('click', loadExistingPricing);
+
+async function loadPricingZones() {
+  pkgState = {}; customPkgs = []; customPkgCounter = 0;
+  renderCustomPkgsList();
   const sel = document.getElementById('pricingZoneSelect');
   if (!CLUB_ID) { sel.innerHTML = '<option>Клуб не найден</option>'; return; }
   try {
     const res = await _api.get('/zones/', { params: { club_id: CLUB_ID } });
     if (!res.data.length) { sel.innerHTML = '<option value="">Нет зон</option>'; return; }
     sel.innerHTML = res.data.map(z => `<option value="${z.id}">${z.name} (ID: ${z.id})</option>`).join('');
-  } catch(e) {
-    sel.innerHTML = '<option value="">Ошибка загрузки</option>';
-  }
+  } catch(e) { sel.innerHTML = '<option value="">Ошибка загрузки</option>'; }
   renderPackages();
+  loadExistingPricing();
 }
 
 function getBasePrice() { return parseFloat(document.getElementById('basePrice').value) || 0; }
@@ -1407,16 +1370,13 @@ function renderPackages() {
   const bp = getBasePrice();
   const list = document.getElementById('packagesList');
   list.innerHTML = '';
-
   PKG_TEMPLATES.forEach(tpl => {
     const k = tpl.hours;
     if (!(k in pkgState)) pkgState[k] = { checked: k <= 3, price: calcPkgPrice(tpl, bp) };
     const s = pkgState[k];
-
     const row = document.createElement('div');
     row.className = 'package-row';
     row.style.opacity = s.checked ? '1' : '0.45';
-
     row.innerHTML = `
       <div class="pkg-checkbox ${s.checked ? 'checked' : ''}" data-k="${k}">
         <span class="material-symbols-outlined">check</span>
@@ -1429,79 +1389,55 @@ function renderPackages() {
         <input class="pkg-price-input" type="number" min="0" value="${s.price}" data-k="${k}" ${s.checked ? '' : 'disabled'}>
         <div class="pkg-unit">₸ / пакет</div>
       </div>`;
-
     row.querySelector('.pkg-checkbox').addEventListener('click', function() {
-      const k2 = parseInt(this.dataset.k);
-      pkgState[k2].checked = !pkgState[k2].checked;
+      pkgState[parseInt(this.dataset.k)].checked = !pkgState[parseInt(this.dataset.k)].checked;
       renderPackages(); updateSummary();
     });
     row.querySelector('.pkg-price-input').addEventListener('input', function() {
-      const k2 = parseInt(this.dataset.k);
-      pkgState[k2].price = parseFloat(this.value) || 0;
+      pkgState[parseInt(this.dataset.k)].price = parseFloat(this.value) || 0;
       updateSummary();
     });
-
     list.appendChild(row);
   });
-
   updateSummary();
 }
 
-// ── Custom packages ──
 function addCustomPkg() {
   customPkgCounter++;
   const id = customPkgCounter;
-  customPkgs.push({
-    _id: id,
-    name: '',
-    start_time: '08:00',
-    end_time: '12:00',
-    price: getBasePrice() * 4,
-    is_package: true,
-  });
-  renderCustomPkgsList();
-  updateSummary();
+  customPkgs.push({ _id: id, name: '', start_time: '08:00', end_time: '12:00', price: getBasePrice() * 4, is_package: true });
+  renderCustomPkgsList(); updateSummary();
 }
 
 function removeCustomPkg(id) {
   customPkgs = customPkgs.filter(p => p._id !== id);
-  renderCustomPkgsList();
-  updateSummary();
+  renderCustomPkgsList(); updateSummary();
 }
 
 function renderCustomPkgsList() {
   const list = document.getElementById('customPkgsList');
   list.innerHTML = '';
-
   if (!customPkgs.length) {
-    list.innerHTML = `<div style="background:var(--card);border:1.5px dashed #3a3a3a;border-radius:12px;padding:18px;text-align:center;color:#555;font-size:11px;margin-bottom:12px;">
-      Нет именных пакетов. Нажмите «Добавить» выше.
-    </div>`;
+    list.innerHTML = `<div style="background:var(--card);border:1.5px dashed #3a3a3a;border-radius:12px;padding:18px;text-align:center;color:#555;font-size:11px;margin-bottom:12px;">Нет именных пакетов. Нажмите «Добавить» выше.</div>`;
     return;
   }
-
   customPkgs.forEach(pkg => {
-    const card = document.createElement('div');
-    card.className = 'custom-pkg-card';
-    card.dataset.pkgId = pkg._id;
-
-    // Compute duration label
     const st = pkg.start_time || '00:00';
     const et = pkg.end_time || '00:00';
     const [sh, sm] = st.split(':').map(Number);
     const [eh, em] = et.split(':').map(Number);
     let diffMins = (eh * 60 + em) - (sh * 60 + sm);
-    if (diffMins < 0) diffMins += 24 * 60; // overnight
+    if (diffMins < 0) diffMins += 24 * 60;
     const diffHours = (diffMins / 60).toFixed(1).replace('.0','');
-
+    const card = document.createElement('div');
+    card.className = 'custom-pkg-card';
+    card.dataset.pkgId = pkg._id;
     card.innerHTML = `
       <div class="custom-pkg-card-header">
         <span class="custom-pkg-label">Именной пакет</span>
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="custom-pkg-time-badge">${st} – ${et} · ${diffHours}ч</span>
-          <button class="icon-btn danger" onclick="removeCustomPkg(${pkg._id})">
-            <span class="material-symbols-outlined">delete</span>
-          </button>
+          <button class="icon-btn danger" onclick="removeCustomPkg(${pkg._id})"><span class="material-symbols-outlined">delete</span></button>
         </div>
       </div>
       <div class="field-group" style="margin-bottom:14px;">
@@ -1509,36 +1445,25 @@ function renderCustomPkgsList() {
         <input type="text" data-cpf="name" value="${pkg.name}" placeholder="Утренний, Ночной, VIP...">
       </div>
       <div class="field-row" style="margin-bottom:14px;">
-        <div class="field-group" style="margin-bottom:0;">
-          <label>Начало</label>
-          <input type="time" data-cpf="start_time" value="${pkg.start_time}">
-        </div>
-        <div class="field-group" style="margin-bottom:0;">
-          <label>Конец</label>
-          <input type="time" data-cpf="end_time" value="${pkg.end_time}">
-        </div>
+        <div class="field-group" style="margin-bottom:0;"><label>Начало</label><input type="time" data-cpf="start_time" value="${pkg.start_time}"></div>
+        <div class="field-group" style="margin-bottom:0;"><label>Конец</label><input type="time" data-cpf="end_time" value="${pkg.end_time}"></div>
       </div>
       <div class="field-group" style="margin-bottom:0;">
         <label>Цена пакета (₸)</label>
         <input type="number" data-cpf="price" value="${pkg.price}" min="0" style="font-size:16px;font-weight:700;">
       </div>`;
-
-    // Bind changes
     card.querySelectorAll('[data-cpf]').forEach(inp => {
       inp.addEventListener('input', () => {
         const f = inp.dataset.cpf;
         pkg[f] = f === 'price' ? (parseFloat(inp.value) || 0) : inp.value;
-        // Re-render just the time badge
-        const [sh2, sm2] = (pkg.start_time||'00:00').split(':').map(Number);
-        const [eh2, em2] = (pkg.end_time||'00:00').split(':').map(Number);
-        let diff2 = (eh2*60+em2)-(sh2*60+sm2);
+        const [sh2,sm2]=(pkg.start_time||'00:00').split(':').map(Number);
+        const [eh2,em2]=(pkg.end_time||'00:00').split(':').map(Number);
+        let diff2=(eh2*60+em2)-(sh2*60+sm2);
         if(diff2<0) diff2+=1440;
-        const dh2 = (diff2/60).toFixed(1).replace('.0','');
-        card.querySelector('.custom-pkg-time-badge').textContent = `${pkg.start_time} – ${pkg.end_time} · ${dh2}ч`;
+        card.querySelector('.custom-pkg-time-badge').textContent=`${pkg.start_time} – ${pkg.end_time} · ${(diff2/60).toFixed(1).replace('.0','')}ч`;
         updateSummary();
       });
     });
-
     list.appendChild(card);
   });
 }
@@ -1547,33 +1472,20 @@ document.getElementById('addCustomPkgBtn').addEventListener('click', addCustomPk
 
 function updateSummary() {
   const selHourly = PKG_TEMPLATES.filter(t => pkgState[t.hours]?.checked);
-  const selCustom = customPkgs;
   const card = document.getElementById('summaryCard');
-  const total = selHourly.length + selCustom.length;
-
+  const total = selHourly.length + customPkgs.length;
   if (!total) { card.style.display = 'none'; return; }
   card.style.display = 'block';
-
   let rows = '';
   selHourly.forEach(t => {
-    rows += `<div class="summary-row">
-      <span class="summary-key">${t.label} <span style="color:#444;font-size:9px;">(null/null)</span></span>
-      <span class="summary-val">${pkgState[t.hours].price} ₸</span>
-    </div>`;
+    rows += `<div class="summary-row"><span class="summary-key">${t.label} <span style="color:#444;font-size:9px;">(null/null)</span></span><span class="summary-val">${pkgState[t.hours].price} ₸</span></div>`;
   });
-  selCustom.forEach(p => {
+  customPkgs.forEach(p => {
     const n = p.name || '(без названия)';
     const t = p.start_time && p.end_time ? `${p.start_time}–${p.end_time}` : '';
-    rows += `<div class="summary-row">
-      <span class="summary-key">${n} <span style="color:#666;font-size:9px;">${t}</span></span>
-      <span class="summary-val">${p.price} ₸</span>
-    </div>`;
+    rows += `<div class="summary-row"><span class="summary-key">${n} <span style="color:#666;font-size:9px;">${t}</span></span><span class="summary-val">${p.price} ₸</span></div>`;
   });
-  rows += `<div class="summary-row">
-    <span class="summary-key" style="color:#fff;font-weight:700;">Итого пакетов</span>
-    <span class="summary-val" style="color:var(--green);">${total}</span>
-  </div>`;
-
+  rows += `<div class="summary-row"><span class="summary-key" style="color:#fff;font-weight:700;">Итого пакетов</span><span class="summary-val" style="color:var(--green);">${total}</span></div>`;
   document.getElementById('summaryRows').innerHTML = rows;
 }
 
@@ -1586,61 +1498,29 @@ document.getElementById('basePrice').addEventListener('input', () => {
 document.getElementById('savePricingBtn').addEventListener('click', async () => {
   const zoneId = parseInt(document.getElementById('pricingZoneSelect').value);
   if (!zoneId) { showError('pricingError', 'Выберите зону!'); return; }
-
   const selHourly = PKG_TEMPLATES.filter(t => pkgState[t.hours]?.checked);
-  if (!selHourly.length && !customPkgs.length) {
-    showError('pricingError', 'Выберите хотя бы один пакет!'); return;
-  }
-
-  // Validate custom packages
+  if (!selHourly.length && !customPkgs.length) { showError('pricingError', 'Выберите хотя бы один пакет!'); return; }
   for (const p of customPkgs) {
-    if (!p.name || !p.name.trim()) {
-      showError('pricingError', 'У всех именных пакетов должно быть название!'); return;
-    }
-    if (!p.start_time || !p.end_time) {
-      showError('pricingError', `Пакет «${p.name}»: укажите время начала и конца.`); return;
-    }
+    if (!p.name || !p.name.trim()) { showError('pricingError', 'У всех именных пакетов должно быть название!'); return; }
+    if (!p.start_time || !p.end_time) { showError('pricingError', `Пакет «${p.name}»: укажите время начала и конца.`); return; }
   }
-
-  // Build payloads
-  // ── Hourly: duration = hours (int), start_time = null, end_time = null
   const hourlyPayloads = selHourly.map(tpl => ({
-    name: tpl.label,
-    start_time: null,
-    end_time: null,
-    duration: tpl.hours,          // ← часы, не минуты
-    price: pkgState[tpl.hours].price,
-    is_package: tpl.hours > 1,
-    zone_id: zoneId,
+    name: tpl.label, start_time: null, end_time: null,
+    duration: tpl.hours, price: pkgState[tpl.hours].price,
+    is_package: tpl.hours > 1, zone_id: zoneId,
   }));
-
-  // ── Custom: duration = computed hours (float→int rounded), with start/end times
   const customPayloads = customPkgs.map(p => {
-    const [sh, sm] = (p.start_time || '00:00').split(':').map(Number);
-    const [eh, em] = (p.end_time || '00:00').split(':').map(Number);
-    let diffMins = (eh * 60 + em) - (sh * 60 + sm);
-    if (diffMins <= 0) diffMins += 24 * 60; // overnight package
-    const durationHours = Math.round(diffMins / 60) || 1;
-
-    return {
-      name: p.name.trim(),
-      start_time: `${p.start_time}:00`,
-      end_time:   `${p.end_time}:00`,
-      duration:   durationHours,   // ← часы
-      price:      p.price,
-      is_package: true,
-      zone_id:    zoneId,
-    };
+    const [sh,sm]=(p.start_time||'00:00').split(':').map(Number);
+    const [eh,em]=(p.end_time||'00:00').split(':').map(Number);
+    let diffMins=(eh*60+em)-(sh*60+sm);
+    if(diffMins<=0) diffMins+=1440;
+    return { name: p.name.trim(), start_time: `${p.start_time}:00`, end_time: `${p.end_time}:00`, duration: Math.round(diffMins/60)||1, price: p.price, is_package: true, zone_id: zoneId };
   });
-
   const allPayloads = [...hourlyPayloads, ...customPayloads];
-
   const btn = document.getElementById('savePricingBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-inline"></span>Создание...';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Создание...';
   document.getElementById('pricingError').classList.remove('visible');
   document.getElementById('pricingSuccess').classList.remove('visible');
-
   const results = { ok: 0, fail: 0, errors: [] };
   for (const p of allPayloads) {
     try {
@@ -1652,95 +1532,159 @@ document.getElementById('savePricingBtn').addEventListener('click', async () => 
       results.errors.push(`• ${p.name}: ${typeof d === 'string' ? d : JSON.stringify(d)}`);
     }
   }
-
-  btn.disabled = false;
-  btn.textContent = 'Создать прайсинг';
-
+  btn.disabled = false; btn.textContent = 'Создать прайсинг';
   if (results.fail === 0) {
     const s = document.getElementById('pricingSuccess');
-    s.textContent = `✅ Создано ${results.ok} пакет(ов)!`;
-    s.classList.add('visible');
+    s.textContent = `✅ Создано ${results.ok} пакет(ов)!`; s.classList.add('visible');
+    loadExistingPricing();
   } else if (results.ok > 0) {
-    const s = document.getElementById('pricingSuccess');
-    s.textContent = `✅ Создано: ${results.ok}`;
-    s.classList.add('visible');
-    const e = document.getElementById('pricingError');
-    e.textContent = `❌ Ошибки (${results.fail}):\n${results.errors.join('\n')}`;
-    e.classList.add('visible');
+    document.getElementById('pricingSuccess').textContent = `✅ Создано: ${results.ok}`;
+    document.getElementById('pricingSuccess').classList.add('visible');
+    document.getElementById('pricingError').textContent = `❌ Ошибки (${results.fail}):\n${results.errors.join('\n')}`;
+    document.getElementById('pricingError').classList.add('visible');
+    loadExistingPricing();
   } else {
-    const e = document.getElementById('pricingError');
-    e.textContent = `❌ Все запросы провалились:\n${results.errors.join('\n')}`;
-    e.classList.add('visible');
+    document.getElementById('pricingError').textContent = `❌ Все запросы провалились:\n${results.errors.join('\n')}`;
+    document.getElementById('pricingError').classList.add('visible');
   }
 });
 
 // ── TAB 5: STAFF ──
-async function loadStaff(){
-  const list=document.getElementById('staffList');
-  list.innerHTML='<div class="empty-state"><span class="spinner-inline"></span> Загрузка...</div>';
-  if(!CLUB_ID){ list.innerHTML='<div class="empty-state" style="color:var(--danger);">Клуб не найден</div>'; return; }
-  try{
-    const res=await _api.get(`/clubs/${CLUB_ID}/staff`);
-    const data=Array.isArray(res.data)?res.data:(res.data?[res.data]:[]);
-    if(!data.length){ list.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">group</span><p>Сотрудников пока нет</p></div>'; return; }
-    list.innerHTML='';
-    data.forEach(s=>{
-      const item=document.createElement('div'); item.className='staff-item'; item.dataset.id=s.id;
-      item.innerHTML=`
+let pendingDeleteStaffId = null;
+
+document.getElementById('cancelDeleteStaffBtn').addEventListener('click', () => {
+  document.getElementById('deleteStaffModal').classList.remove('active');
+  pendingDeleteStaffId = null;
+});
+
+document.getElementById('confirmDeleteStaffBtn').addEventListener('click', async () => {
+  if (!pendingDeleteStaffId) return;
+  const btn = document.getElementById('confirmDeleteStaffBtn');
+  btn.disabled = true; btn.textContent = 'Удаление...';
+  try {
+    await _api.delete(`/clubs/${CLUB_ID}/staff`, { params: { staff_id: pendingDeleteStaffId } });
+    document.getElementById('deleteStaffModal').classList.remove('active');
+    const item = document.querySelector(`.staff-item[data-id="${pendingDeleteStaffId}"]`);
+    if (item) {
+      item.style.opacity = '0'; item.style.transform = 'translateX(20px)'; item.style.transition = '0.2s';
+      setTimeout(() => {
+        item.remove();
+        if (!document.querySelector('.staff-item')) {
+          document.getElementById('staffList').innerHTML = '<div class="empty-state"><span class="material-symbols-outlined">group</span><p>Сотрудников пока нет</p></div>';
+        }
+      }, 200);
+    }
+    toast('Сотрудник удалён', 'green');
+    pendingDeleteStaffId = null;
+  } catch(e) {
+    const d = e.response?.data?.detail;
+    showError('staffError', `❌ ${e.response?.status || e.message}: ${typeof d === 'string' ? d : JSON.stringify(d)}`);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Да, удалить';
+    document.getElementById('deleteStaffModal').classList.remove('active');
+  }
+});
+
+async function loadStaff() {
+  const list = document.getElementById('staffList');
+  list.innerHTML = '<div class="empty-state"><span class="spinner-inline"></span> Загрузка...</div>';
+  if (!CLUB_ID) { list.innerHTML = '<div class="empty-state" style="color:var(--danger);">Клуб не найден</div>'; return; }
+  try {
+    const res = await _api.get(`/clubs/${CLUB_ID}/staff`);
+    const data = Array.isArray(res.data) ? res.data : (res.data ? [res.data] : []);
+    if (!data.length) {
+      list.innerHTML = '<div class="empty-state"><span class="material-symbols-outlined">group</span><p>Сотрудников пока нет</p></div>';
+      return;
+    }
+
+    // Для каждого сотрудника параллельно подтягиваем профиль пользователя
+    const enriched = await Promise.all(data.map(async s => {
+      const staffId = s.user_id ?? s.id ?? s.staff_id ?? null;
+      let profile = {};
+      if (staffId) {
+        try {
+          const pr = await _api.get(`/users/${staffId}`);
+          profile = pr.data || {};
+        } catch {}
+      }
+      return { ...s, _staffId: staffId, _profile: profile };
+    }));
+
+    list.innerHTML = '';
+    enriched.forEach(s => {
+      const staffId = s._staffId;
+      const p = s._profile;
+
+      // Имя: сначала из профиля, потом из самого объекта стаффа
+      const displayName = p.full_name || p.name || p.username
+        || s.full_name || s.name || s.username || '—';
+
+      // Телефон: из профиля или из объекта стаффа
+      const displayPhone = p.phone_number || s.phone_number || '';
+
+      const safeName = displayName.replace(/'/g, "\\'");
+
+      const item = document.createElement('div');
+      item.className = 'staff-item';
+      if (staffId) item.dataset.id = staffId;
+      item.innerHTML = `
         <div class="staff-info">
-          <div class="staff-name">${s.full_name||s.name||'Без имени'}</div>
-          <span class="staff-role ${s.staff_role==='admin'?'admin':'staff'}">${s.staff_role||'staff'}</span>
-          <div class="staff-phone">${s.phone_number||''}</div>
+          <div class="staff-name">${displayName}</div>
+          <span class="staff-role ${s.staff_role === 'admin' ? 'admin' : 'staff'}">${s.staff_role || 'staff'}</span>
+          <div class="staff-phone">${displayPhone}</div>
         </div>
-        <button class="icon-btn danger" onclick="deleteStaff(${s.id},this)"><span class="material-symbols-outlined">person_remove</span></button>`;
+        <button class="icon-btn danger" title="Удалить сотрудника" ${staffId ? '' : 'disabled'} onclick="openDeleteStaffModal(${staffId}, '${safeName}')">
+          <span class="material-symbols-outlined">person_remove</span>
+        </button>`;
       list.appendChild(item);
     });
-  }catch(e){ list.innerHTML=`<div class="empty-state" style="color:var(--danger);">Ошибка: ${e.response?.status||e.message}</div>`; }
+  } catch(e) {
+    list.innerHTML = `<div class="empty-state" style="color:var(--danger);">Ошибка: ${e.response?.status || e.message}</div>`;
+  }
 }
 
-async function deleteStaff(id,btn){
-  btn.disabled=true;
-  try{
-    await _api.delete(`/clubs/${CLUB_ID}/staff`,{params:{staff_id:id}});
-    const item=document.querySelector(`.staff-item[data-id="${id}"]`);
-    if(item){item.style.opacity='0';item.style.transition='0.2s';setTimeout(()=>{item.remove();if(!document.querySelector('.staff-item'))document.getElementById('staffList').innerHTML='<div class="empty-state"><span class="material-symbols-outlined">group</span><p>Сотрудников пока нет</p></div>';},200);}
-    toast('Сотрудник удалён');
-  }catch(e){ showError('staffError',`❌ Ошибка: ${e.response?.status||e.message}`); btn.disabled=false; }
+function openDeleteStaffModal(id, name) {
+  if (!id) { toast('ID сотрудника не найден', 'red'); return; }
+  pendingDeleteStaffId = id;
+  document.getElementById('deleteStaffModalText').textContent = `Сотрудник «${name}» будет удалён из клуба.`;
+  document.getElementById('deleteStaffModal').classList.add('active');
 }
 
-document.getElementById('addStaffBtn').addEventListener('click',async()=>{
-  const phone=document.getElementById('staffPhone').value.trim();
-  const role=document.getElementById('staffRole').value;
-  if(!phone){ showError('staffError','Введите номер телефона'); return; }
-  const btn=document.getElementById('addStaffBtn');
-  btn.disabled=true; btn.innerHTML='<span class="spinner-inline"></span>Добавление...';
-  showError('staffError','');
-  try{
-    await _api.post(`/clubs/${CLUB_ID}/staff`,{phone_number:phone,staff_role:role});
-    document.getElementById('staffPhone').value='';
-    showSuccess('staffError','✅ Сотрудник добавлен!');
+document.getElementById('addStaffBtn').addEventListener('click', async () => {
+  const phone = document.getElementById('staffPhone').value.trim();
+  const role = document.getElementById('staffRole').value;
+  if (!phone) { showError('staffError', 'Введите номер телефона'); return; }
+  const btn = document.getElementById('addStaffBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-inline"></span>Добавление...';
+  showError('staffError', '');
+  try {
+    await _api.post(`/clubs/${CLUB_ID}/staff`, { phone_number: phone, staff_role: role });
+    document.getElementById('staffPhone').value = '';
+    showSuccess('staffError', '✅ Сотрудник добавлен!');
     await loadStaff();
-  }catch(e){
-    const d=e.response?.data?.detail;
-    showError('staffError',`❌ ${e.response?.status}: ${typeof d==='string'?d:JSON.stringify(d)}`);
-  }finally{ btn.disabled=false; btn.textContent='Добавить сотрудника'; }
+  } catch(e) {
+    const d = e.response?.data?.detail;
+    showError('staffError', `❌ ${e.response?.status}: ${typeof d === 'string' ? d : JSON.stringify(d)}`);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Добавить сотрудника';
+  }
 });
 
 // ── INIT ──
-document.addEventListener('DOMContentLoaded',async()=>{
-  if(!CLUB_ID||isNaN(CLUB_ID)){
-    try{
-      const ur=await _api.get('/users/me');
-      const ids=ur.data.club_ids;
-      if(ids&&ids.length){ CLUB_ID=ids[0]; localStorage.setItem('owner_club_id',CLUB_ID); }
-    }catch{}
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!CLUB_ID || isNaN(CLUB_ID)) {
+    try {
+      const ur = await _api.get('/users/me');
+      const ids = ur.data.club_ids;
+      if (ids && ids.length) { CLUB_ID = ids[0]; localStorage.setItem('owner_club_id', CLUB_ID); }
+    } catch {}
   }
-  if(CLUB_ID){
-    try{
-      const cr=await _api.get(`/clubs/${CLUB_ID}`);
-      const badge=document.getElementById('clubBadge');
-      badge.textContent=cr.data.name; badge.style.display='';
-    }catch{}
+  if (CLUB_ID) {
+    try {
+      const cr = await _api.get(`/clubs/${CLUB_ID}`);
+      const badge = document.getElementById('clubBadge');
+      badge.textContent = cr.data.name; badge.style.display = '';
+    } catch {}
   }
   document.getElementById('loadingOverlay').classList.add('hidden');
   loadZonesList();
