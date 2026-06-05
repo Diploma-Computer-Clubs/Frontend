@@ -136,7 +136,7 @@ transform:scale(0.97);
 
 <div class="field">
 <label>Номер телефона</label>
-<input name="phone" type="tel" placeholder="+7">
+<input name="phone" type="tel" id="phoneInput" placeholder="+7">
 </div>
 
 <div class="field">
@@ -159,6 +159,21 @@ transform:scale(0.97);
 </div>
 
 <script>
+
+const phoneInput = document.getElementById('phoneInput');
+
+phoneInput.addEventListener('focus', () => {
+    if (!phoneInput.value) {
+        phoneInput.value = '+7';
+    }
+});
+
+phoneInput.addEventListener('keydown', (e) => {
+    if ((e.key === 'Backspace' || e.key === 'Delete') &&
+        phoneInput.value === '+7') {
+        e.preventDefault();
+    }
+});
 
 const form = document.getElementById("loginForm");
 const errorDiv = document.getElementById("errorMessage");
@@ -190,7 +205,7 @@ form.addEventListener("submit", async (e) => {
         const data = await res.json();
 
         if (!res.ok) {
-            errorDiv.textContent = data.detail || "Ошибка входа";
+            errorDiv.textContent = "Неправильный логин или пароль";
             return;
         }
 
