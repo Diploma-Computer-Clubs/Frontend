@@ -491,7 +491,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 <!-- TAB: STAFF -->
 <div class="tab-panel" id="tab-staff">
   <div class="panel-content">
-    <p class="section-title">Сотрудники</p>
     <div id="staffList">
       <div class="empty-state"><span class="spinner-inline"></span> Загрузка...</div>
     </div>
@@ -501,7 +500,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
       <div class="field-group" style="margin-bottom:0;">
         <label>Роль</label>
         <select id="staffRole">
-          <option value="staff">Staff — сотрудник</option>
           <option value="admin">Admin — администратор</option>
         </select>
       </div>
@@ -629,7 +627,6 @@ function renderZonesList(zones){
         <div class="zone-info-row"><span class="zone-info-key">RAM</span><span class="zone-info-val">${zone.ram}</span></div>
         <div class="zone-info-row"><span class="zone-info-key">SSD</span><span class="zone-info-val">${zone.ssd}</span></div>
         <div class="zone-info-row"><span class="zone-info-key">Монитор</span><span class="zone-info-val">${zone.monitor}</span></div>
-        <div class="zone-info-row"><span class="zone-info-key">Позиция</span><span class="zone-info-val">X: ${zone.x}, Y: ${zone.y}</span></div>
       </div>
       <div class="zone-edit-form" id="ze_${zone.id}">
         <div class="field-group"><label>Название</label><input type="text" data-f="name" value="${zone.name}"></div>
@@ -639,10 +636,6 @@ function renderZonesList(zones){
         <div class="field-group"><label>RAM</label><input type="text" data-f="ram" value="${zone.ram}"></div>
         <div class="field-group"><label>SSD</label><input type="text" data-f="ssd" value="${zone.ssd}"></div>
         <div class="field-group"><label>Монитор</label><input type="text" data-f="monitor" value="${zone.monitor}"></div>
-        <div class="field-row">
-          <div class="field-group"><label>X</label><input type="number" data-f="x" value="${zone.x}"></div>
-          <div class="field-group"><label>Y</label><input type="number" data-f="y" value="${zone.y}"></div>
-        </div>
         <button class="save-zone-btn" id="szb_${zone.id}" onclick="saveZoneEdit(${zone.id})">Сохранить</button>
         <button class="cancel-zone-btn" onclick="toggleZoneEdit(${zone.id})">Отмена</button>
       </div>`;
@@ -729,8 +722,7 @@ function addZoneCard(){
     <div class="field-group"><label>SSD</label><input type="text" placeholder="1TB NVMe" data-f="ssd"></div>
     <div class="field-group"><label>Монитор</label><input type="text" placeholder='27" 165Hz IPS' data-f="monitor"></div>
     <div class="field-row">
-      <div class="field-group"><label>X</label><input type="number" placeholder="0" data-f="x"></div>
-      <div class="field-group"><label>Y</label><input type="number" placeholder="0" data-f="y"></div>
+      
     </div>`;
   container.appendChild(card);
   updateZonesAddCount();
@@ -766,7 +758,7 @@ document.getElementById('saveZonesBtn').addEventListener('click',async()=>{
     await _api.post('/zones/',zones,{params:{club_id:CLUB_ID}});
     document.getElementById('zonesAddContainer').innerHTML=''; zoneCounter=0; updateZonesAddCount();
     sandboxInitialized=false;
-    showSuccess('zonesAddError','✅ Зоны сохранены!');
+    showSuccess('zonesAddError',' Зоны сохранены!');
   }catch(e){
     const d=e.response?.data?.detail;
     let msg=e.response?.status===403?'❌ 403: нет прав (нужна роль owner).':Array.isArray(d)?`❌ Validation:\n`+d.map(x=>`• ${x.loc?.join('.')} — ${x.msg}`).join('\n'):typeof d==='string'?`❌ ${e.response?.status}: ${d}`:`❌ Ошибка: ${JSON.stringify(e.response?.data)}`;
