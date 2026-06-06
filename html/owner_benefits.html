@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underlie — Для владельцев клубов</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="../css/nav.css" />
+    <style>
+        :root {
+            --bg: #333;
+            --surface: #2d2d2d;
+            --card: #2a2a2a;
+            --text: #fff;
+            --muted: #888;
+            --green: #00ff00;
+            --green-dim: rgba(0,255,0,0.08);
+            --accent: #8b1a1a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        .page-wrap { max-width: 480px; margin: 0 auto; padding-bottom: 50px; }
+
+        .hero {
+            background: linear-gradient(160deg, rgba(139,26,26,0.25), transparent 60%);
+            padding: 28px 20px 32px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .hero-tag {
+            font-size: 10px; font-weight: 700; letter-spacing: 2px;
+            text-transform: uppercase; color: var(--green); margin-bottom: 10px;
+        }
+        .hero h2 { font-size: 26px; font-weight: 700; line-height: 1.2; margin-bottom: 12px; }
+        .hero p { font-size: 14px; color: #aaa; line-height: 1.65; }
+
+        .section { padding: 24px 20px 0; }
+        .section-title {
+            font-size: 11px; font-weight: 700; color: #aaa;
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;
+        }
+
+        .benefit-card {
+            background: var(--card); border: 1px solid #444; border-radius: 14px;
+            padding: 18px; margin-bottom: 12px; display: flex; gap: 14px;
+        }
+        .benefit-icon {
+            width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+            background: var(--green-dim); border: 1px solid rgba(0,255,0,0.2);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--green);
+        }
+        .benefit-icon .material-symbols-outlined { font-size: 22px; }
+        .benefit-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+        .benefit-text { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+        .stat-card {
+            background: var(--card); border: 1px solid #444; border-radius: 12px;
+            padding: 16px; text-align: center;
+        }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--green); }
+        .stat-lbl { font-size: 10px; color: var(--muted); margin-top: 4px; text-transform: uppercase; }
+
+        .steps { display: flex; flex-direction: column; gap: 10px; }
+        .step-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            background: var(--card); border: 1px solid #3a3a3a;
+            border-radius: 12px; padding: 14px;
+        }
+        .step-num {
+            width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+            background: var(--accent); color: #fff; font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .step-text { font-size: 13px; line-height: 1.5; color: #ccc; }
+
+        .cta-block {
+            margin: 28px 20px 0;
+            background: linear-gradient(135deg, rgba(0,255,0,0.1), rgba(0,255,0,0.02));
+            border: 1px solid rgba(0,255,0,0.3); border-radius: 16px; padding: 22px;
+        }
+        .cta-block h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+        .cta-block p { font-size: 12px; color: #aaa; line-height: 1.6; margin-bottom: 16px; }
+        .cta-btn {
+            display: block; width: 100%; padding: 16px; border-radius: 12px;
+            border: 1px solid var(--green); background: var(--green-dim);
+            color: var(--green); font-size: 13px; font-weight: 700;
+            text-transform: uppercase; text-align: center; text-decoration: none;
+            cursor: pointer; font-family: 'Montserrat', sans-serif; margin-bottom: 10px;
+        }
+        .cta-btn:active { background: var(--green); color: #000; }
+        .cta-btn.secondary {
+            background: transparent; border-color: #555; color: #ccc;
+        }
+    </style>
+</head>
+<body data-nav-active="owner_benefits">
+
+<div class="overlay" id="overlay"></div>
+
+<nav class="side-drawer" id="sideDrawer">
+    <div class="user-block">
+        <span class="user-name" id="drawer_name">Загрузка...</span>
+        <span class="user-phone" id="drawer_phone">...</span>
+    </div>
+    <div class="drawer-nav" id="appDrawerNav"></div>
+</nav>
+
+<header class="main-header app-header">
+    <button class="burger-menu" id="burger">
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+    </button>
+    <h1>Для владельцев</h1>
+    <div class="header-right">
+        <div class="logo-box"><img src="../img/Frame 6.svg" alt="UNDERLIE" style="height:32px;"></div>
+    </div>
+</header>
+
+<div class="page-wrap">
+    <section class="hero">
+        <div class="hero-tag">Партнёрская программа</div>
+        <h2>Разместите клуб на Underlie — и получайте брони онлайн</h2>
+        <p>Мы берём на себя поиск клиентов, бронирование мест и удобную карту клубов. Вы управляете залом, ценами и персоналом в одной панели.</p>
+    </section>
+
+    <section class="section">
+        <p class="section-title">Почему это выгодно</p>
+        <div class="benefit-card">
+            <div class="benefit-icon"><span class="material-symbols-outlined">groups</span></div>
+            <div>
+                <div class="benefit-title">Новые клиенты без рекламы</div>
+                <div class="benefit-text">Клуб виден на карте города — пользователи находят вас сами и бронируют места в пару кликов.</div>
+            </div>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon"><span class="material-symbols-outlined">event_available</span></div>
+            <div>
+                <div class="benefit-title">Онлайн-бронирование 24/7</div>
+                <div class="benefit-text">Гости выбирают дату, время и конкретное место на схеме зала — даже когда администратор не на связи.</div>
+            </div>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon"><span class="material-symbols-outlined">dashboard</span></div>
+            <div>
+                <div class="benefit-title">Панель управления клубом</div>
+                <div class="benefit-text">Зоны, компьютеры, прайсинг, сотрудники и статистика — всё в одном месте, без таблиц и ручной работы.</div>
+            </div>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon"><span class="material-symbols-outlined">map</span></div>
+            <div>
+                <div class="benefit-title">Схема зала и свободные места</div>
+                <div class="benefit-text">Рисуйте расположение ПК на карте — клиенты видят актуальную занятость в реальном времени.</div>
+            </div>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon"><span class="material-symbols-outlined">payments</span></div>
+            <div>
+                <div class="benefit-title">Гибкий прайсинг</div>
+                <div class="benefit-text">Почасовые тарифы, пакеты и скидки по зонам — настраиваете под свой клуб за минуты.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <p class="section-title">Цифры платформы</p>
+        <div class="stats-row">
+            <div class="stat-card"><div class="stat-val">24/7</div><div class="stat-lbl">Приём броней</div></div>
+            <div class="stat-card"><div class="stat-val">5 мин</div><div class="stat-lbl">Регистрация клуба</div></div>
+            <div class="stat-card"><div class="stat-val">1</div><div class="stat-lbl">Панель на всё</div></div>
+            <div class="stat-card"><div class="stat-val">0 ₸</div><div class="stat-lbl">Старт без вложений</div></div>
+        </div>
+    </section>
+
+    <section class="section">
+        <p class="section-title">Как начать</p>
+        <div class="steps">
+            <div class="step-item"><span class="step-num">1</span><span class="step-text">Зарегистрируйте клуб — название, адрес, фото и описание.</span></div>
+            <div class="step-item"><span class="step-num">2</span><span class="step-text">Добавьте зоны (Standard, VIP…) с характеристиками ПК.</span></div>
+            <div class="step-item"><span class="step-num">3</span><span class="step-text">Расставьте места на схеме и настройте цены.</span></div>
+            <div class="step-item"><span class="step-num">4</span><span class="step-text">Клуб появится на карте — принимайте брони!</span></div>
+        </div>
+    </section>
+
+    <div class="cta-block">
+        <h3>Готовы подключить клуб?</h3>
+        <p>Уже есть клуб на платформе — откройте панель управления. Ещё нет — создайте за несколько минут.</p>
+        <a href="admin_create_club.html" class="cta-btn" id="ctaCreate">Создать клуб</a>
+        <a href="admin_dashboard.html" class="cta-btn secondary" id="ctaDashboard">Мой клуб</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="../js/nav.js"></script>
+<script>
+(function() {
+    if (!localStorage.getItem('access_token')) {
+        window.location.replace('check.html');
+        return;
+    }
+
+    document.addEventListener('appnav:ready', function(e) {
+        const user = e.detail?.user;
+        if (!user || user.role !== 'owner') {
+            window.location.href = 'mainpage.html';
+            return;
+        }
+        const hasClub = user.club_ids?.length > 0 || user.club_id;
+        document.getElementById('ctaDashboard').style.display = hasClub ? 'block' : 'none';
+        document.getElementById('ctaCreate').style.display = hasClub ? 'none' : 'block';
+    });
+})();
+</script>
+</body>
+</html>

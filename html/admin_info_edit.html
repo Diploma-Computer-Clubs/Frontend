@@ -28,7 +28,7 @@
             min-height: 100vh; overflow-x: hidden;
         }
 
-        .burger-menu { background: none; border: none; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; }
+        .burger-menu { background: none; border: none; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; position: fixed; top: 20px; left: 20px; }
         .burger-bar { width: 25px; height: 2px; background-color: #fff; transition: 0.3s; }
         .burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
         .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
@@ -189,11 +189,12 @@
 
 <div class="phone-container">
     <div class="header">
-        <button class="back-btn" onclick="history.back()">
-            <span class="material-symbols-outlined">arrow_back</span>
+        <button class="burger-menu" id="burger">
+            <span class="burger-bar"></span>
+            <span class="burger-bar"></span>
+            <span class="burger-bar"></span>
         </button>
         <h1>Редактировать клуб</h1>
-        <div style="width:25px;"></div>
     </div>
 
     <div class="club-id-badge" id="clubIdBadge" style="display:none;">

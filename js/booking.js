@@ -11,27 +11,6 @@ api.interceptors.request.use(config => {
     return config;
 });
 
-const burgerBtn = document.getElementById('burger');
-const sideDrawer = document.getElementById('sideDrawer');
-const overlay = document.getElementById('overlay');
-
-function toggleMenu() {
-    burgerBtn.classList.toggle('open');
-    sideDrawer.classList.toggle('open');
-    overlay.classList.toggle('active');
-}
-burgerBtn.addEventListener('click', toggleMenu);
-overlay.addEventListener('click', toggleMenu);
-
-async function syncProfile() {
-    try {
-        const response = await api.get('/users/me');
-        const user = response.data;
-        document.getElementById('drawer_name').innerText = user.full_name || "Пользователь";
-        document.getElementById('drawer_phone').innerText = user.phone_number || "";
-    } catch (err) { console.log("Profile sync skipped"); }
-}
-
 async function loadBookings() {
     const listElement = document.getElementById('bookings-list');
     const emptyState = document.getElementById('empty-state');
@@ -142,7 +121,4 @@ function resetDeleteBtn(btn) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    syncProfile();
-    loadBookings();
-});
+document.addEventListener('DOMContentLoaded', loadBookings);

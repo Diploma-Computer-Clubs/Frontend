@@ -1,19 +1,24 @@
 /**
  * Единое боковое меню для всех страниц.
  * На <body> задай data-nav-active="map" (ключ текущей страницы).
+ *
+ * Роли:
+ *   user  — обычный пользователь
+ *   owner — владелец клуба
+ *   admin — суперадмин (только профиль + админ-панель)
  */
 (function () {
     const API_URL = 'http://138.16.224.101:8000/';
 
     const NAV_LINKS = [
-        { key: 'mainpage', href: 'mainpage.html', icon: 'home', label: 'Главная', hideOn: ['mainpage'] },
+        { key: 'mainpage', href: 'mainpage.html', icon: 'home', label: 'Главная', hideForRoles: ['admin'] },
         { key: 'profile', href: 'profile.html', icon: 'account_circle', label: 'Профиль', auth: true },
-        { key: 'map', href: 'map.html', icon: 'search', label: 'Карта клубов' },
-        { key: 'owner', href: 'admin_create_club.html', icon: 'add_business', label: 'Создать свой клуб', roles: ['owner', 'admin'] },
-        { key: 'dashboard', href: 'admin_dashboard.html', icon: 'store', label: 'Мой клуб', roles: ['owner', 'admin'] },
-        { key: 'superadmin', href: 'superadmin.html', icon: 'admin_panel_settings', label: 'Панель администратора', roles: ['superadmin'] },
-        { key: 'booking', href: 'booking.html', icon: 'diamond', label: 'Бронь', auth: true },
-        { key: 'settings', href: 'profile_edit.html', icon: 'settings', label: 'Настройки', auth: true },
+        { key: 'owner_benefits', href: 'owner_benefits.html', icon: 'handshake', label: 'Для владельцев', roles: ['owner'] },
+        { key: 'map', href: 'map.html', icon: 'search', label: 'Карта клубов', hideForRoles: ['admin'] },
+        { key: 'owner', href: 'admin_create_club.html', icon: 'add_business', label: 'Создать клуб', roles: ['owner'] },
+        { key: 'dashboard', href: 'admin_dashboard.html', icon: 'store', label: 'Мой клуб', roles: ['owner'] },
+        { key: 'superadmin', href: 'superadmin.html', icon: 'admin_panel_settings', label: 'Админ панель', roles: ['admin'] },
+        { key: 'booking', href: 'booking.html', icon: 'diamond', label: 'Бронь', auth: true, hideForRoles: ['admin'] },
     ];
 
     function createApi() {
@@ -33,15 +38,20 @@
         return '<span class="material-symbols-outlined">' + name + '</span>';
     }
 
+    function shouldShowItem(item, active, role, isAuth) {
+        if (item.hideOn && item.hideOn.includes(active)) return false;
+        if (item.auth && !isAuth) return false;
+        if (item.hideForRoles && item.hideForRoles.includes(role)) return false;
+        if (item.roles && !item.roles.includes(role)) return false;
+        return true;
+    }
+
     function buildNavHtml(active, user, isAuth) {
         const role = user?.role || '';
         let html = '';
 
         NAV_LINKS.forEach(item => {
-            if (item.hideOn && item.hideOn.includes(active)) return;
-            if (item.auth && !isAuth) return;
-            if (item.roles && !item.roles.includes(role)) return;
-
+            if (!shouldShowItem(item, active, role, isAuth)) return;
             const cls = item.key === active ? 'drawer-link active' : 'drawer-link';
             html += '<a href="' + item.href + '" class="' + cls + '" data-nav-key="' + item.key + '">' +
                 icon(item.icon) + item.label + '</a>';
@@ -79,10 +89,10 @@
         if (user.club_ids?.length) localStorage.setItem('owner_club_id', user.club_ids[0]);
     }
 
-    function updateHeaderSuperadmin(user) {
+    function updateHeaderAdminLink(user) {
         const el = document.getElementById('superadminNavLink');
         if (!el) return;
-        if (user?.role === 'superadmin') el.classList.add('visible');
+        if (user?.role === 'admin') el.classList.add('visible');
         else el.classList.remove('visible');
     }
 
@@ -104,8 +114,7 @@
         }
 
         burger.replaceWith(burger.cloneNode(true));
-        const burgerFresh = document.getElementById('burger');
-        burgerFresh.addEventListener('click', toggle);
+        document.getElementById('burger').addEventListener('click', toggle);
         overlay.replaceWith(overlay.cloneNode(true));
         document.getElementById('overlay').addEventListener('click', close);
     }
@@ -137,7 +146,9 @@
 
         if (token) {
             const cachedName = localStorage.getItem('user_full_name');
-            if (cachedName) updateDrawerUser({ full_name: cachedName, phone_number: localStorage.getItem('user_phone') }, true);
+            if (cachedName) {
+                updateDrawerUser({ full_name: cachedName, phone_number: localStorage.getItem('user_phone') }, true);
+            }
             try {
                 user = (await createApi().get('/users/me')).data;
                 applyOwnerStorage(user);
@@ -147,7 +158,7 @@
         const isAuth = !!token;
         container.innerHTML = buildNavHtml(active, user, isAuth);
         updateDrawerUser(user, isAuth);
-        updateHeaderSuperadmin(user);
+        updateHeaderAdminLink(user);
         bindBurger();
         bindLogout(container);
 

@@ -28,7 +28,7 @@
             min-height: 100vh; overflow-x: hidden;
         }
 
-        .burger-menu { background: none; border: none; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; }
+        .burger-menu { background: none; border: none; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 1001; position: fixed; top: 20px; left: 20px; }
         .burger-bar { width: 25px; height: 2px; background-color: #fff; transition: 0.3s; }
         .burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
         .burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
@@ -54,7 +54,7 @@
 
         .phone-container { width: 100%; max-width: 430px; display: flex; flex-direction: column; padding: 20px; padding-bottom: 60px; }
 
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 30px; }
+        .header { display: flex; align-items: center; padding: 20px 0 30px; gap: 12px; }
         .header h1 { font-size: 20px; font-weight: 700; text-transform: uppercase; }
 
         .section-title {
@@ -371,7 +371,7 @@
     </div>
     <div class="picker-list" id="pickerList"></div>
     <div class="picker-or-create">
-        <button class="picker-create-btn" onclick="window.location.href='owner_club_register.html'">
+        <button class="picker-create-btn" onclick="window.location.href='mainpage.html'">
             <span class="material-symbols-outlined">add_circle</span>
             Создать новый клуб
         </button>
@@ -387,7 +387,6 @@
             <span class="burger-bar"></span>
         </button>
         <h1>Мой клуб</h1>
-        <div style="width:25px;"></div>
     </div>
 
     <!-- Welcome banner -->
@@ -456,7 +455,7 @@
             <div class="export-icon"><span class="material-symbols-outlined">table_view</span></div>
             <div>
                 <div class="export-title">Выгрузка статистики</div>
-                <div class="export-subtitle">Экспорт в Excel (.xlsx)</div>
+                <div class="export-subtitle">Экспорт в Excel</div>
             </div>
         </div>
         <div class="quick-ranges">
@@ -606,7 +605,6 @@
                 </div>
                 ${club.description ? `<div class="club-meta-row" style="margin-top:4px;color:#aaa;font-size:12px;">${club.description}</div>` : ''}
             </div>
-            <span class="club-id-badge">ID клуба: ${club.id}</span>
         `;
         document.getElementById('clubRating').textContent = club.rating ?? '—';
     }
@@ -737,7 +735,7 @@
             });
             if (!response.ok) { const e = await response.json().catch(()=>({})); throw new Error(e.detail || `Ошибка ${response.status}`); }
             const disposition = response.headers.get('Content-Disposition');
-            let filename = `report_${startDate}_${endDate}.xlsx`;
+            let filename = `report_${startDate}_${endDate}.xls`;
             if (disposition) { const m = disposition.match(/filename[^;=\n]*=(['""]?)([^'""\n]*)\1/); if (m?.[2]) filename = m[2]; }
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
@@ -782,7 +780,7 @@
             _allClubs = _allClubs.filter(c => c.id != CLUB_ID);
             closeDeleteModal();
             if (_allClubs.length === 0) {
-                window.location.replace('owner_club_register.html');
+                window.location.replace('mainpage.html');
             } else if (_allClubs.length === 1) {
                 selectClub(_allClubs[0].id);
             } else {

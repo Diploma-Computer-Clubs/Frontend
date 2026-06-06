@@ -1,5 +1,5 @@
-/* Общие стили бокового меню (подключается вместе с nav.js) */
-.drawer-nav { display: flex; flex-direction: column; }
+/* ── Боковое меню ── */
+.drawer-nav { display: flex; flex-direction: column; flex: 1; }
 .drawer-link {
     display: flex; align-items: center;
     padding: 18px 25px; color: #fff; text-decoration: none;
@@ -19,8 +19,110 @@
 .drawer-link.logout span.material-symbols-outlined { color: #ff6b6b; }
 .drawer-link.login-link {
     color: #4CAF50; border-top: 1px solid rgba(255,255,255,0.07);
+    margin-top: auto;
 }
 .drawer-link.login-link span.material-symbols-outlined { color: #4CAF50; }
+
+/* ── Бургер (единый) ── */
+.burger-menu {
+    background: none; border: none;
+    display: flex; flex-direction: column; gap: 5px;
+    cursor: pointer; z-index: 1001; flex-shrink: 0; padding: 4px;
+}
+.burger-bar { width: 25px; height: 2px; background-color: #fff; transition: 0.3s; }
+.burger-menu.open .burger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.burger-menu.open .burger-bar:nth-child(2) { opacity: 0; }
+.burger-menu.open .burger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── Drawer shell ── */
+.side-drawer {
+    position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
+    background-color: #2d2d2d; z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex; flex-direction: column;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+}
+.side-drawer.open { transform: translateX(0); }
+.overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: none; z-index: 999;
+}
+.overlay.active { display: block; }
+.user-block {
+    padding: 60px 25px 30px; background-color: #262626;
+    border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
+}
+.user-name { font-weight: 700; color: #fff; display: block; }
+.user-phone { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
+
+/* ── Единая шапка: бургер всегда слева ── */
+.main-header,
+.top-bar,
+.phone-container > .header,
+.app-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start !important;
+    gap: 14px;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.main-header {
+    background-color: #333;
+    padding: 15px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.main-header .burger-menu,
+.top-bar .burger-menu,
+.phone-container > .header .burger-menu,
+.app-header .burger-menu {
+    order: 0;
+    flex-shrink: 0;
+}
+
+.main-header .header-right,
+.app-header .header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.main-header h1,
+.phone-container > .header h1,
+.app-header h1,
+.top-bar .app-header-title {
+    flex: 1;
+    text-align: left !important;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.phone-container > .header .icon-btn,
+.phone-container > .header .back-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* Убираем фиктивные спейсеры для «центрирования» заголовка */
+.phone-container > .header > div[style*="width: 25"],
+.phone-container > .header > div[style*="width:25"] {
+    display: none !important;
+}
+
+.top-bar .select-wrapper,
+.top-bar .header-extra {
+    flex: 1;
+    min-width: 0;
+}
 
 .header-admin-link {
     display: none; align-items: center; gap: 6px;
@@ -34,3 +136,6 @@
 .header-admin-link.visible { display: inline-flex; }
 .header-admin-link:hover { background: rgba(255, 200, 0, 0.15); }
 .header-admin-link .material-symbols-outlined { font-size: 18px; }
+
+.app-header .badge-sa,
+.app-header .header-right { margin-left: auto; flex-shrink: 0; }

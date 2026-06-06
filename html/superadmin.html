@@ -6,6 +6,7 @@
     <title>Underlie — Суперадмин</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="../css/nav.css" />
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         :root {
@@ -24,14 +25,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
 
-        .topbar {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 18px; background: var(--surface);
-            border-bottom: 1px solid var(--border);
-        }
-        .topbar-left { display: flex; align-items: center; gap: 12px; }
-        .back-btn { background: none; border: none; color: var(--text); cursor: pointer; display: flex; }
-        .topbar h1 { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
         .badge-sa {
             font-size: 9px; font-weight: 700; color: var(--gold);
             background: rgba(255,200,0,0.1); border: 1px solid rgba(255,200,0,0.35);
@@ -146,7 +139,17 @@
         .m-cancel { background: transparent; color: var(--muted); }
     </style>
 </head>
-<body>
+<body data-nav-active="superadmin">
+
+<div class="overlay" id="overlay"></div>
+
+<nav class="side-drawer" id="sideDrawer">
+    <div class="user-block">
+        <span class="user-name" id="drawer_name">Загрузка...</span>
+        <span class="user-phone" id="drawer_phone">...</span>
+    </div>
+    <div class="drawer-nav" id="appDrawerNav"></div>
+</nav>
 
 <div class="modal-overlay" id="deleteCityModal">
     <div class="modal-card">
@@ -162,15 +165,15 @@
 
 <div class="toast" id="toast"></div>
 
-<div class="topbar">
-    <div class="topbar-left">
-        <button class="back-btn" onclick="location.href='mainpage.html'">
-            <span class="material-symbols-outlined">arrow_back</span>
-        </button>
-        <h1>Суперадмин</h1>
-    </div>
-    <span class="badge-sa">Superadmin</span>
-</div>
+<header class="main-header app-header">
+    <button class="burger-menu" id="burger">
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+    </button>
+    <h1>Админ панель</h1>
+    <span class="badge-sa">Admin</span>
+</header>
 
 <div class="tabs">
     <button class="tab-btn active" data-tab="users">Пользователи</button>
@@ -199,10 +202,10 @@
     <p class="section-title" style="margin-top:8px;">Роль</p>
     <div class="btn-row">
         <button class="btn btn-gold" id="promoteBtn" disabled>
-            <span class="material-symbols-outlined" style="font-size:16px;">upgrade</span> → Owner
+            <span class="material-symbols-outlined" style="font-size:16px;">upgrade</span>  Owner
         </button>
         <button class="btn btn-danger" id="demoteBtn" disabled>
-            <span class="material-symbols-outlined" style="font-size:16px;">arrow_downward</span> → User
+            <span class="material-symbols-outlined" style="font-size:16px;">arrow_downward</span>  User
         </button>
     </div>
     <div class="msg err" id="usersErr"></div>
@@ -358,7 +361,7 @@ document.getElementById('searchUserBtn').addEventListener('click', async () => {
             'ID: <b>' + info.id + '</b><br>Телефон: ' + (info.phone_number || phone);
         const roleEl = document.getElementById('foundUserRole');
         roleEl.textContent = info.role;
-        roleEl.className = 'role-pill ' + (info.role === 'owner' ? 'owner' : info.role === 'superadmin' ? 'superadmin' : 'user');
+        roleEl.className = 'role-pill ' + (info.role === 'owner' ? 'owner' : info.role === 'admin' ? 'superadmin' : 'user');
         document.getElementById('userCard').classList.add('visible');
         document.getElementById('promoteBtn').disabled = false;
         document.getElementById('demoteBtn').disabled = false;
@@ -524,12 +527,12 @@ document.getElementById('addCityBtn').addEventListener('click', async () => {
     }
 });
 
-// Init: superadmin only
+// Init: admin only
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const me = await _api.get('/users/me');
-        if (me.data.role !== 'superadmin') {
-            alert('Доступ только для superadmin');
+        if (me.data.role !== 'admin') {
+            alert('Доступ только для администратора');
             location.href = 'mainpage.html';
             return;
         }
@@ -540,5 +543,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 </script>
+<script src="../js/nav.js"></script>
 </body>
 </html>
