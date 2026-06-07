@@ -471,7 +471,7 @@ async function handleBooking() {
     btn.classList.remove('active');
 
     try {
-        const pricePerPc = window.currentTotalPrice / selected.length;
+        const pricePerPc = Math.round(window.currentTotalPrice / selected.length);
         const data = selected.map(s => ({
             start_time: `${selectedDateStr}T${startTime}:00`,
             end_time: `${selectedEndDateStr}T${endTime}:00`,
@@ -491,7 +491,32 @@ async function handleBooking() {
         showToast('Успешно забронировано!', 'success');
         setTimeout(() => { window.location.href = 'booking.html'; }, 1500);
     } catch (e) {
-        showToast(e.response?.data?.detail || 'Ошибка бронирования');
+        const errData = e.response?.data;
+        let errMsg = 'Ошибка бронирования';
+
+        if (errData) {
+            if (typeof errData === 'string') {
+                errMsg = errData;
+            } else if (errData.detail) {
+                // detail может быть строкой или массивом объектов (FastAPI validation)
+                if (typeof errData.detail === 'string') {
+                    errMsg = errData.detail;
+                } else if (Array.isArray(errData.detail)) {
+                    errMsg = errData.detail.map(d => d.msg || JSON.stringify(d)).join(', ');
+                } else {
+                    errMsg = JSON.stringify(errData.detail);
+                }
+            } else if (errData.message) {
+                errMsg = errData.message;
+            } else {
+                errMsg = JSON.stringify(errData);
+            }
+        } else if (e.message) {
+            errMsg = e.message;
+        }
+
+        console.error('Booking error:', e.response?.status, errData);
+        showToast(errMsg);
         btn.textContent = 'Подтвердить бронирование';
         btn.classList.add('active');
     }
