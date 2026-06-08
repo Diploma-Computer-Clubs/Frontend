@@ -344,7 +344,9 @@ console.log("Ответ сервера:", data);
 
 if(response.ok){
 console.log("✅ Регистрация успешна");
-alert("Успешная регистрация");
+error.style.color = "#4CAF50";
+error.textContent = "Регистрация прошла успешно!";
+setTimeout(() => { window.location.href = "check.html"; }, 1500);
 }else{
 console.log("❌ Ошибка регистрации");
 error.textContent = data.message || "Ошибка регистрации";
