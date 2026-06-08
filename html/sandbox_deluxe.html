@@ -669,7 +669,6 @@ async function saveZoneEdit(zoneId){
     toast('✅ Зона обновлена','green');
   }catch(e){
     const d=e.response?.data?.detail;
-    showError('zonesListError',`❌ Ошибка ${e.response?.status}: ${typeof d==='string'?d:JSON.stringify(d)}`);
   }finally{ btn.disabled=false; btn.textContent='Сохранить'; }
 }
 
@@ -931,7 +930,7 @@ function sbCenterView(){
 function sbRenderFloorChrome(){
   const chrome=document.createElement('div');
   chrome.className='floor-chrome';
-  chrome.innerHTML=`<h2>${sbClubName||'План клуба'}</h2><p>ПК и подписи зон — на плане · x,y в API</p>`;
+  chrome.innerHTML=`<h2>${sbClubName||'План клуба'}</h2>`;
   canvas.appendChild(chrome);
 }
 
