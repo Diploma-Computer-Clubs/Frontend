@@ -186,12 +186,6 @@
         </div>
     </section>
 
-    <div class="cta-block">
-        <h3>Готовы подключить клуб?</h3>
-        <p>Уже есть клуб на платформе — откройте панель управления. Ещё нет — создайте за несколько минут.</p>
-        <a href="admin_create_club.html" class="cta-btn" id="ctaCreate">Создать клуб</a>
-        <a href="admin_dashboard.html" class="cta-btn secondary" id="ctaDashboard">Мой клуб</a>
-    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -205,7 +199,7 @@
 
     document.addEventListener('appnav:ready', function(e) {
         const user = e.detail?.user;
-        if (!user || user.role !== 'owner') {
+        if (!user || user.role !== 'user') {
             window.location.href = 'mainpage.html';
             return;
         }

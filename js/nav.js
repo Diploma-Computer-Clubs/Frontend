@@ -13,7 +13,7 @@
     const NAV_LINKS = [
         { key: 'mainpage', href: 'mainpage.html', icon: 'home', label: 'Главная', hideForRoles: ['admin'] },
         { key: 'profile', href: 'profile.html', icon: 'account_circle', label: 'Профиль', auth: true },
-        { key: 'owner_benefits', href: 'owner_benefits.html', icon: 'handshake', label: 'Для владельцев', roles: ['owner'] },
+        { key: 'owner_benefits', href: 'owner_benefits.html', icon: 'handshake', label: 'Для владельцев', roles: ['user'] },
         { key: 'map', href: 'map.html', icon: 'search', label: 'Карта клубов', hideForRoles: ['admin'] },
         { key: 'owner', href: 'admin_create_club.html', icon: 'add_business', label: 'Создать клуб', roles: ['owner'] },
         { key: 'dashboard', href: 'admin_dashboard.html', icon: 'store', label: 'Мой клуб', roles: ['owner'] },
