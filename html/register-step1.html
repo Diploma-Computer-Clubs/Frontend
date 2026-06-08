@@ -37,7 +37,7 @@ left:-40px;
 right:-40px;
 bottom:-40px;
 
-background:url("/frontend/Frontend/img/bg.png") center/cover no-repeat;
+background: url("../img/bg.png") center/cover no-repeat;
 filter: blur(8px) brightness(0.2);
 z-index:-1;
 }
@@ -344,7 +344,9 @@ console.log("Ответ сервера:", data);
 
 if(response.ok){
 console.log("✅ Регистрация успешна");
-alert("Успешная регистрация");
+error.style.color = "#4CAF50";
+error.textContent = "Регистрация прошла успешно!";
+setTimeout(() => { window.location.href = "check.html"; }, 1500);
 }else{
 console.log("❌ Ошибка регистрации");
 error.textContent = data.message || "Ошибка регистрации";

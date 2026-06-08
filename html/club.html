@@ -52,13 +52,18 @@ html,body { height:100%; background:#111; color:#fff; overflow-y:auto; }
 
 /* ── ЗОНЫ ── */
 .detail-zones-title { font-size:16px; font-weight:700; color:#fff; text-align:center; margin-bottom:16px; letter-spacing:0.5px; }
-.zone-card { background:#1c1c1c; border-radius:14px; padding:18px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.zone-card { background:#1c1c1c; border-radius:16px; padding:18px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.05); }
+.zone-card-top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
 .zone-card-name { font-size:16px; font-weight:700; color:#fff; }
-.zone-card-cost { font-size:15px; font-weight:700; color:var(--accent); white-space:nowrap; }
+.zone-card-cost { font-size:16px; font-weight:700; color:#ff6b6b; white-space:nowrap; background:rgba(139,26,26,0.2); border:1px solid rgba(139,26,26,0.4); border-radius:20px; padding:4px 12px; }
 .zone-card-cost span { font-size:11px; font-weight:400; color:rgba(255,255,255,0.4); margin-left:2px; }
-.zone-specs { margin-top:8px; }
-.zone-spec { font-size:13px; color:rgba(255,255,255,0.55); padding:3px 0; display:flex; gap:6px; }
-.zone-spec::before { content:'•'; color:rgba(255,255,255,0.25); flex-shrink:0; }
+.zone-specs { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.zone-spec { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.04); border-radius:10px; padding:8px 10px; }
+.zone-spec-icon { font-size:16px; color:rgba(255,255,255,0.35); flex-shrink:0; }
+.zone-spec-text { display:flex; flex-direction:column; gap:1px; min-width:0; }
+.zone-spec-label { font-size:9px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.5px; }
+.zone-spec-value { font-size:12px; color:rgba(255,255,255,0.85); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.zone-spec.full { grid-column:1 / -1; }
 .zones-loading { color:rgba(255,255,255,0.3); text-align:center; padding:30px 0; font-size:13px; }
 
 /* ── КНОПКА ЗАБРОНИРОВАТЬ ── */
@@ -116,7 +121,6 @@ html,body { height:100%; background:#111; color:#fff; overflow-y:auto; }
 <script>
 const API_URL = 'http://138.16.224.101:8000';
 
-// ── Axios instance с авторизацией и авто-рефрешем ──
 const api = axios.create({
     baseURL: API_URL,
     headers: { 'ngrok-skip-browser-warning': '69420' }
@@ -153,31 +157,24 @@ api.interceptors.response.use(r => r, async err => {
     return Promise.reject(err);
 });
 
-// ── Параметры из URL ──
-const params  = new URLSearchParams(window.location.search);
-const clubId  = parseInt(params.get('club_id'));
-
+const params = new URLSearchParams(window.location.search);
+const clubId = parseInt(params.get('club_id'));
 if (!clubId) window.location.href = 'map.html';
 
 document.getElementById('btnBook').addEventListener('click', () => {
     window.location.href = `select_time.html?club_id=${clubId}`;
 });
 
-// ── Хелпер: проверяем что поле — реальная строка, не placeholder "string" и не пустое ──
 function isValidStr(val) {
     return val && val !== 'string' && val.trim() !== '';
 }
 
-// ── Хелпер: строим полный URL картинки ──
 function imgUrl(path) {
     if (!isValidStr(path)) return null;
-    // Если уже абсолютный URL — возвращаем как есть
     if (path.startsWith('http')) return path;
-    // Убираем двойной слеш если path начинается с /
     return API_URL + (path.startsWith('/') ? path : '/' + path);
 }
 
-// ── Попап прайса ──
 function openPricePopup(url) {
     const content = document.getElementById('pricePopupContent');
     if (url) {
@@ -196,7 +193,16 @@ document.getElementById('pricePopup').addEventListener('click', e => {
     if (e.target === document.getElementById('pricePopup')) closePricePopup();
 });
 
-// ── Рендер зон из club.zones ──
+// ── Поля зон: иконка, лейбл, полная ширина ──
+const ZONE_SPEC_CONFIG = {
+    cpu:     { icon: 'memory',          label: 'Процессор',  full: false },
+    gpu:     { icon: 'videocam',        label: 'Видеокарта', full: false },
+    ram:     { icon: 'developer_board', label: 'ОЗУ',        full: false },
+    ssd:     { icon: 'storage',         label: 'Накопитель', full: false },
+    monitor: { icon: 'monitor',         label: 'Монитор',    full: true  },
+};
+
+// ── Рендер зон ──
 function renderZones(zones) {
     const el = document.getElementById('zonesContent');
     if (!el) return;
@@ -206,35 +212,41 @@ function renderZones(zones) {
         return;
     }
 
-    // Поля которые показываем отдельно — не дублируем в specs
-    const skip = new Set(['id', 'club_id', 'name', 'title', 'cost', 'created_at', 'updated_at']);
-
     el.innerHTML = zones.map(zone => {
-        const name = zone.name || zone.title || 'Зона';
-        const cost = zone.cost ? `<div class="zone-card-cost">${zone.cost} ₸<span>/ ч</span></div>` : '';
+        const name = zone.name || 'Зона';
+        const cost = zone.cost
+            ? `<div class="zone-card-cost">${zone.cost} ₸<span>/ ч</span></div>`
+            : '';
 
-        const specs = Object.entries(zone)
-            .filter(([k, v]) => !skip.has(k) && isValidStr(String(v)))
-            .map(([k, v]) => `<div class="zone-spec">${k}: ${v}</div>`)
+        const specs = Object.entries(ZONE_SPEC_CONFIG)
+            .filter(([key]) => isValidStr(String(zone[key] ?? '')))
+            .map(([key, cfg]) => `
+                <div class="zone-spec${cfg.full ? ' full' : ''}">
+                    <span class="material-symbols-outlined zone-spec-icon">${cfg.icon}</span>
+                    <div class="zone-spec-text">
+                        <span class="zone-spec-label">${cfg.label}</span>
+                        <span class="zone-spec-value">${zone[key]}</span>
+                    </div>
+                </div>`)
             .join('');
 
         return `
             <div class="zone-card">
-                <div>
+                <div class="zone-card-top">
                     <div class="zone-card-name">${name}</div>
-                    ${specs ? `<div class="zone-specs">${specs}</div>` : ''}
+                    ${cost}
                 </div>
-                ${cost}
+                ${specs ? `<div class="zone-specs">${specs}</div>` : ''}
             </div>`;
     }).join('');
 }
 
-// ── Рендер всей страницы клуба ──
-function renderClub(club) {
+// ── Рендер страницы клуба (без зон — они подгружаются отдельно) ──
+function renderClub(club, minPrice) {
     document.getElementById('pageTitle').textContent = club.name;
 
-    const bgUrl   = imgUrl(club.img_background);
-    const logoUrl = imgUrl(club.image_url);
+    const bgUrl    = imgUrl(club.img_background);
+    const logoUrl  = imgUrl(club.image_url);
     const priceUrl = imgUrl(club.image_price_url);
 
     const rating = Math.round(club.rating || 0);
@@ -263,9 +275,6 @@ function renderClub(club) {
            </div>`
         : '';
 
-    // Минимальная цена из зон
-    const costs = (club.zones || []).map(z => z.cost).filter(c => c > 0);
-    const minPrice = costs.length ? Math.min(...costs) : null;
     const minPriceText = minPrice ? `${minPrice} ₸ / ч` : '—';
 
     document.getElementById('pageContent').innerHTML = `
@@ -284,36 +293,43 @@ function renderClub(club) {
             ${descHtml}
             ${promosHtml}
             <div class="detail-price-row">
-                <div class="detail-price-from">от <b>${minPriceText}</b></div>
+                <div class="detail-price-from">от <b id="minPriceLabel">${minPriceText}</b></div>
                 <button class="btn-price" onclick="openPricePopup(${priceUrl ? `'${priceUrl}'` : 'null'})">
                     Посмотреть цены
                 </button>
             </div>
             <div class="detail-zones-title">Зоны</div>
-            <div id="zonesContent"></div>
+            <div id="zonesContent"><div class="zones-loading">Загрузка зон…</div></div>
         </div>`;
-
-    // Зоны уже пришли внутри club.zones — рендерим сразу
-    renderZones(club.zones || []);
 }
 
 // ── Инициализация ──
 async function init() {
-    // 1. Быстрый рендер из кэша
     const cached = localStorage.getItem('club_cache_' + clubId);
     if (cached) {
         try { renderClub(JSON.parse(cached)); } catch {}
     }
 
-    // 2. Свежий запрос к /clubs/{id} — там уже есть zones внутри
     try {
-        const r = await api.get(`/clubs/${clubId}`);
-        const club = r.data;
-        // Обновляем кэш
+        // Запрос 1: инфо о клубе
+        // Запрос 2: зоны клуба — GET /zones/?club_id=...
+        const [clubRes, zonesRes] = await Promise.all([
+            api.get(`/clubs/${clubId}`),
+            api.get(`/zones/`, { params: { club_id: clubId } }),
+        ]);
+
+        const club  = clubRes.data;
+        const zones = Array.isArray(zonesRes.data) ? zonesRes.data : [];
+
+        // Минимальная цена из зон
+        const costs    = zones.map(z => z.cost).filter(c => c > 0);
+        const minPrice = costs.length ? Math.min(...costs) : null;
+
         localStorage.setItem('club_cache_' + clubId, JSON.stringify(club));
-        renderClub(club);
+        renderClub(club, minPrice);
+        renderZones(zones);
+
     } catch (e) {
-        // Если кэш уже отрисован — не показываем ошибку поверх
         if (!cached) {
             document.getElementById('pageContent').innerHTML = `
                 <div class="page-loading">

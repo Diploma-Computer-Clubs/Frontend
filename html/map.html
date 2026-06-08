@@ -56,6 +56,11 @@ select option { background:#111; color:#fff; }
 .slide-handle:hover .slide-handle-bar { background:rgba(255,255,255,0.7); }
 .clubs-count-label { pointer-events:all; cursor:pointer; padding:10px 0 20px; font-size:14px; font-weight:700; color:#030303; text-align:center; width:100%; animation:wobble 2.6s ease-in-out infinite; text-shadow:0 0 20px rgba(255,255,255,0.2); }
 .clubs-count-label span { font-weight:400; opacity:0.7; }
+
+@media (max-width: 768px) {
+    .clubs-count-label { padding-bottom: 60px; }
+}
+
 @keyframes wobble {
     0%,100% { transform:rotate(0deg) scale(1); }
     15%      { transform:rotate(-2deg) scale(1.05); }
