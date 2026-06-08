@@ -55,7 +55,7 @@ const API_URL = 'http://138.16.224.101:8000';
         try {
             btn.innerText = "Удаляем...";
             btn.disabled = true;
-            await api.delete('/users/delete_user');
+            await api.delete('/users/me');
             localStorage.clear();
             window.location.href = 'check.html';
         } catch (error) {
