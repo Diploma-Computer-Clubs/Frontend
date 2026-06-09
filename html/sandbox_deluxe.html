@@ -669,6 +669,7 @@ async function saveZoneEdit(zoneId){
     toast('✅ Зона обновлена','green');
   }catch(e){
     const d=e.response?.data?.detail;
+    showError('zonesListError',`❌ Ошибка ${e.response?.status}: ${typeof d==='string'?d:JSON.stringify(d)}`);
   }finally{ btn.disabled=false; btn.textContent='Сохранить'; }
 }
 
