@@ -88,10 +88,10 @@
         .club-name { font-size: 15px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         .club-address { font-size: 10px; color: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 2px; }
 
-        /* ── NEW TIME PICKER BAR (Narrower & Smarter) ── */
+        /* ── TIME PICKER BAR ── */
         .time-bar {
             width: 100%;
-            max-width: 320px; /* Поуже */
+            max-width: 320px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -123,7 +123,7 @@
             width: 65px;
             cursor: pointer;
         }
-        .time-bar input[type="time"]::-webkit-calendar-picker-indicator { display: none; } /* Скрываем иконку для чистоты */
+        .time-bar input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
 
         .time-sep { color: rgba(255,255,255,0.2); font-size: 12px; }
 
@@ -247,7 +247,7 @@
         .date-selector {
             display: flex;
             gap: 12px;
-            justify-content: center; /* Центрируем, так как дней мало */
+            justify-content: center;
             margin-bottom: 16px;
         }
 
@@ -597,13 +597,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-// ... (Скрипты остаются прежними до функции initCalendar) ...
+// ── ИСПРАВЛЕНО: убран слэш в конце WS_URL ──
+const API_URL = 'http://138.16.224.101:8000';
+const WS_URL  = 'http://138.16.224.101:8000';
 
-const API_URL    = 'http://138.16.224.101:8000';
-const WS_URL     = 'http://138.16.224.101:8000/';
-// Опасяяян, / он вроде робит а вроде сбивает всё нах
-const params     = new URLSearchParams(window.location.search);
-const clubId     = params.get('club_id');
+const params  = new URLSearchParams(window.location.search);
+const clubId  = params.get('club_id');
 
 if (!clubId) { window.location.href = 'admin_select_time.html'; }
 
@@ -625,8 +624,8 @@ function addDayISO(iso) {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-let startTime = getNowTime();
-let endTime   = getTimeInThreeHours();
+let startTime          = getNowTime();
+let endTime            = getTimeInThreeHours();
 let selectedDateStr    = getTodayISO();
 let selectedEndDateStr = getTodayISO();
 
@@ -680,7 +679,7 @@ api.interceptors.response.use(r => r, async err => {
     return Promise.reject(err);
 });
 
-// ── PC Toggle (включить / выключить) ──
+// ── PC Toggle ──
 let ctxCompId = null;
 let ctxCompBookings = [];
 let holdTimer = null;
@@ -692,7 +691,6 @@ function openCtxMenu(el, comp) {
     document.getElementById('pcCtxTurnOn').style.display  = comp.is_Active ? 'none' : 'flex';
     document.getElementById('pcCtxTurnOff').style.display = comp.is_Active ? 'flex' : 'none';
 
-    // Показываем кнопку удаления если есть брони
     const hasBookings = ctxCompBookings.length > 0;
     document.getElementById('pcCtxDeleteBook').style.display = hasBookings ? 'flex' : 'none';
     document.getElementById('pcCtxDelDivider').style.display = hasBookings ? 'block' : 'none';
@@ -773,16 +771,55 @@ function connectWS() {
     if (ws) { ws.onclose = null; ws.close(); }
     const dot = document.getElementById('wsDot');
     dot.className = 'ws-dot pending';
+
     const startISO = `${selectedDateStr}T${startTime}:00`;
     const endISO   = `${selectedEndDateStr}T${endTime}:00`;
     const token    = localStorage.getItem('access_token');
-    const wsPath = `${WS_URL}/${clubId}/availability/ws?start_time=${encodeURIComponent(startISO)}&end_time=${encodeURIComponent(endISO)}&token=${encodeURIComponent(token)}`;
+
+    // ── ИСПРАВЛЕНО: заменяем http→ws (или https→wss) явно в строке пути ──
+    const wsBase = WS_URL.replace(/^http/, 'ws');
+    const wsPath = `${wsBase}/${clubId}/availability/ws?start_time=${encodeURIComponent(startISO)}&end_time=${encodeURIComponent(endISO)}&token=${encodeURIComponent(token)}`;
+
     ws = new WebSocket(wsPath);
+    let layoutReady = false;  // координаты считаем только один раз за сессию WS
+
     ws.onopen = () => { dot.className = 'ws-dot connected'; wsConnected = true; };
-    ws.onmessage = (event) => {
+    ws.onmessage = async (event) => {
         try {
             const data = JSON.parse(event.data);
-            availabilityData = Array.isArray(data) ? data : (data.zones || data.computers || []);
+
+            if (!layoutReady) {
+                // Первое сообщение: грузим mapObjects и считаем layout один раз
+                layoutReady = true;
+                availabilityData = Array.isArray(data) ? data : (data.zones || data.computers || []);
+                try {
+                    const mapRes = await api.get(`/map-objects/${clubId}/map-objects/`).catch(() => ({ data: [] }));
+                    mapObjects = Array.isArray(mapRes.data) ? mapRes.data : [];
+                } catch { mapObjects = []; }
+                normalizeFloorCoords();   // мутирует координаты — только 1 раз!
+                computeMapLayout();
+                const loading = document.getElementById('mapLoading');
+                if (loading) loading.style.display = 'none';
+                scrollMapIntoView();
+            } else {
+                // Последующие обновления: только обновляем статусы броней, координаты не трогаем
+                const freshZones = Array.isArray(data) ? data : (data.zones || data.computers || []);
+                // Мерджим только bookings / is_Active, не перезаписывая x/y
+                freshZones.forEach(freshZone => {
+                    const existing = availabilityData.find(z => z.id === freshZone.id);
+                    if (existing) {
+                        existing.computers.forEach(pc => {
+                            const freshPc = (freshZone.computers || []).find(c => c.id === pc.id);
+                            if (freshPc) {
+                                pc.bookings   = freshPc.bookings;
+                                pc.is_Active  = freshPc.is_Active;
+                                pc.is_active  = freshPc.is_active;
+                            }
+                        });
+                    }
+                });
+            }
+
             const freeIds = new Set(
                 availabilityData.flatMap(z => z.computers || [])
                     .filter(c => c.is_Active && c.bookings?.length === 0)
@@ -831,7 +868,7 @@ async function fetchAvailabilityREST() {
 function confirmTimeAndConnect(silent = false) {
     const [sh, sm] = startTime.split(':').map(Number);
     const [eh, em] = endTime.split(':').map(Number);
-    if (eh * 60 + em <= sh * 60 + sm) { selectedEndDateStr = addDayISO(selectedDateStr); } 
+    if (eh * 60 + em <= sh * 60 + sm) { selectedEndDateStr = addDayISO(selectedDateStr); }
     else { selectedEndDateStr = selectedDateStr; }
     document.getElementById('timeLabel').innerText = `${startTime} – ${endTime}`;
     localStorage.setItem('booking_start_time', startTime);
@@ -843,16 +880,10 @@ function confirmTimeAndConnect(silent = false) {
     if (!silent) showToast('Время обновлено', 'success');
 }
 
-function onTimeChanged() {
-    document.getElementById('timeLabel').innerText = `${startTime} – ${endTime}`;
-}
-
 function formatTime(isoStr) {
     const d = new Date(isoStr);
     return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-
-const tooltip = document.getElementById ? null : null; // init later
 
 let tooltipBookingId        = null;
 let tooltipBookingCheckedIn = false;
@@ -1095,7 +1126,6 @@ function renderMap() {
         zoneColorById[zone.id] = accent;
         const isVip  = zName.toLowerCase().includes('vip');
 
-        // Метка зоны
         const lbl = document.createElement('div');
         lbl.className = 'zone-label';
         lbl.style.left = mapX(zone.x ?? 70 + zi * 140) + 'px';
@@ -1169,7 +1199,6 @@ function renderMap() {
                 };
             }
 
-            // Всегда вешаем hold-меню (для включения/выключения и удаления брони)
             attachPcHold(el, comp);
             pcLayer.appendChild(el);
         });
@@ -1220,14 +1249,19 @@ async function handleBooking() {
     try {
         const pricePerPc = window.currentTotalPrice / selected.length;
         const data = selected.map(s => ({
-            "start_time": `${selectedDateStr}T${startTime}:00.000`, "end_time": `${selectedEndDateStr}T${endTime}:00.000`,
-            "total_price": pricePerPc, "computer_id": s.id, "zone_id": s.zid, "club_id": parseInt(clubId)
+            "start_time": `${selectedDateStr}T${startTime}:00.000`,
+            "end_time": `${selectedEndDateStr}T${endTime}:00.000`,
+            "total_price": pricePerPc,
+            "computer_id": s.id,
+            "zone_id": s.zid,
+            "club_id": parseInt(clubId)
         }));
         await api.post(`/bookings/admin`, data, { params: { club_id: clubId } });
         showToast("Успешно!", "success");
         selected = [];
         updateUI();
-        connectWS();    } catch (e) { 
+        connectWS();
+    } catch (e) {
         showToast(e.response?.data?.detail || "Ошибка");
         btn.innerText = "ПОДТВЕРДИТЬ БРОНИРОВАНИЕ";
     }
@@ -1237,9 +1271,9 @@ async function fetchClubInfo() {
     try {
         const r = await api.get(`/clubs/${clubId}`);
         document.getElementById('clubNameHeader').innerText = r.data.name;
-        document.getElementById('clubAddrHeader').innerHTML = `<span class="material-symbols-outlined" style="font-size:12px">location_on</span> ${r.data.address}`;
+        document.getElementById('clubAddrHeader').innerHTML =
+            `<span class="material-symbols-outlined" style="font-size:12px">location_on</span> ${r.data.address}`;
 
-        // Лого клуба
         if (r.data.image_url) {
             const img = document.getElementById('clubLogoImg');
             img.src = API_URL + r.data.image_url;
@@ -1247,7 +1281,6 @@ async function fetchClubInfo() {
             document.getElementById('clubLogoPlaceholder').style.display = 'none';
         }
 
-        // Фон карты
         if (r.data.img_background) {
             const canvas = document.getElementById('floorCanvas');
             canvas.style.backgroundImage = `url('${API_URL + r.data.img_background}')`;
@@ -1258,13 +1291,11 @@ async function fetchClubInfo() {
     } catch {}
 }
 
-// ── Измененная логика календаря (ТОЛЬКО 3 ДНЯ) ──
 function initCalendar() {
     const list = document.getElementById('dateSelector');
     const daysShort = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
     list.innerHTML = '';
 
-    // Меняем цикл с 7 на 3 дня
     for (let i = 0; i < 3; i++) {
         const d = new Date();
         d.setDate(d.getDate() + i);
@@ -1272,14 +1303,12 @@ function initCalendar() {
 
         const item = document.createElement('div');
         item.className = `date-item ${iso === selectedDateStr ? 'active' : ''}`;
-        
-        // Добавим подписи: Сегодня, Завтра, Послезавтра
+
         let dayLabel = daysShort[d.getDay()];
         if (i === 0) dayLabel = "Сегодня";
         if (i === 1) dayLabel = "Завтра";
 
         item.innerHTML = `<span>${dayLabel}</span><b>${d.getDate()}</b>`;
-
         item.onclick = () => {
             document.querySelectorAll('.date-item').forEach(el => el.classList.remove('active'));
             item.classList.add('active');
@@ -1300,14 +1329,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('pickerStart').value = startTime;
     document.getElementById('pickerEnd').value   = endTime;
     document.getElementById('pickerStart').onchange = (e) => { startTime = e.target.value; confirmTimeAndConnect(true); };
-    document.getElementById('pickerEnd').onchange = (e) => { endTime = e.target.value; confirmTimeAndConnect(true); };
+    document.getElementById('pickerEnd').onchange   = (e) => { endTime   = e.target.value; confirmTimeAndConnect(true); };
 
     fetchClubInfo();
     initCalendar();
     document.getElementById('timeLabel').innerText = `${startTime} – ${endTime}`;
     timeConfirmed = true;
 
-    // Тултип не скрывается при наведении на него самого
     const tt = document.getElementById('pcTooltip');
     tt.addEventListener('mouseenter', () => clearTimeout(tooltipHideTimer));
     tt.addEventListener('mouseleave', hidePcTooltip);
